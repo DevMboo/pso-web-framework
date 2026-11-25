@@ -156,7 +156,7 @@ jobs:
             --signing-key "$env:RUNNER_TEMP\keys\release.private.pem" --denylist "$env:RUNNER_TEMP\keys\denylist.txt"
           if ($LASTEXITCODE -ne 0) { throw "finalize failed" }
 
-      - name: Portable ZIP (gated: its only executable is the OpenJS-signed runtime)
+      - name: "Portable ZIP (gated: its only executable is the OpenJS-signed runtime)"
         shell: pwsh
         run: |
           node scripts/psd/build-portable.mjs --label ${{ steps.label.outputs.label }} --work "$env:RUNNER_TEMP\work" `
