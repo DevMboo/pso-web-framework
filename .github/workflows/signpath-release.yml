@@ -41,7 +41,7 @@ jobs:
     environment: release-signing    # required reviewers = signing approvers (manual approval before any signing request)
     timeout-minutes: 240
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: { persist-credentials: false }
 
       - name: Release label from the tag
