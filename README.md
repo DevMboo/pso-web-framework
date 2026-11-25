@@ -1,4 +1,33 @@
-# PSO Web Framework
+<p align="center">
+  <img src="assets/branding/pso-logo.svg" alt="PSO Web Framework logo" width="90" height="90">
+</p>
+
+<h1 align="center">PSO Web Framework</h1>
+
+<p align="center"><strong>Path Structure Working</strong></p>
+
+<p align="center">
+  A framework and CLI for structured web applications: a TypeScript orchestrator as the single public entry point,
+  Spring Boot microservices that own their data, a local infrastructure engine, Studio and a deployment agent.
+</p>
+
+<p align="center">
+  <a href="https://github.com/DevMboo/pso-web-framework/releases"><img alt="Release" src="https://img.shields.io/github/v/release/DevMboo/pso-web-framework?include_prereleases&amp;label=release"></a>
+  <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
+  <img alt="TypeScript 5.9" src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&amp;logoColor=white">
+  <img alt="Node.js 24 or newer" src="https://img.shields.io/badge/Node.js-%E2%89%A524-5FA04E?logo=nodedotjs&amp;logoColor=white">
+  <img alt="Java 21 or newer" src="https://img.shields.io/badge/Java-21%2B-ED8B00?logo=openjdk&amp;logoColor=white">
+  <img alt="Spring Boot 3.5" src="https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?logo=springboot&amp;logoColor=white">
+</p>
+
+<p align="center">
+  <a href="https://devmboo.github.io/pso-web-docs/">Documentation</a> ·
+  <a href="https://devmboo.github.io/pso-web-docs/getting-started/quick-start.html">Getting Started</a> ·
+  <a href="https://github.com/DevMboo/pso-web-framework/releases">Releases</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+---
 
 **PSO Web** is a framework and command-line tool (`pso`) for building structured web applications: a TypeScript orchestrator that is the
 single public entry point, Spring Boot microservices that own their data, a local infrastructure engine (certificates, identity provider,
