@@ -28,10 +28,10 @@ PSO Web Framework is free and open-source software, licensed under the [Apache L
 
 | Release detail | Value |
 | --- | --- |
-| Release | [`v0.2.0-rc.4`](https://github.com/DevMboo/pso-web-framework/releases/tag/v0.2.0-rc.4) (public prerelease, built from the tagged commit of this repository) |
+| Release | [`v0.2.0-rc.4`](https://github.com/DevMboo/pso-web-framework/releases/tag/v0.2.0-rc.4) (public prerelease, built from commit `a56a6ac` of the source repository) |
 | Platform | Windows 10/11 x64 |
-| Recommended asset | `PSO-Web-0.2.0-rc.4-win-x64-portable.zip` |
-| Experimental asset | `PSO-Web-0.2.0-rc.4-win-x64.exe` (**Authenticode-unsigned**) |
+| Recommended asset | `PSO-Web-0.2.0-rc.4-win-x64-portable.zip`, 50.4 MB (50,448,335 bytes) |
+| Experimental asset | `PSO-Web-0.2.0-rc.4-win-x64.exe`, 31.4 MB (31,392,131 bytes), **Authenticode-unsigned** |
 | Also on the release page | the npm tarballs of the 13 `@pso/*` packages (0.2.0) and the `com.pso:*:0.2.0-rc.4` Maven file repository, with their SBOMs |
 | Node.js requirement | Bundled private runtime; no system Node.js installation |
 | Java | JDK 21 or newer for Spring services; the matching `com.pso` Maven repository is included (`pso java:install`) |
@@ -41,13 +41,13 @@ PSO Web Framework is free and open-source software, licensed under the [Apache L
 :::download-button url="https://github.com/DevMboo/pso-web-framework/releases/download/v0.2.0-rc.4/PSO-Web-0.2.0-rc.4-win-x64-portable.zip" label="Download PSO Web V2 — Windows x64 portable (0.2.0-rc.4, recommended)"
 
 The **portable ZIP is the recommended download**. It installs nothing: extract it and run `pso.cmd`
-([Installation](/getting-started/installation)). Its validation results are in the release notes.
+([Installation](/getting-started/installation)). The exact ZIP passed 21/21 portable validation checks (isolated folder, no Node.js on PATH: checksums, signature, launcher, doctor, integrity, tamper detection, repair, relocation, foreign-signer refusal).
 
 :::download-button url="https://github.com/DevMboo/pso-web-framework/releases/download/v0.2.0-rc.4/PSO-Web-0.2.0-rc.4-win-x64.exe" label="Download the experimental, Authenticode-unsigned Windows x64 installer (0.2.0-rc.4)"
 
 The **installer is experimental and unsigned**: it carries the same content, but its real Windows installation flow (wizard, PATH
 entry, uninstaller) has not been validated end to end, because Smart App Control on the validation machine refuses unsigned
-installers. It may block it on your machine too. Read `INSTALL.md` on the release page first.
+installers. This build did run there once (installation, full integrity check, real uninstaller), which does not predict your machine: it may block it. Read `INSTALL.md` on the release page first.
 
 The [release page](https://github.com/DevMboo/pso-web-framework/releases/tag/v0.2.0-rc.4) also holds `PORTABLE.md`, `INSTALL.md`, the checksums, the detached signature, the public key, the
 release manifest, the SBOMs and the notices.
@@ -61,7 +61,14 @@ Get-FileHash .\PSO-Web-0.2.0-rc.4-win-x64-portable.zip -Algorithm SHA256
 Get-Content .\SHA256SUMS
 ```
 
-The SHA-256 of every asset is listed in `SHA256SUMS` and repeated in the release notes. `SHA256SUMS` is signed with Ed25519 by the
+| File | SHA-256 |
+| --- | --- |
+| `PSO-Web-0.2.0-rc.4-win-x64-portable.zip` | `ef1d6cfd67c1db3982a604e4caef3a8d6f8f85c0326102eb5915944bf1bfd9bf` |
+| `PSO-Web-0.2.0-rc.4-win-x64.exe` | `04dad81fc929449c75ca8c894452b13837d0b948c0f5669ffbf5c1f480130d30` |
+| `pso-npm-0.2.0-packages.zip` | `134e15e567ae5520eff71a0816ce4a8dc849821d69a708196682f3b78639880d` |
+| `pso-java-0.2.0-rc.4-maven-repository.zip` | `ff3b111cb2dad1ff86dda59d7068dc2444176c3ba4298bcda6895f922af2a975` |
+
+The package archives are listed in `SHA256SUMS-PACKAGES`, signed the same way (`SHA256SUMS-PACKAGES.sig`). `SHA256SUMS` is signed with Ed25519 by the
 release key `7ebced006968027b3ca9939c1e245637ce93ba8bb6261a125a0fd31f957dcc89` (fingerprint of `release-signing-key.public.pem`,
 also published in this repository's documentation). The signature proves integrity relative to that key; the key travels with the
 release, so confirm the fingerprint here, through a channel other than the download, before relying on it. Stop if a checksum or the

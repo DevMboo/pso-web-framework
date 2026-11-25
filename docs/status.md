@@ -1,6 +1,6 @@
 # PSO Web Framework: implementation status
 
-Current release: **`0.2.0-rc.4`** (release candidate; the CLI reports `0.2.0`). The user documentation is
+Current release: **`0.2.0-rc.4`**, the first public release ([GitHub release](https://github.com/DevMboo/pso-web-framework/releases/tag/v0.2.0-rc.4); release candidate, Authenticode-unsigned; the CLI reports `0.2.0`). The user documentation is
 https://devmboo.github.io/pso-web-docs/; this page summarises what exists, what does not, and how it is verified. The authoritative lists
 of unimplemented commands and capabilities are in `packages/cli/src/unimplemented.ts`, which the documentation and the AI contexts read and
 which `packages/cli/test/docs-parity.test.ts` checks against the sources.
@@ -31,13 +31,23 @@ Capabilities that do not exist in this version (from `UNSUPPORTED_CAPABILITIES`)
 - Distributed transactions, sagas or a workflow engine.
 - Applying deployments to Kubernetes, ECS, Container Apps or Cloud Run (descriptors are generated and checked only).
 - Cloud providers other than SSH to a Linux server; PSO provisions no cloud resources.
-- In Cloud Lifecycle and Operations: release-signature verification, a Java dependency vulnerability scanner, a systemd service driver,
-  automatic TLS certificates and DNS changes, frontend deployment.
+- In Cloud Lifecycle and Operations: system-scope systemd units, resource limits on services, automatic TLS certificates and DNS or
+  hosts-file changes, and a vulnerability database of its own (the Java dependency scan runs OSV-Scanner when it is installed).
+  Release-signature verification, the systemd driver and static frontend deployment are implemented.
 - Published packages on npm or Maven Central.
 - A production identity provider (`pso idp:dev` is for development only).
 
-Release executables are not Authenticode-signed yet
+Release executables are not Authenticode-signed yet, including `0.2.0-rc.4`
 ([code signing policy](https://devmboo.github.io/pso-web-docs/downloads/code-signing-policy.html)).
+
+## Verified only in part
+
+| Area | Verified | Not verified |
+|---|---|---|
+| Credential stores | Windows Credential Manager, encrypted file, Linux Secret Service (real gnome-keyring in a container) | macOS Keychain (no macOS test machine) |
+| Cloud deployment | disposable Linux containers over SSH in the test suites; one owner-run validation on a cloud VM | public HTTPS through that provider's firewall; frontend deployment on that VM |
+| Windows distribution | portable ZIP (21 checks), upgrade and rollback, the real installer and uninstaller once | Authenticode signing (no certificate); Smart App Control acceptance in general |
+| Studio | every section in Chrome, including Cloud → Signing and Frontend operations | the Cloud section with a deployed static frontend |
 
 ## How it is verified
 
