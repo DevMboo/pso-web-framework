@@ -1,0 +1,140 @@
+# catalog: PSO Spring Boot service. Every value below can be overridden by an environment variable (shown as ${VAR:default}).
+# Unknown pso.* keys are an error at start-up (a misspelled security setting is never silently ignored).
+# Reference: PSO Docs > Spring Boot > Configuration reference.
+spring:
+  application:
+    name: catalog
+  output:
+    ansi:
+      enabled: ${PSO_LOG_COLOR:detect}   # detect | always | never (NO_COLOR is not read by Spring; use never)
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/catalog}
+    username: ${DB_USER:}
+    password: ${DB_PASSWORD:}
+  flyway:
+    enabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  # no default profile on purpose: choose one explicitly (local, dev, test, staging, prod, h2); `pso dev` uses local.
+
+server:
+  port: ${PORT:8082}
+  address: ${HOST:127.0.0.1}
+  shutdown: graceful
+  error:
+    include-message: never
+    include-stacktrace: never
+
+# Logging uses Spring Boot's own facilities (Logback). Console pattern: timestamp, level, [service,correlationId,traceId], logger, message.
+# PSO_LOG_LEVEL changes the root level (TRACE, DEBUG, INFO, WARN, ERROR, OFF). Production profiles write structured JSON (see application-prod.yml).
+logging:
+  level:
+    root: ${PSO_LOG_LEVEL:INFO}
+  pattern:
+    level: "%5p [${spring.application.name:},%X{correlationId:-},%X{traceId:-}]"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+pso:
+  service:
+    name: catalog
+    # Endpoint prefix applied once, by PSO, to every @RestController (controllers map paths WITHOUT it).
+    # Keep it equal to the "prefix" of this service in pso.workspace.json: `pso validate` checks it. "/" disables the prefix.
+    prefix: ${PSO_SERVICE_PREFIX:/catalog}
+  security:
+    jwt:                       # tokens are validated here with the issuer's public keys; the service never trusts the caller
+      jwks-uri: ${PSO_JWT_JWKS_URI:}
+      issuer: ${PSO_JWT_ISSUER:}
+      audience: ${PSO_JWT_AUDIENCE:}
+      algorithms: ${PSO_JWT_ALGORITHMS:ES256,RS256}
+      clock-skew: 30s
+      roles-claim: roles
+      # an identity provider on a private network is approved by naming it: host:port of the JWKS URI (anything else private is refused)
+      private-hosts: ${PSO_JWT_JWKS_PRIVATE_HOSTS:}
+      # PEM file with the certificate authority of the identity provider, when it is not a public one
+      ca-file: ${PSO_JWT_JWKS_CA_FILE:}
+    cors:                      # off by default; origins are always explicit (never *)
+      enabled: ${PSO_CORS_ENABLED:false}
+      allowed-origins: ${PSO_CORS_ORIGINS:}
+      allowed-methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+      allowed-headers: [Authorization, Content-Type, X-Correlation-ID]
+      allow-credentials: false
+      max-age: 30m
+    rules: []                  # explicit authorization rules; everything not listed requires a valid token
+    #  - path: /ping/**        # relative to the service prefix
+    #    methods: [GET]
+    #    access: SCOPES        # PUBLIC | AUTHENTICATED | SCOPES
+    #    scopes: [ping:read]
+  http:
+    client:
+      services: {}             # named remote services for PsoHttpClient; nothing outside this list can be called
+      #  customers:
+      #    base-url: https://customers.internal:8443
+      #    forward-bearer: false
+      #    retry: { max-attempts: 2 }
+      #    tls: { ca-file: /run/pso/tls/ca.crt }   # PEM authority: the file the orchestrator uses (trust-store for PKCS12/JKS)
+  limits:
+    requests:
+      enabled: true
+      per-minute: ${PSO_RATE_LIMIT_PER_MINUTE:600}
+      # per-principal: true            # a budget of its own for each authenticated caller
+      # trusted-proxies: [ "10.0.0.0/8" ]   # X-Forwarded-For counts only from these peers
+      # routes:                        # stricter, route-specific budgets (route without the service prefix)
+      #   - { route: "POST /customers", limit: 10, window-seconds: 60, burst: 5 }
+      # provider: redis                # shared budget: add com.pso:pso-ratelimit-redis-starter and set redis-url from the environment
+    body:
+      max-size: 2MB
+    multipart:
+      enabled: false
+      max-file-size: 5MB
+      max-request-size: 10MB
+    header:
+      max-size: 16KB
+    timeouts:
+      connection: 10s
+      async-request: 30s
+    concurrency:
+      max-requests: 0          # 0 = unlimited
+  dispatch:                    # installed on demand: `pso dispatch:install <redis|rabbitmq|kafka>`; nothing connects while enabled is false
+    enabled: ${PSO_DISPATCH_ENABLED:false}
+    provider: rabbitmq
+    max-message-size: 1MB
+    consumer:
+      concurrency: 1
+      batch-size: 10
+    retry:                     # in-process retries with backoff; the message stays unacknowledged meanwhile
+      enabled: true
+      max-attempts: 3
+      initial-delay: 1s
+      max-delay: 30s
+      multiplier: 2.0
+    dead-letter:               # exhausted and poison messages go to <channel>.dlq
+      enabled: true
+    observability:
+      enabled: true
+    idempotency:
+      retention: 24h
+    outbox:                    # transactional outbox (needs a database): events are stored with your data and relayed afterwards
+      enabled: false
+    rabbitmq:
+      url: ${RABBITMQ_URL:}
+      exchange-prefix: pso.
+  database:                    # none | h2 | postgresql   (`pso database:enable <h2|postgresql>`)
+    provider: postgresql
+  observability:
+    correlation:
+      enabled: true
+      header: X-Correlation-ID
+    # development diagnostics: log the message and stack trace of an unexpected exception (`pso dev` turns it on; ignored with a production profile)
+    error-details: ${PSO_LOG_ERROR_DETAILS:false}

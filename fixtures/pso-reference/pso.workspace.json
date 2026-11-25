@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "name": "pso-reference",
+  "services": [
+    {
+      "name": "gateway",
+      "path": "gateway",
+      "runtime": "node",
+      "role": "orchestrator",
+      "port": 3000,
+      "health": "/health/ready"
+    },
+    {
+      "name": "catalog",
+      "path": "catalog",
+      "runtime": "spring-boot",
+      "role": "service",
+      "prefix": "/catalog",
+      "db": "postgres",
+      "port": 8081,
+      "health": "/actuator/health"
+    },
+    {
+      "name": "accounts",
+      "path": "accounts",
+      "runtime": "spring-boot",
+      "role": "service",
+      "prefix": "/accounts",
+      "port": 8082,
+      "health": "/actuator/health"
+    }
+  ],
+  "frontends": [
+    {
+      "name": "fei-shop",
+      "kind": "fei",
+      "path": "frontend/fei-shop",
+      "port": 4200
+    },
+    {
+      "name": "fei-admin",
+      "kind": "fei",
+      "path": "frontend/fei-admin",
+      "port": 4201
+    },
+    {
+      "name": "mei-catalog",
+      "kind": "mei",
+      "path": "frontend/mei-catalog",
+      "port": 9000
+    },
+    {
+      "name": "mei-cart",
+      "kind": "mei",
+      "path": "frontend/mei-cart",
+      "port": 9001
+    },
+    {
+      "name": "mei-users",
+      "kind": "mei",
+      "path": "frontend/mei-users",
+      "port": 9002
+    }
+  ]
+}

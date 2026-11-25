@@ -1,0 +1,150 @@
+{
+  "schema": {
+    "type": "object",
+    "required": [
+      "userId",
+      "age"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "userId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 5,
+        "pattern": "^[0-9]+$"
+      },
+      "age": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 150
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "maxItems": 2
+      },
+      "kind": {
+        "enum": [
+          "a",
+          "b"
+        ]
+      },
+      "note": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    }
+  },
+  "cases": [
+    {
+      "value": {
+        "userId": "123",
+        "age": 5
+      },
+      "valid": true
+    },
+    {
+      "value": {
+        "userId": "123",
+        "age": 5,
+        "tags": [
+          "x"
+        ],
+        "kind": "a",
+        "note": null
+      },
+      "valid": true
+    },
+    {
+      "value": {
+        "userId": "123"
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "userId": "",
+        "age": 5
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "userId": "abc",
+        "age": 5
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "userId": "123456",
+        "age": 5
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "userId": "123",
+        "age": -1
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "userId": "123",
+        "age": 1.5
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "userId": "123",
+        "age": 5,
+        "extra": 1
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "userId": "123",
+        "age": 5,
+        "tags": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "userId": "123",
+        "age": 5,
+        "kind": "z"
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "userId": "123",
+        "age": 5,
+        "note": 3
+      },
+      "valid": false
+    },
+    {
+      "value": "text",
+      "valid": false
+    },
+    {
+      "value": [
+        1
+      ],
+      "valid": false
+    }
+  ]
+}

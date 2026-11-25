@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "name": "commerce",
+  "services": [
+    {
+      "name": "gateway",
+      "path": "gateway",
+      "runtime": "node",
+      "role": "orchestrator",
+      "port": 3000,
+      "health": "/health/ready"
+    },
+    {
+      "name": "customers",
+      "path": "customers",
+      "runtime": "spring-boot",
+      "role": "service",
+      "prefix": "/customers",
+      "db": "postgres",
+      "port": 8081,
+      "health": "/actuator/health"
+    },
+    {
+      "name": "catalog",
+      "path": "catalog",
+      "runtime": "spring-boot",
+      "role": "service",
+      "prefix": "/catalog",
+      "db": "postgres",
+      "port": 8082,
+      "health": "/actuator/health"
+    },
+    {
+      "name": "orders",
+      "path": "orders",
+      "runtime": "spring-boot",
+      "role": "service",
+      "prefix": "/orders",
+      "db": "postgres",
+      "port": 8083,
+      "health": "/actuator/health"
+    }
+  ],
+  "frontends": [
+    {
+      "name": "fei-commerce",
+      "kind": "fei",
+      "path": "frontend/fei-commerce",
+      "port": 4200
+    },
+    {
+      "name": "mei-customers",
+      "kind": "mei",
+      "path": "frontend/mei-customers",
+      "port": 9000
+    },
+    {
+      "name": "mei-catalog",
+      "kind": "mei",
+      "path": "frontend/mei-catalog",
+      "port": 9001
+    },
+    {
+      "name": "mei-orders",
+      "kind": "mei",
+      "path": "frontend/mei-orders",
+      "port": 9002
+    }
+  ]
+}

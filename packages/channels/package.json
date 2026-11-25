@@ -1,0 +1,56 @@
+{
+  "name": "@pso/channels",
+  "version": "0.2.0",
+  "license": "Apache-2.0",
+  "author": "DevMboo",
+  "homepage": "https://devmboo.github.io/pso-web-docs/",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    }
+  },
+  "dependencies": {
+    "@pso/channels-client": "0.2.0",
+    "@pso/core": "0.2.0",
+    "@pso/http": "0.2.0",
+    "@pso/security": "0.2.0",
+    "reflect-metadata": "^0.2.2",
+    "ws": "^8.18.3"
+  },
+  "optionalDependencies": {
+    "ioredis": "^5.4.1"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "@pso/react-channels": "0.2.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "@pso/react-channels": {
+      "optional": true
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.map",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "description": "PSO Web framework: channels (WebSocket real-time delivery)"
+}

@@ -1,0 +1,59 @@
+### optimistic lock race (service level)
+org.springframework.orm.ObjectOptimisticLockingFailureException
+
+### page 0, size 2, sort price asc
+status 200
+{"items":[{"id":"a17f6a51-b108-4892-8bb9-14bd0617c4f5","sku":"MS-100","name":"Mouse","priceCents":1999,"createdAt":"2026-11-08T16:41:52.902432Z","updatedAt":"2026-11-08T16:41:52.902432Z"},{"id":"05a6fb6f-c80f-44c1-9e80-812f44e9db6c","sku":"KB-100","name":"Keyboard","priceCents":4999,"createdAt":"2026-11-08T16:41:52.824119Z","updatedAt":"2026-11-08T16:41:52.824119Z"}],"page":0,"size":2,"totalElements":5,"totalPages":3}
+
+### page 2, size 2, sort price asc
+status 200
+{"items":[{"id":"d306a897-fed4-4f26-8099-1d657a31f9e6","sku":"MN-100","name":"Monitor","priceCents":15999,"createdAt":"2026-11-08T16:41:52.942131Z","updatedAt":"2026-11-08T16:41:52.942131Z"}],"page":2,"size":2,"totalElements":5,"totalPages":3}
+
+### filter name=keyboard, sort name desc
+status 200
+{"items":[{"id":"e1156f8e-c659-41a1-81ee-8793a265739e","sku":"KB-200","name":"Keyboard Pro","priceCents":9999,"createdAt":"2026-11-08T16:41:52.862968Z","updatedAt":"2026-11-08T16:41:52.862968Z"},{"id":"05a6fb6f-c80f-44c1-9e80-812f44e9db6c","sku":"KB-100","name":"Keyboard","priceCents":4999,"createdAt":"2026-11-08T16:41:52.824119Z","updatedAt":"2026-11-08T16:41:52.824119Z"}],"page":0,"size":10,"totalElements":2,"totalPages":1}
+
+### filter with SQL metacharacters
+status 200
+{"items":[],"page":0,"size":10,"totalElements":0,"totalPages":0}
+
+### size too large
+status 400
+{"type":"urn:pso:problem:http-400","title":"HTTP 400","status":400,"detail":"page must be >= 0 and size between 1 and 50","instance":"/catalog/products/search","code":"PSO_HTTP_ERROR_400","correlationId":"b1a6feaf-5ced-44ab-8902-d095ffd20608","error":"page must be >= 0 and size between 1 and 50"}
+
+### sort not allowed
+status 400
+{"type":"urn:pso:problem:http-400","title":"HTTP 400","status":400,"detail":"sort must be one of [created, name, price]","instance":"/catalog/products/search","code":"PSO_HTTP_ERROR_400","correlationId":"6af62443-de56-4337-a1a7-429418466907","error":"sort must be one of [created, name, price]"}
+
+### search without the scope
+status 403
+{"type":"urn:pso:problem:auth-forbidden","title":"Access denied","status":403,"detail":"The authenticated caller is not allowed to perform this operation.","instance":"/catalog/products/search","code":"PSO_AUTH_FORBIDDEN","correlationId":"8ea626cf-81fb-428d-b780-6491f6b738dc","error":"forbidden"}
+
+### PATCH name only
+status 200
+{"id":"13764ded-43e9-40aa-a762-a034d22aae94","sku":"PT-100","name":"Renamed","priceCents":1000,"createdAt":"2026-11-08T16:41:53.324405Z","updatedAt":"2026-11-08T16:41:53.373395200Z"}
+
+### PATCH price only
+status 200
+{"id":"13764ded-43e9-40aa-a762-a034d22aae94","sku":"PT-100","name":"Renamed","priceCents":2500,"createdAt":"2026-11-08T16:41:53.324405Z","updatedAt":"2026-11-08T16:41:53.446691Z"}
+
+### PATCH with an empty body
+status 400
+{"type":"urn:pso:problem:validation-failed","title":"Validation failed","status":400,"detail":"The request is not valid; see the errors member.","instance":"/catalog/products/13764ded-43e9-40aa-a762-a034d22aae94","code":"PSO_VALIDATION_FAILED","correlationId":"c6a02e09-92ef-42f2-b554-4a2366b22128","errors":[{"field":"change","message":"at least one of name or priceCents is required"}],"error":"validation_failed","fields":{"change":"at least one of name or priceCents is required"}}
+
+### PATCH with an invalid price
+status 400
+{"type":"urn:pso:problem:validation-failed","title":"Validation failed","status":400,"detail":"The request is not valid; see the errors member.","instance":"/catalog/products/13764ded-43e9-40aa-a762-a034d22aae94","code":"PSO_VALIDATION_FAILED","correlationId":"d5c29fa0-d55b-4189-85b2-146ae2580b8c","errors":[{"field":"priceCents","message":"must be greater than 0"}],"error":"validation_failed","fields":{"priceCents":"must be greater than 0"}}
+
+### PATCH of an unknown id
+status 404
+{"type":"urn:pso:problem:http-not-found","title":"Resource not found","status":404,"detail":"No resource matches the request.","instance":"/catalog/products/00000000-0000-0000-0000-000000000000","code":"PSO_HTTP_NOT_FOUND","correlationId":"2543ce59-4e44-41a6-b37a-aeaf3daca02d","error":"not_found"}
+
+### PATCH without the scope
+status 403
+{"type":"urn:pso:problem:auth-forbidden","title":"Access denied","status":403,"detail":"The authenticated caller is not allowed to perform this operation.","instance":"/catalog/products/13764ded-43e9-40aa-a762-a034d22aae94","code":"PSO_AUTH_FORBIDDEN","correlationId":"b36ab35b-a37e-4192-bca2-7cd9564be35c","error":"forbidden"}
+
+### unmapped ObjectOptimisticLockingFailureException
+status 500
+{"type":"urn:pso:problem:internal-error","title":"Internal error","status":500,"detail":"The server could not complete the request.","instance":"/catalog/lock-demo","code":"PSO_INTERNAL_ERROR","correlationId":"6e399bdc-6307-4a8f-b5a1-70acea5de337","error":"internal_error"}
+

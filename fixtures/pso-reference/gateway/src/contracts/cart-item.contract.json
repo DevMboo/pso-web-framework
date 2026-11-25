@@ -1,0 +1,12 @@
+{
+  "name": "cart-item",
+  "version": "0.1.0",
+  "service": "catalog",
+  "operations": [
+    {
+      "id": "cartItemCreate",
+      "method": "POST",
+      "path": "/catalog/cart-items"
+    }
+  ]
+}

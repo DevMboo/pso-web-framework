@@ -1,0 +1,21 @@
+{
+  "events": [
+    {
+      "name": "it.user-created",
+      "version": 1,
+      "channel": "it-events",
+      "key": "run",
+      "compatibility": "full",
+      "schema": {
+        "type": "object",
+        "required": ["run", "n", "mode"],
+        "additionalProperties": false,
+        "properties": {
+          "run": { "type": "string", "minLength": 1 },
+          "n": { "type": "integer", "minimum": 0 },
+          "mode": { "enum": ["ok", "fail-twice", "always-fail"] }
+        }
+      }
+    }
+  ]
+}

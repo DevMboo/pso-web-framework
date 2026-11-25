@@ -1,0 +1,29 @@
+{
+  "name": "@pso/frontend-client",
+  "version": "0.2.0",
+  "license": "Apache-2.0",
+  "author": "DevMboo",
+  "homepage": "https://devmboo.github.io/pso-web-docs/",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@pso/channels-client": "0.2.0",
+    "@pso/frontend": "0.2.0"
+  },
+  "files": [
+    "dist",
+    "!**/*.map",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "description": "PSO Web framework: orchestrator-only HTTP client for browsers (native fetch, Problem Details, correlation, cancellation) and the FEI channels manager"
+}

@@ -1,0 +1,202 @@
+{
+  "schema": 1,
+  "kind": "pso-orchestrator-routes",
+  "generatedAt": "2026-11-15T21:42:41.529Z",
+  "service": "gateway",
+  "routes": [
+    {
+      "id": "customers.create",
+      "module": "customers",
+      "method": "POST",
+      "path": "/customers",
+      "controller": "CustomersController",
+      "action": "create",
+      "service": "customers",
+      "services": [],
+      "access": "guard:jwt",
+      "guard": "jwt",
+      "guards": [
+        "jwt"
+      ],
+      "scopes": [
+        "customers:write"
+      ],
+      "public": false,
+      "file": "src/routes/customers/ROUTES.pso.ts",
+      "upstream": "/customers",
+      "active": true
+    },
+    {
+      "id": "customers.findOne",
+      "module": "customers",
+      "method": "GET",
+      "path": "/customers/:id",
+      "controller": "CustomersController",
+      "action": "findOne",
+      "service": "customers",
+      "services": [],
+      "access": "guard:jwt",
+      "guard": "jwt",
+      "guards": [
+        "jwt"
+      ],
+      "scopes": [
+        "customers:read"
+      ],
+      "public": false,
+      "file": "src/routes/customers/ROUTES.pso.ts",
+      "upstream": "/customers/:id",
+      "active": true
+    },
+    {
+      "id": "orders.create",
+      "module": "orders",
+      "method": "POST",
+      "path": "/orders",
+      "controller": "OrdersController",
+      "action": "create",
+      "service": "orders",
+      "services": [],
+      "access": "guard:jwt",
+      "guard": "jwt",
+      "guards": [
+        "jwt"
+      ],
+      "scopes": [
+        "orders:write"
+      ],
+      "public": false,
+      "file": "src/routes/orders/ROUTES.pso.ts",
+      "upstream": "/orders",
+      "active": true
+    },
+    {
+      "id": "orders.findOne",
+      "module": "orders",
+      "method": "GET",
+      "path": "/orders/:id",
+      "controller": "OrdersController",
+      "action": "findOne",
+      "service": "orders",
+      "services": [],
+      "access": "guard:jwt",
+      "guard": "jwt",
+      "guards": [
+        "jwt"
+      ],
+      "scopes": [
+        "orders:read"
+      ],
+      "public": false,
+      "file": "src/routes/orders/ROUTES.pso.ts",
+      "upstream": "/orders/:id",
+      "active": true
+    },
+    {
+      "id": "overview.show",
+      "module": "overview",
+      "method": "GET",
+      "path": "/overview/orders/:id",
+      "controller": "OverviewController",
+      "action": "show",
+      "service": "",
+      "services": [
+        "orders",
+        "customers",
+        "catalog"
+      ],
+      "access": "guard:jwt",
+      "guard": "jwt",
+      "guards": [
+        "jwt"
+      ],
+      "scopes": [
+        "orders:read"
+      ],
+      "public": false,
+      "file": "src/routes/overview/ROUTES.pso.ts",
+      "upstream": "/overview/orders/:id",
+      "active": true
+    },
+    {
+      "id": "playground.index",
+      "module": "playground",
+      "method": "GET",
+      "path": "/playground",
+      "controller": "PlaygroundController",
+      "action": "index",
+      "service": "playground",
+      "services": [],
+      "access": "public",
+      "guard": null,
+      "guards": [],
+      "scopes": [],
+      "public": true,
+      "file": "src/routes/playground/ROUTES.pso.ts",
+      "upstream": "/playground",
+      "active": true
+    },
+    {
+      "id": "playground.asset",
+      "module": "playground",
+      "method": "GET",
+      "path": "/playground/:asset",
+      "controller": "PlaygroundController",
+      "action": "asset",
+      "service": "playground",
+      "services": [],
+      "access": "public",
+      "guard": null,
+      "guards": [],
+      "scopes": [],
+      "public": true,
+      "file": "src/routes/playground/ROUTES.pso.ts",
+      "upstream": "/playground/:asset",
+      "active": true
+    },
+    {
+      "id": "products.create",
+      "module": "products",
+      "method": "POST",
+      "path": "/products",
+      "controller": "ProductsController",
+      "action": "create",
+      "service": "catalog",
+      "services": [],
+      "access": "guard:jwt",
+      "guard": "jwt",
+      "guards": [
+        "jwt"
+      ],
+      "scopes": [
+        "catalog:write"
+      ],
+      "public": false,
+      "file": "src/routes/products/ROUTES.pso.ts",
+      "upstream": "/products",
+      "active": true
+    },
+    {
+      "id": "products.findOne",
+      "module": "products",
+      "method": "GET",
+      "path": "/products/:id",
+      "controller": "ProductsController",
+      "action": "findOne",
+      "service": "catalog",
+      "services": [],
+      "access": "guard:jwt",
+      "guard": "jwt",
+      "guards": [
+        "jwt"
+      ],
+      "scopes": [
+        "catalog:read"
+      ],
+      "public": false,
+      "file": "src/routes/products/ROUTES.pso.ts",
+      "upstream": "/products/:id",
+      "active": true
+    }
+  ]
+}

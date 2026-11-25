@@ -1,0 +1,7 @@
+# h2: in-memory H2 for local development. Activate on purpose:  ./mvnw spring-boot:run -Dspring-boot.run.profiles=h2
+# (that also switches on the Maven profile of the same name, which adds the persistence starter and H2). To combine it with the local
+# conveniences use:  ./mvnw -Ph2 spring-boot:run -Dspring-boot.run.profiles=local,h2
+# Nothing is written to disk and the H2 console stays off. PSO refuses to start with this profile together with staging or prod.
+pso:
+  database:
+    provider: h2

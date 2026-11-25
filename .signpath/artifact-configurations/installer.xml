@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SignPath artifact configuration "installer" (signing request 2 of 2 of a PSO Web release).
+  The submitted GitHub artifact is a ZIP holding exactly ONE file: the Inno Setup installer PSO-Web-<label>-win-x64.exe, built in the same
+  workflow run with the uninstaller signed by request 1 embedded. Only this file is signed: the bundled node.exe is inside the compressed
+  installer payload and keeps the OpenJS Foundation's signature (upstream binaries are never signed with this project's certificate).
+  Its version resource: ProductName "PSO Web Framework", ProductVersion and FileVersion = the release label (numeric major.minor.patch.0).
+  PREPARED: validate it in the SignPath artifact configuration editor when the project is created.
+-->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <pe-file path="PSO-Web-*-win-x64.exe" product-name="PSO Web Framework" max-matches="1">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

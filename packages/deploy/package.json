@@ -1,0 +1,30 @@
+{
+  "name": "@pso/deploy",
+  "version": "0.2.0",
+  "license": "Apache-2.0",
+  "author": "DevMboo",
+  "homepage": "https://devmboo.github.io/pso-web-docs/",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "typescript": "^5.9.3",
+    "@pso/frontend": "0.2.0"
+  },
+  "files": [
+    "dist",
+    "agent",
+    "!**/*.map",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "description": "PSO Web framework: cloud lifecycle and operations (deployment engine, runtime agent, credentials)"
+}

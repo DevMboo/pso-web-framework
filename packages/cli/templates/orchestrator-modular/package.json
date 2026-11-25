@@ -1,0 +1,29 @@
+{
+  "name": "{{name}}",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "dev": "tsc -p . && node --env-file-if-exists=.env dist/main.js",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "tsc -p tests && node --test \".test-dist/tests/**/*.test.js\""
+  },
+  "dependencies": {
+    "@pso/core": "{{coreSpec}}",
+    "@pso/http": "{{httpSpec}}",
+    "@pso/security": "{{securitySpec}}",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist",
+    "package.json"
+  ]
+}

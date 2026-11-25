@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SignPath artifact configuration "inno-uninstaller" (signing request 1 of 2 of a PSO Web release).
+  The submitted GitHub artifact is a ZIP holding exactly ONE file: Inno Setup's uninstaller uninst-<inno version>-<hash>.e32, which is also the
+  temporary copy of Setup that runs from TEMP. It is built in the same workflow run (pso dist installer - -signed-uninstaller-dir).
+  Its version resource: ProductName "PSO Web Framework", ProductVersion = the release label (numeric major.minor.patch.0); FileVersion is Inno Setup's own.
+  PREPARED: validate it in the SignPath artifact configuration editor when the project is created (the editor checks the schema).
+-->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <pe-file path="uninst-*.e32" product-name="PSO Web Framework" max-matches="1">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

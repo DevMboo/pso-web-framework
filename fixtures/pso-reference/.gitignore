@@ -1,0 +1,6 @@
+node_modules
+dist
+target
+.pso/
+# PSO infrastructure (.infra/): key material, secrets, state and generated configuration are never committed
+.infra/

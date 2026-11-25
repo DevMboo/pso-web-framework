@@ -1,0 +1,10 @@
+node_modules
+target
+dist
+.git
+.pso
+keys
+*.pem
+.env
+.env.*
+*.log

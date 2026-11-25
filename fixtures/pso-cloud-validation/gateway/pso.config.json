@@ -1,0 +1,9 @@
+{
+  "dispatch": {
+    "enabled": false,
+    "provider": "rabbitmq",
+    "rabbitmq": {
+      "url": "${env:RABBITMQ_URL}"
+    }
+  }
+}

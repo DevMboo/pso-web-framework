@@ -1,0 +1,30 @@
+{
+  "events": [
+    {
+      "name": "orders.placed",
+      "version": 1,
+      "channel": "orders.events",
+      "key": "orderId",
+      "compatibility": "full",
+      "schema": {
+        "type": "object",
+        "required": [
+          "orderId",
+          "productId",
+          "quantity"
+        ],
+        "properties": {
+          "orderId": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  ]
+}

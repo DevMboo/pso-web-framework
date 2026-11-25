@@ -1,0 +1,84 @@
+{
+  "events": [
+    {
+      "name": "orders.created",
+      "version": 1,
+      "channel": "orders.events",
+      "key": "orderId",
+      "publish": false,
+      "schema": {
+        "type": "object",
+        "required": [
+          "orderId",
+          "customerId",
+          "productId",
+          "quantity"
+        ],
+        "properties": {
+          "orderId": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "inventory.reserved",
+      "version": 1,
+      "channel": "inventory.events",
+      "key": "orderId",
+      "schema": {
+        "type": "object",
+        "required": [
+          "orderId",
+          "productId",
+          "quantity"
+        ],
+        "properties": {
+          "orderId": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "name": "inventory.rejected",
+      "version": 1,
+      "channel": "inventory.events",
+      "key": "orderId",
+      "schema": {
+        "type": "object",
+        "required": [
+          "orderId",
+          "productId",
+          "quantity"
+        ],
+        "properties": {
+          "orderId": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  ]
+}

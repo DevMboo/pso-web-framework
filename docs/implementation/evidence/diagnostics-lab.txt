@@ -1,0 +1,193 @@
+### baseline
+$ pso validate
+gateway: 4 resource(s), digest cc35d7a3b5c6
+catalog: 3 resource(s), digest 4731e3e29002
+OK
+
+### controller not registered in MODULE.pso.ts
+$ pso validate
+ERROR   PSO_MODULE_003 gateway/src/routes/orders/MODULE.pso.ts: Controller is not declared in MODULE.pso.ts.
+
+Module: orders
+Controller: OrdersController
+
+A controller absent from the module declaration is never registered.
+
+Controller rejected.
+ERROR   PSO_ROUTE_001 gateway/src/routes/orders/ROUTES.pso.ts: Route references a controller that is not part of the module.
+
+Module: orders
+Route: GET /orders
+Controller: OrdersController
+Action: list
+
+Expected: OrdersController listed in MODULE.pso.ts controllers
+Found: controllers: []
+
+Route activation denied.
+gateway: 4 resource(s), digest cc35d7a3b5c6
+catalog: 3 resource(s), digest 4731e3e29002
+FAILED
+
+### route points at an action that does not exist
+$ pso validate
+ERROR   PSO_ROUTE_002 gateway/src/routes/orders/ROUTES.pso.ts: Controller action does not exist.
+
+Module: orders
+Route: GET /orders
+Controller: OrdersController
+Action: listAll
+
+Expected: method listAll() on OrdersController
+Found: actions: list
+
+Route activation denied.
+gateway: 4 resource(s), digest cc35d7a3b5c6
+catalog: 3 resource(s), digest 4731e3e29002
+FAILED
+
+### route method differs from the decorator
+$ pso validate
+ERROR   PSO_ROUTE_004 gateway/src/routes/orders/ROUTES.pso.ts: Route declaration mismatch.
+
+Module: orders
+Route: POST /orders
+Controller: OrdersController
+Action: list
+
+Expected: @Post("/")
+Found: @Get("/")
+
+Route activation denied.
+gateway: 4 resource(s), digest cc35d7a3b5c6
+catalog: 3 resource(s), digest 4731e3e29002
+FAILED
+
+### route path differs from the decorator
+$ pso validate
+ERROR   PSO_ROUTE_005 gateway/src/routes/orders/ROUTES.pso.ts: Route path does not match the controller.
+
+Module: orders
+Route: GET /order
+Controller: OrdersController
+Action: list
+
+Expected: path "/orders" (from @RestController("/orders") + @Get("/"))
+Found: path "/order"
+
+Route activation denied.
+gateway: 4 resource(s), digest cc35d7a3b5c6
+catalog: 3 resource(s), digest 4731e3e29002
+FAILED
+
+### route references a guard that does not exist
+$ pso validate
+ERROR   PSO_ROUTE_008 gateway/src/routes/orders/ROUTES.pso.ts: Unknown guard.
+
+Module: orders
+Route: GET /orders
+Controller: OrdersController
+Action: list
+
+Expected: an existing guard named "jwtt"
+Found: available: jwt
+
+Route activation denied.
+gateway: 4 resource(s), digest cc35d7a3b5c6
+catalog: 3 resource(s), digest 4731e3e29002
+FAILED
+
+### route forwards to a service that is not in the workspace
+$ pso validate
+ERROR   PSO_ROUTE_010 gateway/src/routes/orders/ROUTES.pso.ts: Route targets an unknown service.
+
+Module: orders
+Route: GET /orders
+
+Expected: one of catalog
+Found: billing
+
+Route activation denied.
+gateway: 4 resource(s), digest cc35d7a3b5c6
+catalog: 3 resource(s), digest 4731e3e29002
+FAILED
+
+### decorated action with no route (ROUTES.pso.ts empty)
+$ pso validate
+gateway: 4 resource(s), digest cc35d7a3b5c6
+catalog: 3 resource(s), digest 4731e3e29002
+OK
+
+### ROUTES.pso.ts deleted
+$ pso validate
+ERROR   PSO_MODULE_002 gateway/src/routes/orders/MODULE.pso.ts: Route registry missing.
+
+Module: orders
+
+routes/orders/ROUTES.pso.ts does not exist. Controllers are never exposed without an explicit route registry.
+
+No route of this module is activated.
+gateway: 3 resource(s), digest 0963449bc5d1
+catalog: 3 resource(s), digest 4731e3e29002
+FAILED
+
+### two services on one port
+$ pso validate
+ERROR   PSO_PORT_CONFLICT pso.workspace.json: Services "gateway" and "catalog" both use port 3000
+        hint: Give each service its own port
+
+FAILED
+
+### prefix in pso.workspace.json differs from application.yml
+$ pso validate
+gateway: 4 resource(s), digest cc35d7a3b5c6
+catalog: 3 resource(s), digest 4731e3e29002
+OK
+
+### a mapper outside adapters/
+$ pso validate
+ERROR   PSO_MISPLACED_RESOURCE catalog/src/main/java/com/pso/catalog/misc/OrderMapper.java: mapper "OrderMapper" must live in a "adapters/" directory
+        hint: Move it to adapters/
+gateway: 4 resource(s), digest cc35d7a3b5c6
+catalog: 3 resource(s), digest 4731e3e29002
+FAILED
+
+### security check of a workspace with no JWT configuration
+$ pso security:check
+HIGH     SEC005 gateway
+         jwt guard is used but security.jwt.issuer, security.jwt.audience, a key source (jwksUri or publicKeyFile) is not configured for "production"; the orchestrator will refuse to start
+         fix: Declare security.authentication.* in pso.config.json (or set the PSO_JWT_* environment variables)
+FAILED
+
+### security validate
+$ pso security:validate
+environment: development
+INVALID gateway (orchestrator)
+         high     PSO_SEC_MISSING: issuer is required (PSO_JWT_ISSUER)
+         high     PSO_SEC_MISSING: audience is required (PSO_JWT_AUDIENCE)
+         high     PSO_SEC_MISSING: a key source is required: security.authentication.jwks.uri (PSO_JWT_JWKS_URI) or security.authentication.publicKey.file (PSO_JWT_PUBLIC_KEY_FILE)
+ok      catalog (spring-service)
+
+Static validation only: key providers (JWKS reachability) are checked when each service starts.
+
+### doctor
+$ pso doctor
+ok      node    v24.18.0  (>=24)
+ok      java    java version "25.0.3" 2026-04-21 LTS  (>=21 for Spring Boot services)
+missing mvn     not found  (optional (or use Docker))
+ok      docker  Docker version 29.6.1, build 8900f1d  (optional)
+(node:46892) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+### config validate
+$ pso config:validate
+OK
+
+### services graph
+$ pso services:graph
+startup order: catalog -> gateway
+
+### services health with nothing running
+$ pso services:health
+DOWN  catalog            http://127.0.0.1:8081/actuator/health
+UP    gateway            http://127.0.0.1:3000/health/ready  11ms

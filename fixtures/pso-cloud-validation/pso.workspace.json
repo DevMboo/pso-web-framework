@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "name": "pso-cloud-validation",
+  "services": [
+    {
+      "name": "customers",
+      "path": "customers",
+      "runtime": "spring-boot",
+      "role": "service",
+      "prefix": "/customers",
+      "db": "postgres",
+      "port": 8201,
+      "health": "/actuator/health"
+    },
+    {
+      "name": "catalog",
+      "path": "catalog",
+      "runtime": "spring-boot",
+      "role": "service",
+      "prefix": "/catalog",
+      "db": "postgres",
+      "port": 8202,
+      "health": "/actuator/health"
+    },
+    {
+      "name": "orders",
+      "path": "orders",
+      "runtime": "spring-boot",
+      "role": "service",
+      "prefix": "/orders",
+      "db": "postgres",
+      "port": 8203,
+      "health": "/actuator/health"
+    },
+    {
+      "name": "gateway",
+      "path": "gateway",
+      "runtime": "node",
+      "role": "orchestrator",
+      "port": 3000,
+      "health": "/health/ready"
+    }
+  ]
+}

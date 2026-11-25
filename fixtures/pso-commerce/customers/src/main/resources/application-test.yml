@@ -1,0 +1,8 @@
+# test: automated tests. No throttling so test suites are not rate limited.
+logging:
+  level:
+    root: WARN
+pso:
+  limits:
+    requests:
+      enabled: false

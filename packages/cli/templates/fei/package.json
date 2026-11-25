@@ -1,0 +1,37 @@
+{
+  "name": "{{name}}",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "rspack serve",
+    "build": "rspack build --mode production",
+    "typecheck": "pso-frontend generate && tsc --noEmit",
+    "test": "node --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@module-federation/enhanced": "{{mf}}",
+    "@pso/frontend": "0.1.0",
+    "@pso/frontend-client": "0.1.0",
+    "@pso/frontend-react": "0.1.0",
+    "react": "{{react}}",
+    "react-dom": "{{react}}",
+    "react-icons": "{{icons}}",
+    "react-router-dom": "{{router}}"
+  },
+  "devDependencies": {
+    "@rspack/cli": "{{rspack}}",
+    "@rspack/core": "{{rspack}}",
+    "@rspack/dev-server": "{{devServer}}",
+    "@tailwindcss/postcss": "{{tailwind}}",
+    "@types/node": "^24.0.0",
+    "@types/react": "{{typesReact}}",
+    "@types/react-dom": "{{typesReactDom}}",
+    "css-loader": "{{cssLoader}}",
+    "postcss": "{{postcss}}",
+    "postcss-loader": "{{postcssLoader}}",
+    "tailwindcss": "{{tailwind}}",
+    "typescript": "{{typescript}}"
+  },
+  "engines": { "node": ">=24" }
+}

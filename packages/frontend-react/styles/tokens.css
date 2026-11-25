@@ -1,0 +1,27 @@
+/*
+ * PSO design tokens, shared by the FEI shell and every MEI.
+ *
+ * Contract: colors, radii and spacing come from CSS custom properties (--pso-*). The FEI sets their values (light and dark), a MEI only
+ * READS them, so independent teams stay visually coherent without sharing a component library. This file contains no reset and no
+ * element selectors: the one Preflight (Tailwind reset) is loaded by the FEI. A MEI's stylesheet imports this file and the Tailwind
+ * utilities layer only.
+ */
+@layer theme, base, components, utilities;
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  --color-bg: var(--pso-bg);
+  --color-surface: var(--pso-surface);
+  --color-surface-2: var(--pso-surface-2);
+  --color-fg: var(--pso-fg);
+  --color-muted: var(--pso-muted);
+  --color-line: var(--pso-line);
+  --color-brand: var(--pso-brand);
+  --color-brand-fg: var(--pso-brand-fg);
+  --color-ok: var(--pso-ok);
+  --color-warn: var(--pso-warn);
+  --color-bad: var(--pso-bad);
+  --radius-pso: var(--pso-radius);
+  --font-sans: var(--pso-font);
+}

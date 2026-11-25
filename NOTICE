@@ -1,0 +1,14 @@
+PSO Web Framework
+Copyright 2026 DevMboo
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The Windows distribution of this product also contains third-party software, each component under its own license; those licenses are
+reproduced in THIRD-PARTY-NOTICES.txt, which accompanies every release:
+
+- Node.js runtime (bundled privately in the Windows distribution), Copyright Node.js contributors, MIT License, with the licenses of the
+  components Node.js includes (LICENSE-node.txt).
+- npm packages included in the distribution, each under its own license (MIT, Apache-2.0, BSD-3-Clause or ISC).
+
+The Windows installer and uninstaller are built with Inno Setup, Copyright (C) 1997-2026 Jordan Russell, Portions Copyright (C) 2000-2026
+Martijn Laan, https://jrsoftware.org/ (Inno Setup License).

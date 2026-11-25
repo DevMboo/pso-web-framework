@@ -1,0 +1,4 @@
+# dev: a shared development environment. Origins and secrets come from the environment, never from this file.
+logging:
+  level:
+    com.pso: INFO

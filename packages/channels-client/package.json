@@ -1,0 +1,25 @@
+{
+  "name": "@pso/channels-client",
+  "version": "0.2.0",
+  "license": "Apache-2.0",
+  "author": "DevMboo",
+  "homepage": "https://devmboo.github.io/pso-web-docs/",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.map",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "description": "PSO Channels client: framework-independent WebSocket SDK for browsers, Electron and Node (no dependencies)"
+}

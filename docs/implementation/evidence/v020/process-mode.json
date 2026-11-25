@@ -1,0 +1,6 @@
+{
+  "at": "2026-11-24T09:32:35.872Z",
+  "command": "pso dev --with-dependencies --service catalog --smoke --timeout 300",
+  "result": "catalog-db and idp started as the dependencies stack (healthy); catalog started as a local process with .infra/env/local/catalog.env (12 variables), DB_PASSWORD resolved from secret://db-catalog at start, READY/UP on 127.0.0.1:8091; smoke stopped the process and the dependencies",
+  "note": "catalog port moved to 8091 in a scratch copy because another process on this machine owns 8081"
+}

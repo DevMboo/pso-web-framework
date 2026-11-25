@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.pso</groupId>
+  <artifactId>pso-bom</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>PSO Web Framework - BOM</name>
+  <description>Bill of materials: compatible versions of every PSO artifact. Import it, then declare starters without versions.</description>
+  <url>https://devmboo.github.io/pso-web-docs/</url>
+  <organization>
+    <name>PSO Web Framework</name>
+    <url>https://devmboo.github.io/pso-web-docs/</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>DevMboo</id>
+      <name>DevMboo</name>
+      <url>https://github.com/DevMboo</url>
+      <roles>
+        <role>maintainer</role>
+      </roles>
+    </developer>
+  </developers>
+  <!-- the planned public source repository (not published yet); replaces the scm inherited from spring-boot-starter-parent -->
+  <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
+    <url>https://github.com/DevMboo/pso-web-framework</url>
+    <connection>scm:git:https://github.com/DevMboo/pso-web-framework.git</connection>
+    <developerConnection>scm:git:https://github.com/DevMboo/pso-web-framework.git</developerConnection>
+  </scm>
+  <properties>
+    <aws.sdk.version>2.59.0</aws.sdk.version>
+    <azure.sdk.bom.version>1.3.10</azure.sdk.bom.version>
+  </properties>
+  <dependencyManagement>
+    <dependencies>
+      <!-- provider SDKs of PSO Storage (optional: a service declares the one it uses, without a version) -->
+      <dependency><groupId>software.amazon.awssdk</groupId><artifactId>bom</artifactId><version>${aws.sdk.version}</version><type>pom</type><scope>import</scope></dependency>
+      <dependency><groupId>com.azure</groupId><artifactId>azure-sdk-bom</artifactId><version>${azure.sdk.bom.version}</version><type>pom</type><scope>import</scope></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-dispatch-api</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-dispatch-test</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-spring-boot-autoconfigure</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-spring-boot-starter</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-security-spring-boot-starter</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-http-spring-boot-starter</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-data-spring-boot-starter</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-storage-spring-boot-starter</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-channels-spring-boot-starter</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-dispatch-redis-starter</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-dispatch-rabbitmq-starter</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-dispatch-kafka-starter</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-ratelimit-redis-starter</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-observability-starter</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.pso</groupId><artifactId>pso-test</artifactId><version>${project.version}</version></dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>

@@ -1,0 +1,5 @@
+#!/bin/sh
+# PSO framework DEVELOPMENT command: runs this checkout's CLI (packages/cli/bin/pso.js) with the Node.js on PATH.
+# It is not the installed distribution (use "pso" for that). See packages/cli/docs/devops/installed-and-development-cli.md
+here=$(cd "$(dirname "$0")" && pwd)
+exec node "$here/../../packages/cli/bin/pso.js" "$@"

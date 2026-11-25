@@ -1,0 +1,4 @@
+com.pso.spring.autoconfigure.PsoAutoConfiguration
+com.pso.spring.autoconfigure.PsoWebAutoConfiguration
+com.pso.spring.autoconfigure.dispatch.PsoDispatchAutoConfiguration
+com.pso.spring.autoconfigure.problem.PsoProblemAutoConfiguration

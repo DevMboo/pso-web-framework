@@ -1,0 +1,128 @@
+### anonymous (one response: the header and the body come from the same curl call)
+HTTP/1.1 401 Unauthorized
+content-type: application/problem+json; charset=utf-8
+x-correlation-id: d902443f-1ecb-4665-a027-e9c0792bdc6d
+www-authenticate: Bearer
+{"type":"urn:pso:problem:auth-unauthorized","title":"Authentication required","status":401,"detail":"Valid credentials are required to access this resource.","code":"PSO_AUTH_UNAUTHORIZED","error":"unauthorized","instance":"/products","correlationId":"d902443f-1ecb-4665-a027-e9c0792bdc6d"}
+
+### create KB-100
+HTTP/1.1 201 Created
+x-correlation-id: 4cb16462-9f0d-48ee-80d5-37b79f8293a4
+content-type: application/json
+
+{"id":"fba2513e-06ca-4d2c-a56b-a3ed9c83ba16","sku":"KB-100","name":"Keyboard","priceCents":4999,"createdAt":"2026-11-08T16:05:01.842840100Z","updatedAt":"2026-11-08T16:05:01.842840100Z"}
+
+
+### create MS-200
+HTTP/1.1 201 Created
+x-correlation-id: 93663a77-cac2-4605-865a-a7867169e272
+content-type: application/json
+
+{"id":"a2240e93-c14e-41bf-8366-5b85b1c778d6","sku":"MS-200","name":"Mouse","priceCents":1999,"createdAt":"2026-11-08T16:05:02.058140400Z","updatedAt":"2026-11-08T16:05:02.058140400Z"}
+
+
+### db after create
+  sku   |   name   | price_cents | version 
+--------+----------+-------------+---------
+ KB-100 | Keyboard |        4999 |       0
+ MS-200 | Mouse    |        1999 |       0
+(2 rows)
+
+### list
+HTTP/1.1 200 OK
+x-correlation-id: b7deb668-3f3e-4f01-93d1-bacea36b0ec0
+content-type: application/json
+
+[{"id":"fba2513e-06ca-4d2c-a56b-a3ed9c83ba16","sku":"KB-100","name":"Keyboard","priceCents":4999,"createdAt":"2026-11-08T16:05:01.842840Z","updatedAt":"2026-11-08T16:05:01.842840Z"},{"id":"a2240e93-c14e-41bf-8366-5b85b1c778d6","sku":"MS-200","name":"Mouse","priceCents":1999,"createdAt":"2026-11-08T16:05:02.058140Z","updatedAt":"2026-11-08T16:05:02.058140Z"}]
+
+
+ID=fba2513e-06ca-4d2c-a56b-a3ed9c83ba16
+### get by id
+HTTP/1.1 200 OK
+x-correlation-id: 26f8a035-b8eb-42c4-957e-7755f0398bd9
+content-type: application/json
+
+{"id":"fba2513e-06ca-4d2c-a56b-a3ed9c83ba16","sku":"KB-100","name":"Keyboard","priceCents":4999,"createdAt":"2026-11-08T16:05:01.842840Z","updatedAt":"2026-11-08T16:05:01.842840Z"}
+
+
+### update
+HTTP/1.1 200 OK
+x-correlation-id: 4261c665-03bd-47d7-9a24-4254e6bb0a55
+content-type: application/json
+
+{"id":"fba2513e-06ca-4d2c-a56b-a3ed9c83ba16","sku":"KB-100","name":"Mechanical keyboard","priceCents":5999,"createdAt":"2026-11-08T16:05:01.842840Z","updatedAt":"2026-11-08T16:05:02.767699100Z"}
+
+
+### db after update
+  sku   |        name         | price_cents | version | touched 
+--------+---------------------+-------------+---------+---------
+ KB-100 | Mechanical keyboard |        5999 |       1 | t
+ MS-200 | Mouse               |        1999 |       0 | f
+(2 rows)
+
+### delete
+HTTP/1.1 204 No Content
+x-correlation-id: 8bf48a8d-54e6-48a9-960f-8fc146b2401d
+
+
+
+### db after delete
+  sku   | name  
+--------+-------
+ MS-200 | Mouse
+(1 row)
+
+### get after delete
+HTTP/1.1 404 Not Found
+x-correlation-id: 3486a2dd-1b04-49c3-ac73-5a59a99ea4b5
+content-type: application/problem+json
+
+{"type":"urn:pso:problem:http-not-found","title":"Resource not found","status":404,"detail":"No resource matches the request.","instance":"/catalog/products/fba2513e-06ca-4d2c-a56b-a3ed9c83ba16","code":"PSO_HTTP_NOT_FOUND","correlationId":"3486a2dd-1b04-49c3-ac73-5a59a99ea4b5","error":"not_found"}
+
+
+### invalid
+HTTP/1.1 400 Bad Request
+x-correlation-id: 38d44be5-5afc-478d-a855-5f5bb9973759
+content-type: application/problem+json
+
+{"type":"urn:pso:problem:validation-failed","title":"Validation failed","status":400,"detail":"The request is not valid; see the errors member.","instance":"/catalog/products","code":"PSO_VALIDATION_FAILED","correlationId":"38d44be5-5afc-478d-a855-5f5bb9973759","errors":[{"field":"sku","message":"must be 3-32 characters: A-Z, 0-9 or -"},{"field":"name","message":"não deve estar em branco"},{"field":"priceCents","message":"deve ser maior que 0"}],"error":"validation_failed","fields":{"sku":"must be 3-32 characters: A-Z, 0-9 or -","name":"não deve estar em branco","priceCents":"deve ser maior que 0"}}
+
+
+### duplicate
+HTTP/1.1 409 Conflict
+x-correlation-id: f6487618-8a31-4679-8d3f-203dd5ec84c6
+content-type: application/problem+json
+
+{"type":"urn:pso:problem:http-409","title":"HTTP 409","status":409,"detail":"a product with this sku already exists","instance":"/catalog/products","code":"PSO_HTTP_ERROR_409","correlationId":"f6487618-8a31-4679-8d3f-203dd5ec84c6","error":"a product with this sku already exists"}
+
+
+### read-only token writes
+HTTP/1.1 403 Forbidden
+content-type: application/problem+json; charset=utf-8
+x-correlation-id: 7f5276c5-f1c3-4be0-8a3a-0dac15f9f95c
+
+{"type":"urn:pso:problem:auth-forbidden","title":"Access denied","status":403,"detail":"The authenticated caller is not allowed to perform this operation.","code":"PSO_AUTH_FORBIDDEN","error":"forbidden","instance":"/products","correlationId":"7f5276c5-f1c3-4be0-8a3a-0dac15f9f95c"}
+
+
+### malformed id
+HTTP/1.1 400 Bad Request
+x-correlation-id: ad240a75-c848-4134-8e64-05d42bb5df91
+content-type: application/problem+json
+
+{"type":"urn:pso:problem:http-bad-request","title":"Bad request","status":400,"detail":"The request could not be understood.","instance":"/catalog/products/not-a-uuid","code":"PSO_HTTP_BAD_REQUEST","correlationId":"ad240a75-c848-4134-8e64-05d42bb5df91","error":"bad_request"}
+
+
+### malformed json
+HTTP/1.1 400 Bad Request
+x-correlation-id: c0729637-7662-4589-b829-ebdc7dab1998
+content-type: application/problem+json
+
+{"type":"urn:pso:problem:http-invalid-json","title":"Malformed JSON body","status":400,"detail":"The request body is not valid JSON.","instance":"/catalog/products","code":"PSO_HTTP_INVALID_JSON","correlationId":"c0729637-7662-4589-b829-ebdc7dab1998","error":"invalid_json"}
+
+
+### db at the end
+  sku   | name  | price_cents 
+--------+-------+-------------
+ MS-200 | Mouse |        1999
+(1 row)
+

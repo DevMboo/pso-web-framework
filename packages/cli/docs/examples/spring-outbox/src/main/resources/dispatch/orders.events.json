@@ -1,0 +1,11 @@
+{
+  "events": [
+    {
+      "name": "orders.created",
+      "version": 1,
+      "channel": "orders.created",
+      "key": "orderId",
+      "schema": { "type": "object", "required": ["orderId"], "properties": { "orderId": { "type": "string" } } }
+    }
+  ]
+}

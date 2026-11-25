@@ -1,0 +1,64 @@
+### search page 0 size 2 by price asc
+HTTP/1.1 200 OK
+x-correlation-id: 318591d4-3984-498e-86b8-d2d380fefab0
+content-type: application/json
+{"items":[{"id":"528ef8dd-6a12-4905-aec5-29bbc10248f2","sku":"MS-100","name":"Mouse","priceCents":1999,"createdAt":"2026-11-08T16:44:23.587978Z","updatedAt":"2026-11-08T16:44:23.587978Z"},{"id":"f42e9f36-3fd0-4c7f-8e5c-073088a9c988","sku":"KB-100","name":"Keyboard","priceCents":4999,"createdAt":"2026-11-08T16:44:23.396231Z","updatedAt":"2026-11-08T16:44:23.396231Z"}],"page":0,"size":2,"totalElements":5,"totalPages":3}
+
+### search page 2 size 2
+HTTP/1.1 200 OK
+x-correlation-id: 9b3baefe-93b2-4b5f-be4a-e01a73de8171
+content-type: application/json
+{"items":[{"id":"558838ac-1ec5-404f-94f0-a311aa20c433","sku":"MN-100","name":"Monitor","priceCents":15999,"createdAt":"2026-11-08T16:44:23.659674Z","updatedAt":"2026-11-08T16:44:23.659674Z"}],"page":2,"size":2,"totalElements":5,"totalPages":3}
+
+### filter keyboard, name desc
+HTTP/1.1 200 OK
+x-correlation-id: 931694ba-2cda-4bf2-8b71-386afb08d0f1
+content-type: application/json
+{"items":[{"id":"e340d986-bb72-4980-bafa-e9ffa7980c05","sku":"KB-200","name":"Keyboard Pro","priceCents":9999,"createdAt":"2026-11-08T16:44:23.529183Z","updatedAt":"2026-11-08T16:44:23.529183Z"},{"id":"f42e9f36-3fd0-4c7f-8e5c-073088a9c988","sku":"KB-100","name":"Keyboard","priceCents":4999,"createdAt":"2026-11-08T16:44:23.396231Z","updatedAt":"2026-11-08T16:44:23.396231Z"}],"page":0,"size":10,"totalElements":2,"totalPages":1}
+
+### sort not allowed
+HTTP/1.1 400 Bad Request
+x-correlation-id: 9dad2486-4fd2-41a7-ae1a-dbfd02fa503b
+content-type: application/problem+json
+{"type":"urn:pso:problem:http-400","title":"HTTP 400","status":400,"detail":"sort must be one of [created, name, price]","instance":"/catalog/products/search","code":"PSO_HTTP_ERROR_400","correlationId":"9dad2486-4fd2-41a7-ae1a-dbfd02fa503b","error":"sort must be one of [created, name, price]"}
+
+### size too large
+HTTP/1.1 400 Bad Request
+x-correlation-id: aaf9ef15-387a-49b5-8081-ab495236236d
+content-type: application/problem+json
+{"type":"urn:pso:problem:http-400","title":"HTTP 400","status":400,"detail":"page must be >= 0 and size between 1 and 50","instance":"/catalog/products/search","code":"PSO_HTTP_ERROR_400","correlationId":"aaf9ef15-387a-49b5-8081-ab495236236d","error":"page must be >= 0 and size between 1 and 50"}
+
+### search anonymous
+HTTP/1.1 401 Unauthorized
+content-type: application/problem+json; charset=utf-8
+x-correlation-id: c1d25b06-9f69-490f-81f5-d946fd46e66f
+{"type":"urn:pso:problem:auth-unauthorized","title":"Authentication required","status":401,"detail":"Valid credentials are required to access this resource.","code":"PSO_AUTH_UNAUTHORIZED","error":"unauthorized","instance":"/products/search","correlationId":"c1d25b06-9f69-490f-81f5-d946fd46e66f"}
+
+### PATCH price only
+HTTP/1.1 200 OK
+x-correlation-id: 1a448b9d-ab91-413e-ba4a-d54c67dc0c88
+content-type: application/json
+{"id":"558838ac-1ec5-404f-94f0-a311aa20c433","sku":"MN-100","name":"Monitor","priceCents":14999,"createdAt":"2026-11-08T16:44:23.659674Z","updatedAt":"2026-11-08T16:44:24.360857600Z"}
+
+### PATCH empty body
+HTTP/1.1 400 Bad Request
+x-correlation-id: dfd841cf-4e68-44ca-85e7-34ef6efedd9a
+content-type: application/problem+json
+{"type":"urn:pso:problem:validation-failed","title":"Validation failed","status":400,"detail":"The request is not valid; see the errors member.","instance":"/catalog/products/558838ac-1ec5-404f-94f0-a311aa20c433","code":"PSO_VALIDATION_FAILED","correlationId":"dfd841cf-4e68-44ca-85e7-34ef6efedd9a","errors":[{"field":"change","message":"at least one of name or priceCents is required"}],"error":"validation_failed","fields":{"change":"at least one of name or priceCents is required"}}
+
+### PATCH with the read scope
+HTTP/1.1 403 Forbidden
+content-type: application/problem+json; charset=utf-8
+x-correlation-id: b5a2254a-dd28-40ff-a88f-35c6deab5100
+{"type":"urn:pso:problem:auth-forbidden","title":"Access denied","status":403,"detail":"The authenticated caller is not allowed to perform this operation.","code":"PSO_AUTH_FORBIDDEN","error":"forbidden","instance":"/products/558838ac-1ec5-404f-94f0-a311aa20c433","correlationId":"b5a2254a-dd28-40ff-a88f-35c6deab5100"}
+
+### db
+  sku   |     name     | price_cents | version 
+--------+--------------+-------------+---------
+ HD-100 | Headset      |        8999 |       0
+ KB-100 | Keyboard     |        4999 |       0
+ KB-200 | Keyboard Pro |        9999 |       0
+ MN-100 | Monitor      |       14999 |       1
+ MS-100 | Mouse        |        1999 |       0
+(5 rows)
+

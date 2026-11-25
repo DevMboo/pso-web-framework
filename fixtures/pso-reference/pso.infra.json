@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "defaultEnvironment": "local",
+  "environments": {
+    "local": {
+      "kind": "development",
+      "domain": "pso.localhost",
+      "runtime": "docker",
+      "httpsPort": 8443,
+      "tls": {
+        "source": "pso-dev-ca"
+      },
+      "secrets": {
+        "provider": "local"
+      },
+      "dns": {
+        "provider": "none"
+      }
+    },
+    "staging": {
+      "kind": "staging",
+      "domain": "staging.pso.localhost",
+      "runtime": "docker",
+      "httpsPort": 9443,
+      "tls": {
+        "source": "external",
+        "dir": "/etc/pso-reference/tls"
+      },
+      "secrets": {
+        "provider": "file",
+        "dir": "/etc/pso-reference/secrets"
+      },
+      "dns": {
+        "provider": "external"
+      },
+      "deploy": {
+        "target": "ssh",
+        "connection": "staging-host",
+        "root": "/srv/pso"
+      }
+    }
+  },
+  "identity": {
+    "provider": "keycloak",
+    "realm": "pso-reference",
+    "users": [
+      {
+        "username": "ana",
+        "scopes": [
+          "catalog:read",
+          "cart:write",
+          "users:admin",
+          "accounts:read"
+        ]
+      },
+      {
+        "username": "bob",
+        "scopes": [
+          "catalog:read",
+          "cart:write"
+        ]
+      }
+    ]
+  },
+  "services": {
+    "accounts": {
+      "mtls": true
+    }
+  }
+}

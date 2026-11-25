@@ -1,0 +1,25 @@
+{
+  "_comment": "Scanner waivers. Every entry names a rule and a path (or path prefix) and MUST carry a reason; a waiver without a reason is ignored. Prefer fixing the artifact over adding an entry.",
+  "exceptions": [
+    {
+      "rule": "private-key",
+      "pathPrefix": "node_modules/jose/dist/",
+      "reason": "jose compares a PEM header string literal while parsing keys it is given; the match is the header text, not key material (reviewed 2026-11-16)."
+    },
+    {
+      "rule": "name-vcs",
+      "pathPrefix": "node_modules/@pso/cli/templates/",
+      "reason": "templates ship a .gitignore that becomes the developer's own file in generated projects (class C, developer-owned)."
+    },
+    {
+      "rule": "name-ai-history",
+      "path": "docs-site/ai/AGENTS.md",
+      "reason": "public LLM development guidance: the documentation portal generates assistant instruction files for DEVELOPERS to place in their own projects (generated from the public docs); it is not conversation history or internal context (reviewed 2026-11-16)."
+    },
+    {
+      "rule": "name-ai-history",
+      "path": "docs-site/ai/CLAUDE.md",
+      "reason": "public LLM development guidance: the documentation portal generates assistant instruction files for DEVELOPERS to place in their own projects (generated from the public docs); it is not conversation history or internal context (reviewed 2026-11-16)."
+    }
+  ]
+}

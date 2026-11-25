@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>PSO Commerce - Cloud Validation Playground</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/playground/styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+  <div class="brand"><span id="brand-icon"></span><div><strong>PSO Commerce</strong><span class="sub">Cloud Validation Playground</span></div></div>
+  <div class="top-chips">
+    <span class="chip" id="chip-origin" title="Every request goes to this origin and nowhere else"></span>
+    <button class="chip chip-btn" id="chip-token" type="button"></button>
+    <span class="chip" id="chip-ws"></span>
+  </div>
+</header>
+<div class="shell">
+  <nav class="nav" aria-label="Sections" id="nav"></nav>
+  <main id="main" tabindex="-1">
+    <section id="view-overview" class="view"></section>
+    <section id="view-customers" class="view" hidden></section>
+    <section id="view-catalog" class="view" hidden></section>
+    <section id="view-orders" class="view" hidden></section>
+    <section id="view-request" class="view" hidden></section>
+    <section id="view-activity" class="view" hidden></section>
+    <section id="view-events" class="view" hidden></section>
+  </main>
+  <aside class="exchange" aria-label="Last request and response" id="exchange"></aside>
+</div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<noscript>This playground needs JavaScript.</noscript>
+<script type="module" src="/playground/app.js"></script>
+</body>
+</html>

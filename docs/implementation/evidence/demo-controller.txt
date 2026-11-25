@@ -1,0 +1,33 @@
+(node:48612) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+$ GET /orders
+HTTP 200 application/json; charset=utf-8
+[{"id":"1","total":10},{"id":"2","total":25}]
+
+$ GET /orders/42
+HTTP 200 application/json; charset=utf-8
+{"id":"42","found":true}
+
+$ POST /orders
+HTTP 201 application/json; charset=utf-8
+{"created":true}
+
+$ GET /orders/nothing/now  (action returns undefined)
+HTTP 200 application/json; charset=utf-8
+null
+
+$ GET /orders/gone/now  (throw new HttpError(404, "not_found"))
+HTTP 404 application/problem+json; charset=utf-8
+{"type":"urn:pso:problem:http-not-found","title":"Resource not found","status":404,"detail":"No resource matches the request.","code":"PSO_HTTP_NOT_FOUND","error":"not_found","instance":"/orders/gone/now","correlationId":"doc-ctl-0001"}
+
+$ GET /orders/teapot/now  (throw new HttpError(418, "I am a teapot"))
+HTTP 418 application/problem+json; charset=utf-8
+{"type":"urn:pso:problem:http-418","title":"HTTP 418","status":418,"detail":"I am a teapot","code":"PSO_HTTP_ERROR_418","error":"I am a teapot","instance":"/orders/teapot/now","correlationId":"doc-ctl-0001"}
+
+$ GET /orders/boom/now  (throw new Error("database password is hunter2"))
+HTTP 500 application/problem+json; charset=utf-8
+{"type":"urn:pso:problem:internal-error","title":"Internal error","status":500,"detail":"The server could not complete the request.","code":"PSO_INTERNAL_ERROR","error":"internal_error","instance":"/orders/boom/now","correlationId":"doc-ctl-0001"}
+
+=== terminal (errors) ===
+2026-11-08 18:57:55.118 INFO  request (doc-ctl-0001)  traceId=41c5fced89f431e2502a6d9dc9e709d4 method=GET path=/orders/boom/now status=500 ms=1.2701

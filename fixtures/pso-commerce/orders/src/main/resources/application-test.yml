@@ -1,0 +1,10 @@
+# test: automated tests. No throttling so test suites are not rate limited.
+logging:
+  level:
+    root: WARN
+pso:
+  dispatch:
+    provider: memory   # tests publish and consume in process (com.pso:pso-dispatch-test): no broker is needed
+  limits:
+    requests:
+      enabled: false

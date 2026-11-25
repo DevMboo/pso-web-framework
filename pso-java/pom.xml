@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" child.project.url.inherit.append.path="false"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.5.6</version>
+    <relativePath/>
+  </parent>
+  <groupId>com.pso</groupId>
+  <artifactId>pso-parent</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>PSO Web Framework - Java (parent)</name>
+  <description>Spring Boot starters, auto-configuration and APIs for PSO Web Framework microservices.</description>
+  <url>https://devmboo.github.io/pso-web-docs/</url>
+  <organization>
+    <name>PSO Web Framework</name>
+    <url>https://devmboo.github.io/pso-web-docs/</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>DevMboo</id>
+      <name>DevMboo</name>
+      <url>https://github.com/DevMboo</url>
+      <roles>
+        <role>maintainer</role>
+      </roles>
+    </developer>
+  </developers>
+  <!-- the planned public source repository (not published yet); replaces the scm inherited from spring-boot-starter-parent -->
+  <scm child.scm.connection.inherit.append.path="false" child.scm.developerConnection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
+    <url>https://github.com/DevMboo/pso-web-framework</url>
+    <connection>scm:git:https://github.com/DevMboo/pso-web-framework.git</connection>
+    <developerConnection>scm:git:https://github.com/DevMboo/pso-web-framework.git</developerConnection>
+  </scm>
+  <properties>
+    <java.version>21</java.version>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  <modules>
+    <module>pso-bom</module>
+    <module>pso-dispatch-api</module>
+    <module>pso-dispatch-test</module>
+    <module>pso-spring-boot-autoconfigure</module>
+    <module>pso-spring-boot-starter</module>
+    <module>pso-security-spring-boot-starter</module>
+    <module>pso-http-spring-boot-starter</module>
+    <module>pso-data-spring-boot-starter</module>
+    <module>pso-storage-spring-boot-starter</module>
+    <module>pso-channels-spring-boot-starter</module>
+    <module>pso-dispatch-redis-starter</module>
+    <module>pso-dispatch-rabbitmq-starter</module>
+    <module>pso-dispatch-kafka-starter</module>
+    <module>pso-ratelimit-redis-starter</module>
+    <module>pso-observability-starter</module>
+    <module>pso-test</module>
+    <module>pso-integration-tests</module>
+  </modules>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <parameters>true</parameters>
+          <compilerArgs><arg>-Xlint:all,-processing,-serial</arg></compilerArgs>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

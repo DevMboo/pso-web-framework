@@ -1,0 +1,155 @@
+{
+  "options": {
+    "sort": [
+      "sku",
+      "name",
+      "price",
+      "createdAt",
+      "updatedAt"
+    ],
+    "directions": [
+      "asc",
+      "desc"
+    ],
+    "filters": [
+      "sku",
+      "name",
+      "active"
+    ],
+    "maxPageSize": 100,
+    "defaultPageSize": 20
+  },
+  "unauthorized": {
+    "type": "urn:pso:problem:auth-unauthorized",
+    "title": "Authentication required",
+    "status": 401,
+    "detail": "Valid credentials are required to access this resource.",
+    "code": "PSO_AUTH_UNAUTHORIZED",
+    "error": "unauthorized",
+    "instance": "/products",
+    "correlationId": "07ecab4f-cb24-4c42-bfe6-603eb9e49478"
+  },
+  "create": {
+    "status": 201,
+    "location": "/products/552178c7-02be-4534-9dd4-f0ca5c88b268",
+    "body": {
+      "id": "552178c7-02be-4534-9dd4-f0ca5c88b268",
+      "sku": "KB-100",
+      "name": "Keyboard KB-100",
+      "description": "Mechanical, 87 keys",
+      "price": "49.90",
+      "active": true,
+      "createdAt": "2026-11-24T19:28:17.754309Z",
+      "updatedAt": "2026-11-24T19:28:17.754330Z"
+    }
+  },
+  "page": {
+    "items": [
+      {
+        "id": "552178c7-02be-4534-9dd4-f0ca5c88b268",
+        "sku": "KB-100",
+        "name": "Keyboard KB-100",
+        "description": "Mechanical, 87 keys",
+        "price": "49.90",
+        "active": true,
+        "createdAt": "2026-11-24T19:28:17.754309Z",
+        "updatedAt": "2026-11-24T19:28:17.754330Z"
+      },
+      {
+        "id": "447a2ecf-9726-45b8-8277-06cd061e6e72",
+        "sku": "KB-101",
+        "name": "Keyboard KB-101",
+        "description": "Mechanical, 87 keys",
+        "price": "49.90",
+        "active": true,
+        "createdAt": "2026-11-24T19:28:17.942438Z",
+        "updatedAt": "2026-11-24T19:28:17.942446Z"
+      }
+    ],
+    "page": 0,
+    "size": 2,
+    "totalItems": 4,
+    "totalPages": 2
+  },
+  "invalid": {
+    "type": "urn:pso:problem:validation-failed",
+    "title": "Validation failed",
+    "status": 400,
+    "detail": "The request is not valid; see the errors member.",
+    "code": "PSO_VALIDATION_FAILED",
+    "error": "validation_failed",
+    "instance": "/products",
+    "correlationId": "ef6fa467-8aff-4652-8d4e-a14d983aee40",
+    "errors": [
+      {
+        "field": "unexpected",
+        "message": "is not allowed"
+      },
+      {
+        "field": "sku",
+        "message": "must contain only upper-case letters, digits and inner hyphens (for example KB-100)"
+      },
+      {
+        "field": "name",
+        "message": "is required"
+      },
+      {
+        "field": "price",
+        "message": "must be a decimal number with at most 10 integer and 2 fraction digits, as a string (for example \"12.50\")"
+      }
+    ]
+  },
+  "duplicate": {
+    "type": "urn:pso:problem:http-conflict",
+    "title": "Conflict",
+    "status": 409,
+    "detail": "a product with this sku already exists",
+    "code": "PSO_HTTP_CONFLICT",
+    "error": "conflict",
+    "instance": "/products",
+    "correlationId": "95769237-09a5-4a6f-a8e7-3f816a9ffcbe"
+  },
+  "missing": {
+    "type": "urn:pso:problem:http-not-found",
+    "title": "Resource not found",
+    "status": 404,
+    "detail": "product 00000000-0000-0000-0000-000000000000 does not exist",
+    "code": "PSO_HTTP_NOT_FOUND",
+    "error": "not_found",
+    "instance": "/products/00000000-0000-0000-0000-000000000000",
+    "correlationId": "bfe6e7c8-7543-4e0d-a6d8-36fb91e6ece2"
+  },
+  "forbidden": {
+    "type": "urn:pso:problem:auth-forbidden",
+    "title": "Access denied",
+    "status": 403,
+    "detail": "The authenticated caller is not allowed to perform this operation.",
+    "code": "PSO_AUTH_FORBIDDEN",
+    "error": "forbidden",
+    "instance": "/products",
+    "correlationId": "6e486629-9a7e-413a-a87b-75393fc7e087"
+  },
+  "downstream": {
+    "status": 503,
+    "body": {
+      "type": "urn:pso:problem:upstream-unavailable",
+      "title": "Upstream unavailable",
+      "status": 503,
+      "detail": "An upstream service could not be reached.",
+      "code": "PSO_UPSTREAM_UNAVAILABLE",
+      "error": "upstream_unavailable",
+      "instance": "/products",
+      "correlationId": "0a82a10c-f403-4287-a16d-53688737d3b3"
+    }
+  },
+  "orders": {
+    "id": "552178c7-02be-4534-9dd4-f0ca5c88b268",
+    "sku": "KB-100",
+    "name": "Keyboard (renamed)",
+    "description": "Mechanical, 87 keys",
+    "price": "44.00",
+    "active": true,
+    "createdAt": "2026-11-24T19:28:17.754309Z",
+    "updatedAt": "2026-11-24T19:28:18.970913Z"
+  }
+}

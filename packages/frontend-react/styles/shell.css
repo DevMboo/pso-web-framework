@@ -1,0 +1,16 @@
+/* Values of the tokens. Loaded by the FEI only (a MEI never redefines the identity of the application). */
+@layer base {
+  :root {
+    --pso-bg: #f6f7f9; --pso-surface: #ffffff; --pso-surface-2: #eef0f4; --pso-fg: #111827; --pso-muted: #5b6472; --pso-line: #d9dde4;
+    --pso-brand: #1d4ed8; --pso-brand-fg: #ffffff; --pso-ok: #15803d; --pso-warn: #b45309; --pso-bad: #b91c1c;
+    --pso-radius: 0.5rem; --pso-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  [data-theme="dark"] {
+    --pso-bg: #0b0f17; --pso-surface: #131a26; --pso-surface-2: #1b2433; --pso-fg: #e6e9ef; --pso-muted: #9aa4b5; --pso-line: #2a3446;
+    --pso-brand: #6ea0ff; --pso-brand-fg: #0b1220; --pso-ok: #4ade80; --pso-warn: #fbbf24; --pso-bad: #f87171;
+  }
+  html { background: var(--pso-bg); color: var(--pso-fg); font-family: var(--pso-font); }
+  body { min-height: 100vh; }
+  :focus-visible { outline: 2px solid var(--pso-brand); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; } }
+}

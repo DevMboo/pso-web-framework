@@ -1,0 +1,13 @@
+/*
+ * Styling strategy of the application (see the documentation page "Styling and isolation"):
+ *   - the FEI owns the ONE reset (Tailwind Preflight) and the values of the design tokens (shell.css);
+ *   - a MEI imports the tokens and the utilities layer only, never a reset, so its styles cannot restyle the shell or another MEI;
+ *   - everything lives in cascade layers (theme < base < components < utilities), so utilities always win over base styles.
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "@pso/frontend-react/tokens.css";
+@import "@pso/frontend-react/shell.css";
+@import "tailwindcss/utilities.css" layer(utilities);
+@source "../";

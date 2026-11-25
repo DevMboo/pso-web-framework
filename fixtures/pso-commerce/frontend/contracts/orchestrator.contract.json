@@ -1,0 +1,534 @@
+{
+  "schema": 1,
+  "kind": "pso-orchestrator-contract",
+  "orchestrator": "gateway",
+  "version": "e34db847ec29",
+  "operations": [
+    {
+      "id": "GET /customers",
+      "method": "GET",
+      "path": "/customers",
+      "scopes": [
+        "customers:read"
+      ],
+      "auth": "jwt",
+      "pathParams": [],
+      "body": null,
+      "responses": {
+        "200": {
+          "kind": "dto",
+          "dto": "CustomerResponse",
+          "collection": true
+        },
+        "401": {
+          "kind": "problem"
+        },
+        "403": {
+          "kind": "problem"
+        }
+      }
+    },
+    {
+      "id": "GET /customers/:id",
+      "method": "GET",
+      "path": "/customers/:id",
+      "scopes": [
+        "customers:read"
+      ],
+      "auth": "jwt",
+      "pathParams": [
+        "id"
+      ],
+      "body": null,
+      "responses": {
+        "200": {
+          "kind": "dto",
+          "dto": "CustomerResponse"
+        },
+        "401": {
+          "kind": "problem"
+        },
+        "403": {
+          "kind": "problem"
+        },
+        "404": {
+          "kind": "problem"
+        }
+      }
+    },
+    {
+      "id": "GET /customers/:id/summary",
+      "method": "GET",
+      "path": "/customers/:id/summary",
+      "scopes": [
+        "customers:read",
+        "orders:read"
+      ],
+      "auth": "jwt",
+      "pathParams": [
+        "id"
+      ],
+      "body": null
+    },
+    {
+      "id": "GET /orders",
+      "method": "GET",
+      "path": "/orders",
+      "scopes": [
+        "orders:read"
+      ],
+      "auth": "jwt",
+      "pathParams": [],
+      "body": null,
+      "responses": {
+        "200": {
+          "kind": "dto",
+          "dto": "OrderResponse",
+          "collection": true
+        },
+        "401": {
+          "kind": "problem"
+        },
+        "403": {
+          "kind": "problem"
+        }
+      }
+    },
+    {
+      "id": "GET /orders/:id",
+      "method": "GET",
+      "path": "/orders/:id",
+      "scopes": [
+        "orders:read"
+      ],
+      "auth": "jwt",
+      "pathParams": [
+        "id"
+      ],
+      "body": null,
+      "responses": {
+        "200": {
+          "kind": "dto",
+          "dto": "OrderResponse"
+        },
+        "401": {
+          "kind": "problem"
+        },
+        "403": {
+          "kind": "problem"
+        },
+        "404": {
+          "kind": "problem"
+        }
+      }
+    },
+    {
+      "id": "GET /products",
+      "method": "GET",
+      "path": "/products",
+      "scopes": [
+        "catalog:read"
+      ],
+      "auth": "jwt",
+      "pathParams": [],
+      "body": null,
+      "responses": {
+        "200": {
+          "kind": "dto",
+          "dto": "ProductResponse",
+          "collection": true
+        },
+        "401": {
+          "kind": "problem"
+        },
+        "403": {
+          "kind": "problem"
+        }
+      }
+    },
+    {
+      "id": "GET /products/:id",
+      "method": "GET",
+      "path": "/products/:id",
+      "scopes": [
+        "catalog:read"
+      ],
+      "auth": "jwt",
+      "pathParams": [
+        "id"
+      ],
+      "body": null,
+      "responses": {
+        "200": {
+          "kind": "dto",
+          "dto": "ProductResponse"
+        },
+        "401": {
+          "kind": "problem"
+        },
+        "403": {
+          "kind": "problem"
+        },
+        "404": {
+          "kind": "problem"
+        }
+      }
+    },
+    {
+      "id": "PATCH /customers/:id/status",
+      "method": "PATCH",
+      "path": "/customers/:id/status",
+      "scopes": [
+        "customers:write"
+      ],
+      "auth": "jwt",
+      "pathParams": [
+        "id"
+      ],
+      "body": "CustomerStatusDto",
+      "responses": {
+        "200": {
+          "kind": "dto",
+          "dto": "CustomerResponse"
+        },
+        "400": {
+          "kind": "problem"
+        },
+        "401": {
+          "kind": "problem"
+        },
+        "403": {
+          "kind": "problem"
+        },
+        "404": {
+          "kind": "problem"
+        }
+      }
+    },
+    {
+      "id": "PATCH /products/:id/stock",
+      "method": "PATCH",
+      "path": "/products/:id/stock",
+      "scopes": [
+        "catalog:write"
+      ],
+      "auth": "jwt",
+      "pathParams": [
+        "id"
+      ],
+      "body": "StockChangeDto",
+      "responses": {
+        "200": {
+          "kind": "dto",
+          "dto": "ProductResponse"
+        },
+        "400": {
+          "kind": "problem"
+        },
+        "401": {
+          "kind": "problem"
+        },
+        "403": {
+          "kind": "problem"
+        },
+        "404": {
+          "kind": "problem"
+        },
+        "409": {
+          "kind": "problem"
+        }
+      }
+    },
+    {
+      "id": "POST /customers",
+      "method": "POST",
+      "path": "/customers",
+      "scopes": [
+        "customers:write"
+      ],
+      "auth": "jwt",
+      "pathParams": [],
+      "body": "CreateCustomerDto",
+      "responses": {
+        "201": {
+          "kind": "dto",
+          "dto": "CustomerResponse"
+        },
+        "400": {
+          "kind": "problem"
+        },
+        "401": {
+          "kind": "problem"
+        },
+        "403": {
+          "kind": "problem"
+        },
+        "409": {
+          "kind": "problem"
+        }
+      }
+    },
+    {
+      "id": "POST /orders",
+      "method": "POST",
+      "path": "/orders",
+      "scopes": [
+        "orders:write"
+      ],
+      "auth": "jwt",
+      "pathParams": [],
+      "body": "PlaceOrderDto",
+      "responses": {
+        "201": {
+          "kind": "dto",
+          "dto": "OrderResponse"
+        },
+        "400": {
+          "kind": "problem"
+        },
+        "401": {
+          "kind": "problem"
+        },
+        "403": {
+          "kind": "problem"
+        },
+        "404": {
+          "kind": "problem"
+        },
+        "409": {
+          "kind": "problem"
+        }
+      }
+    },
+    {
+      "id": "POST /products",
+      "method": "POST",
+      "path": "/products",
+      "scopes": [
+        "catalog:write"
+      ],
+      "auth": "jwt",
+      "pathParams": [],
+      "body": "CreateProductDto",
+      "responses": {
+        "201": {
+          "kind": "dto",
+          "dto": "ProductResponse"
+        },
+        "400": {
+          "kind": "problem"
+        },
+        "401": {
+          "kind": "problem"
+        },
+        "403": {
+          "kind": "problem"
+        },
+        "409": {
+          "kind": "problem"
+        }
+      }
+    },
+    {
+      "id": "PUT /customers/:id",
+      "method": "PUT",
+      "path": "/customers/:id",
+      "scopes": [
+        "customers:write"
+      ],
+      "auth": "jwt",
+      "pathParams": [
+        "id"
+      ],
+      "body": "UpdateCustomerDto"
+    },
+    {
+      "id": "PUT /products/:id",
+      "method": "PUT",
+      "path": "/products/:id",
+      "scopes": [
+        "catalog:write"
+      ],
+      "auth": "jwt",
+      "pathParams": [
+        "id"
+      ],
+      "body": "CreateProductDto"
+    }
+  ],
+  "dtos": {
+    "CreateCustomerDto": [
+      {
+        "name": "name",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "email",
+        "type": "string",
+        "required": true
+      }
+    ],
+    "CreateProductDto": [
+      {
+        "name": "sku",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "priceCents",
+        "type": "number",
+        "required": true
+      },
+      {
+        "name": "stock",
+        "type": "number",
+        "required": true
+      }
+    ],
+    "CustomerResponse": [
+      {
+        "name": "id",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "email",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "CustomerStatusDto": [
+      {
+        "name": "status",
+        "type": "\"ACTIVE\" | \"SUSPENDED\"",
+        "required": true
+      }
+    ],
+    "OrderResponse": [
+      {
+        "name": "id",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "customerId",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "productId",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "quantity",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "unitPriceCents",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "totalCents",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "status",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "createdBy",
+        "type": "string",
+        "required": false
+      }
+    ],
+    "PlaceOrderDto": [
+      {
+        "name": "customerId",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "productId",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "quantity",
+        "type": "number",
+        "required": true
+      }
+    ],
+    "ProductResponse": [
+      {
+        "name": "id",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "sku",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "required": false
+      },
+      {
+        "name": "priceCents",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "stock",
+        "type": "number",
+        "required": false
+      },
+      {
+        "name": "available",
+        "type": "boolean",
+        "required": false
+      }
+    ],
+    "StockChangeDto": [
+      {
+        "name": "stock",
+        "type": "number",
+        "required": true
+      }
+    ],
+    "UpdateCustomerDto": [
+      {
+        "name": "name",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "email",
+        "type": "string",
+        "required": true
+      }
+    ]
+  }
+}

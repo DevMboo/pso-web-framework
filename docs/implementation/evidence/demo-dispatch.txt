@@ -1,0 +1,49 @@
+$ pso dispatch:install redis --service gw
+package.json: + @pso/dispatch
+package.json: + ioredis
+pso.config.json: dispatch.provider = redis (enabled stays false; secrets are ${env:...} references)
+src/dispatch/: modules go here, each with an EVENTS.pso.ts
+infra/dispatch/redis.compose.yml: a local development broker (not started by PSO)
+Next: declare your events, then set pso.dispatch.enabled=true (and the broker URL) to activate. See /docs/dispatch/overview.
+
+
+$ pso dispatch:validate
+INFO    PSO_DISPATCH_UNLOCKED gw (src/dispatch/orders/EVENTS.pso.ts)
+        orders.placed v1 is not locked yet
+        fix: Run `pso dispatch:lock` to record its contract
+INFO    PSO_DISPATCH_UNLOCKED gw (src/dispatch/orders/EVENTS.pso.ts)
+        orders.confirmed v1 is not locked yet
+        fix: Run `pso dispatch:lock` to record its contract
+
+valid. Static validation only: event delivery is verified by running the service against a broker.
+
+$ pso dispatch:events
+orders.placed@1  channel orders.demo83375  gw consumes  schema yes  consumers: gw
+orders.confirmed@1  channel orders.confirmed.demo83375  gw publishes  schema none  consumers: -
+
+$ pso dispatch:consumers
+orders.placed                gw  OrderPlacedConsumer  group gw  (src/dispatch/orders/orders.consumer.ts)
+
+$ pso dispatch:graph
+gw --orders.confirmed--> channel:orders.confirmed.demo83375
+channel:orders.demo83375 --orders.placed--> gw
+
+(node:30684) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+=== stream orders.confirmed (published by the consumer) ===
+
+=== dead-letter channel orders.demo83375.dlq ===
+{"envelope":"{\"envelopeVersion\":1,\"id\":\"evt-bad-1\",\"type\":\"orders.placed\",\"version\":1,\"source\":\"orders-service\",\"occurredAt\":\"2026-11…","h:x-pso-reason":"handler-failed:Error","h:x-pso-attempts":"3","h:x-pso-group":"gw","h:x-pso-original-channel":"orders.demo83375","h:x-pso-dead-letter-id":"8989b9da-0a70-45e0-a8a6-10a4a44596f3"}
+{"envelope":"{\"envelopeVersion\":1,\"id\":\"evt-poison-1\",\"type\":\"orders.placed\",\"version\":1,\"source\":\"orders-service\",\"occurredAt\":\"2026…","h:x-pso-reason":"PSO_DISPATCH_ENVELOPE_INVALID","h:x-pso-attempts":"0","h:x-pso-group":"gw","h:x-pso-original-channel":"orders.demo83375","h:x-pso-dead-letter-id":"9da9ed19-6541-4486-b565-ae8a577f2b92"}
+
+=== consumer group state ===
+[["name","gw","consumers",1,"pending",0,"last-delivered-id","1794164291083-0","entries-read",3,"lag",0]]
+
+=== /_pso/telemetry dispatch ===
+{"metrics":{"published":0,"publishFailed":0,"consumed":0,"failed":3,"retried":2,"deadLettered":2,"dropped":0,"duplicates":1,"poison":1,"processing":{"count":0,"totalMs":0,"maxMs":0},"byType":{"orders.placed":{"published":0,"consumed":0,"failed":3}}},"health":{"status":"up","detail":"PING answered"}}
+
+=== orchestrator terminal (dispatch-related) ===
+2026-11-08 18:58:07.577 WARN  consumer failed  event=orders.placed id=evt-bad-1 attempt=1 error=Error
+2026-11-08 18:58:07.789 WARN  consumer failed  event=orders.placed id=evt-bad-1 attempt=2 error=Error
+2026-11-08 18:58:08.195 WARN  consumer failed  event=orders.placed id=evt-bad-1 attempt=3 error=Error

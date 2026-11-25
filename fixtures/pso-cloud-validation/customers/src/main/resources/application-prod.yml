@@ -1,0 +1,14 @@
+# prod: JWT validation must be configured (PSO_JWT_JWKS_URI, PSO_JWT_ISSUER, PSO_JWT_AUDIENCE) or the service refuses to start.
+# H2 is refused. CORS stays off unless you set PSO_CORS_ENABLED=true and list explicit origins in PSO_CORS_ORIGINS.
+# Credentials never belong in this file: inject them as environment variables.
+# Structured JSON logs on the console (Spring Boot ECS format) with secrets removed from every string. Switch format with LOGGING_STRUCTURED_FORMAT_CONSOLE=logstash|gelf.
+logging:
+  structured:
+    format:
+      console: ecs
+    json:
+      customizer: com.pso.spring.autoconfigure.logging.PsoStructuredLogRedaction
+pso:
+  limits:
+    requests:
+      per-minute: ${PSO_RATE_LIMIT_PER_MINUTE:300}

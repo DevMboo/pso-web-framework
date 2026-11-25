@@ -1,0 +1,5 @@
+    hikari:                         # connection pool (HikariCP is Spring Boot's default)
+      maximum-pool-size: ${DB_POOL_SIZE:10}   # size it from the database's connection limit divided by the number of instances
+      minimum-idle: ${DB_POOL_MIN_IDLE:2}
+      connection-timeout: 5000      # ms to wait for a free connection before failing fast
+      max-lifetime: 1800000         # ms; keep it shorter than any idle-connection timeout in front of the database

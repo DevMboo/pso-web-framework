@@ -1,0 +1,70 @@
+=== generated DTO ===
+import { Dto, Required, StringField, IntegerField, Email, MinLength, MaxLength, Min, Max } from "@pso/http";
+
+@Dto()
+export class CreateOrderDto {
+  @Required() @StringField() @MinLength(3) @MaxLength(40)
+  customer!: string;
+
+  @Required() @Email()
+  email!: string;
+
+  @Required() @IntegerField() @Min(1) @Max(100)
+  quantity!: number;
+}
+
+=== generated controller ===
+import { Controller, RestController, Post, Body } from "@pso/http";
+import { CreateOrderDto } from "./dto/create-order.dto";
+
+@Controller()
+@RestController("/orders")
+export class OrdersController {
+
+  @Post("/")
+  async create(@Body(CreateOrderDto) body: CreateOrderDto) {
+    return { accepted: true, customer: body.customer, quantity: body.quantity };
+  }
+}
+
+(node:47384) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+=== valid ===
+201 {"accepted":true,"customer":"Grace","quantity":3}
+=== invalid ===
+400 application/problem+json; charset=utf-8
+{
+  "type": "urn:pso:problem:validation-failed",
+  "title": "Validation failed",
+  "status": 400,
+  "detail": "The request is not valid; see the errors member.",
+  "code": "PSO_VALIDATION_FAILED",
+  "error": "validation_failed",
+  "instance": "/orders",
+  "correlationId": "demo-corr-0001",
+  "errors": [
+    {
+      "field": "admin",
+      "message": "is not allowed"
+    },
+    {
+      "field": "customer",
+      "message": "must have at least 3 characters"
+    },
+    {
+      "field": "email",
+      "message": "must be a valid e-mail address"
+    },
+    {
+      "field": "quantity",
+      "message": "must be at least 1"
+    }
+  ]
+}
+=== terminal output (pretty, no colour) ===
+2026-11-08 18:58:02.375 INFO  [startup] starting orchestrator  service=gw environment=development logLevel=info logFormat=pretty node=v24.18.0
+2026-11-08 18:58:02.398 INFO  [security] security initialized (pem, ES256)
+2026-11-08 18:58:02.405 INFO  [http] orchestrator listening  host=127.0.0.1 port=39695 routes=6 modules=2
+2026-11-08 18:58:02.497 INFO  request (demo-corr-0001)  traceId=6bd81d11fad5237e1e9628a235ce2861 method=POST path=/orders status=201 ms=6.8681
+2026-11-08 18:58:02.506 INFO  request (demo-corr-0001)  traceId=86e079dfe0774b535b74dc1d0d5c32fb method=POST path=/orders status=400 ms=1.4034
+

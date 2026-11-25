@@ -1,0 +1,16 @@
+(node:31312) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+request 1: HTTP 503  ratelimit-limit: 3  ratelimit-remaining: 2
+request 2: HTTP 503  ratelimit-limit: 3  ratelimit-remaining: 1
+request 3: HTTP 503  ratelimit-limit: 3  ratelimit-remaining: 0
+request 4: HTTP 429  ratelimit-limit: 3  ratelimit-remaining: 0  ratelimit-reset: 20  retry-after: 20
+   body: {"type":"urn:pso:problem:rate-limited","title":"Too many requests","status":429,"detail":"The rate limit was exceeded; retry after the interval given in Retry-After.","code":"PSO_RATE_LIMITED","error":"too_many_requests","instance":"/customers/ping","correlationId":"doc-rl-0004"}
+request 5: HTTP 429  ratelimit-limit: 3  ratelimit-remaining: 0  ratelimit-reset: 20  retry-after: 20
+health during the limit: HTTP 200
+
+=== terminal ===
+2026-11-08 18:57:58.740 INFO  request (doc-rl-0001)  traceId=88205b34e98828f8d871cd41b8436bd3 method=GET path=/customers/ping status=503 ms=6.826
+2026-11-08 18:57:58.747 INFO  request (doc-rl-0002)  traceId=1ae910fcd7dbc45075567c0ef6afa719 method=GET path=/customers/ping status=503 ms=1.2672
+2026-11-08 18:57:58.756 INFO  request (doc-rl-0003)  traceId=733849e09126f856b1ec0fb0fc5f81e3 method=GET path=/customers/ping status=503 ms=1.3902
+2026-11-08 18:57:58.771 INFO  request (doc-rl-0004)  traceId=82f71c23359976e5f84a42d6ec12182d method=GET path=/customers/ping status=429 ms=0.4199
+2026-11-08 18:57:58.786 INFO  request (doc-rl-0005)  traceId=955c8b6bcf882a188d7764ab343aed63 method=GET path=/customers/ping status=429 ms=0.353

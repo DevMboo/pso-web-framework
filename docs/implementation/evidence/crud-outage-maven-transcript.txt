@@ -1,0 +1,10 @@
+### read while the database is down
+status 500
+{"type":"urn:pso:problem:internal-error","title":"Internal error","status":500,"detail":"The server could not complete the request.","instance":"/catalog/products","code":"PSO_INTERNAL_ERROR","correlationId":"2c0cc605-0dc4-4930-952b-525b80ff3f39","error":"internal_error"}
+
+### write while the database is down
+status 500
+{"type":"urn:pso:problem:internal-error","title":"Internal error","status":500,"detail":"The server could not complete the request.","instance":"/catalog/products","code":"PSO_INTERNAL_ERROR","correlationId":"d4311ad6-9cd6-4f01-b4f7-78732a522200","error":"internal_error"}
+
+### both calls took (ms)
+47

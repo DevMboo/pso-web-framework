@@ -1,0 +1,173 @@
+# PSO Web: verifiable release build and Authenticode signing through SignPath.
+#
+# PREPARED, NOT ACTIVE. It needs (see scripts/psd/SIGNPATH.md): the source in a public GitHub repository, an accepted SignPath Foundation
+# project, the secrets and variables below, and a GitHub environment "release-signing" whose required reviewers are the signing approvers.
+#
+# Every artifact SignPath signs is produced in THIS run, on a GitHub-hosted runner, from the tagged commit, and submitted by its GitHub
+# artifact id so SignPath can verify where it was built. Two signing requests per release, each approved manually in SignPath:
+#   1. Inno Setup's uninstaller, which is also the temporary copy of Setup that runs from TEMP (signing only the finished installer would
+#      leave both unsigned, and Smart App Control blocks them);
+#   2. the finished installer, built with the signed uninstaller embedded.
+# Third-party files keep their own signatures (node.exe: OpenJS Foundation) and are never submitted. Checksums and manifests are computed
+# only after signing (scripts/psd/signpath-finalize.mjs). Nothing is published by this workflow.
+name: Release (SignPath)
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read          # SignPath downloads the submitted artifacts of this run
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_RUNTIME_VERSION: "24.11.1"   # the private runtime bundled in the release; verified against nodejs.org's SHASUMS256.txt and its OpenJS signature
+  INNO_SETUP_VERSION: "7.1.1"
+  PUBLISHER: "SignPath Foundation"  # the certificate subject of a SignPath Foundation certificate; the installer verifies it at run time
+
+jobs:
+  release:
+    runs-on: windows-2025           # GitHub-hosted: required for a verifiable origin
+    environment: release-signing    # required reviewers = signing approvers (manual approval before any signing request)
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+
+      - name: Release label from the tag
+        id: label
+        shell: pwsh
+        run: |
+          $label = "${{ github.ref_name }}".TrimStart("v")
+          if ($label -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw "not a release tag: ${{ github.ref_name }}" }
+          "label=$label" >> $env:GITHUB_OUTPUT
+
+      - uses: actions/setup-node@v4
+        with: { node-version: "24.11.1" }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+
+      - name: Inno Setup (pinned)
+        shell: pwsh
+        run: |
+          choco install innosetup --version=$env:INNO_SETUP_VERSION -y --no-progress
+          $iscc = Get-ChildItem "C:\Program Files*\Inno Setup*\ISCC.exe" | Select-Object -First 1
+          if (-not $iscc) { throw "ISCC.exe not found" }
+          "ISCC=$($iscc.FullName)" >> $env:GITHUB_ENV
+
+      - name: Build and focused tests
+        shell: pwsh
+        run: |
+          npm ci
+          npm run build
+          node --test scripts/psd/test/codesign.test.mjs
+          node --test --experimental-strip-types packages/cli/test/dist-cli.test.ts
+
+      - name: Private Node.js runtime (verified, never re-signed)
+        shell: pwsh
+        run: |
+          $v = $env:NODE_RUNTIME_VERSION; $d = Join-Path $env:RUNNER_TEMP "node-runtime"; New-Item -ItemType Directory $d | Out-Null
+          $zip = "node-v$v-win-x64.zip"
+          Invoke-WebRequest "https://nodejs.org/dist/v$v/$zip" -OutFile "$d\$zip"
+          Invoke-WebRequest "https://nodejs.org/dist/v$v/SHASUMS256.txt" -OutFile "$d\SHASUMS256.txt"
+          $expected = (Select-String -Path "$d\SHASUMS256.txt" -Pattern " $([regex]::Escape($zip))$").Line.Split(" ")[0]
+          if ((Get-FileHash "$d\$zip" -Algorithm SHA256).Hash.ToLower() -ne $expected) { throw "node runtime checksum mismatch" }
+          Expand-Archive "$d\$zip" -DestinationPath $d
+          Copy-Item "$d\node-v$v-win-x64\node.exe" "$d\node.exe"; Copy-Item "$d\node-v$v-win-x64\LICENSE" "$d\LICENSE-node.txt"
+          node scripts/psd/codesign.mjs verify --file "$d\node.exe" --publisher "$env:PUBLISHER"
+          if ($LASTEXITCODE -ne 0) { throw "node.exe is not validly signed by the OpenJS Foundation" }
+
+      - name: Package signing key and deny-list (secrets, outside the repository)
+        shell: pwsh
+        env:
+          PSO_RELEASE_SIGNING_KEY: ${{ secrets.PSO_RELEASE_SIGNING_KEY }}
+          PSO_DENYLIST: ${{ secrets.PSO_DENYLIST }}
+        run: |
+          $k = Join-Path $env:RUNNER_TEMP "keys"; New-Item -ItemType Directory $k | Out-Null
+          Set-Content -NoNewline -Encoding ascii "$k\release.private.pem" $env:PSO_RELEASE_SIGNING_KEY
+          Set-Content -Encoding utf8 "$k\denylist.txt" $env:PSO_DENYLIST
+
+      - name: Java artifacts (compiled from this commit)
+        shell: pwsh
+        run: node scripts/release-maven.mjs --version ${{ steps.label.outputs.label }} --out "$env:RUNNER_TEMP\maven" --sign-key "$env:RUNNER_TEMP\keys\release.private.pem" --denylist "$env:RUNNER_TEMP\keys\denylist.txt"
+
+      - name: Release build, pass 1 (stops for the uninstaller signing request)
+        shell: pwsh
+        run: |
+          node scripts/psd/build-release.mjs --label ${{ steps.label.outputs.label }} --publisher "$env:PUBLISHER" `
+            --runtime "$env:RUNNER_TEMP\node-runtime\node.exe" --runtime-license "$env:RUNNER_TEMP\node-runtime\LICENSE-node.txt" `
+            --signing-key "$env:RUNNER_TEMP\keys\release.private.pem" --denylist "$env:RUNNER_TEMP\keys\denylist.txt" --maven "$env:RUNNER_TEMP\maven\repository" `
+            --work "$env:RUNNER_TEMP\work" --release "$env:RUNNER_TEMP\release" --evidence "$env:RUNNER_TEMP\evidence" --remote-signing "$env:RUNNER_TEMP\remote"
+          if ($LASTEXITCODE -ne 4) { throw "pass 1 must stop for the uninstaller signing request (exit 4), got $LASTEXITCODE" }
+
+      - id: uninstaller
+        uses: actions/upload-artifact@v4
+        with: { name: uninstaller-to-sign, path: "${{ runner.temp }}/remote/request-uninstaller/*", if-no-files-found: error }
+
+      - name: SignPath request 1 - uninstaller (manual approval)
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: inno-uninstaller
+          github-artifact-id: ${{ steps.uninstaller.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 7200
+          output-artifact-directory: ${{ runner.temp }}/remote/uninstaller
+
+      - name: Release build, pass 2 (verifies the signed uninstaller; stops for the installer signing request)
+        shell: pwsh
+        run: |
+          node scripts/psd/build-release.mjs --label ${{ steps.label.outputs.label }} --publisher "$env:PUBLISHER" `
+            --runtime "$env:RUNNER_TEMP\node-runtime\node.exe" --runtime-license "$env:RUNNER_TEMP\node-runtime\LICENSE-node.txt" `
+            --signing-key "$env:RUNNER_TEMP\keys\release.private.pem" --denylist "$env:RUNNER_TEMP\keys\denylist.txt" --maven "$env:RUNNER_TEMP\maven\repository" `
+            --work "$env:RUNNER_TEMP\work" --release "$env:RUNNER_TEMP\release" --evidence "$env:RUNNER_TEMP\evidence" --remote-signing "$env:RUNNER_TEMP\remote"
+          if ($LASTEXITCODE -ne 5) { throw "pass 2 must stop for the installer signing request (exit 5), got $LASTEXITCODE" }
+
+      - id: installer
+        uses: actions/upload-artifact@v4
+        with: { name: installer-to-sign, path: "${{ runner.temp }}/remote/request-installer/*.exe", if-no-files-found: error }
+
+      - name: SignPath request 2 - installer (manual approval)
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: installer
+          github-artifact-id: ${{ steps.installer.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 7200
+          output-artifact-directory: ${{ runner.temp }}/remote/signed-installer
+
+      - name: Finalize (signed build = submitted build; checksums only now)
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem "$env:RUNNER_TEMP\remote\signed-installer" -Filter "PSO-Web-*-win-x64.exe" -Recurse | Select-Object -First 1
+          node scripts/psd/signpath-finalize.mjs --remote-signing "$env:RUNNER_TEMP\remote" --signed-installer $exe.FullName `
+            --signing-key "$env:RUNNER_TEMP\keys\release.private.pem" --denylist "$env:RUNNER_TEMP\keys\denylist.txt"
+          if ($LASTEXITCODE -ne 0) { throw "finalize failed" }
+
+      - name: Portable ZIP (gated: its only executable is the OpenJS-signed runtime)
+        shell: pwsh
+        run: |
+          node scripts/psd/build-portable.mjs --label ${{ steps.label.outputs.label }} --work "$env:RUNNER_TEMP\work" `
+            --runtime "$env:RUNNER_TEMP\node-runtime\node.exe" --runtime-license "$env:RUNNER_TEMP\node-runtime\LICENSE-node.txt" `
+            --release "$env:RUNNER_TEMP\release" --signing-key "$env:RUNNER_TEMP\keys\release.private.pem" --publisher "$env:PUBLISHER"
+          if ($LASTEXITCODE -ne 0) { throw "portable build failed" }
+
+      - name: Remove key material
+        if: always()
+        shell: pwsh
+        run: Remove-Item -Recurse -Force "$env:RUNNER_TEMP\keys" -ErrorAction SilentlyContinue
+
+      - uses: actions/upload-artifact@v4
+        with: { name: release-${{ steps.label.outputs.label }}, path: "${{ runner.temp }}/release", if-no-files-found: error }

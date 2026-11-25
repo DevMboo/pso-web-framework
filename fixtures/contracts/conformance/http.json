@@ -1,0 +1,259 @@
+{
+  "description": "Language-neutral HTTP-level contracts shared by the TypeScript orchestrator and the Spring starters: correlation id handling, liveness body, and the authorization decision for scopes and roles. Each runtime executes every case (packages/cli/test/conformance-http.test.ts, ConformanceHttpTests, AuthorizationConformanceTests).",
+  "correlation": {
+    "header": "X-Correlation-ID",
+    "cases": [
+      {
+        "name": "a UUID is propagated",
+        "incoming": "3f2b8c1e-5d4a-4f6b-9a7c-1e2d3c4b5a69",
+        "propagated": true
+      },
+      {
+        "name": "the minimum length (8) is propagated",
+        "incoming": "abcd1234",
+        "propagated": true
+      },
+      {
+        "name": "dots, underscores and hyphens are allowed",
+        "incoming": "svc.req_12-34",
+        "propagated": true
+      },
+      {
+        "name": "the maximum length (64) is propagated",
+        "incoming": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "propagated": true
+      },
+      {
+        "name": "too short is replaced",
+        "incoming": "abc",
+        "propagated": false
+      },
+      {
+        "name": "too long is replaced",
+        "incoming": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "propagated": false
+      },
+      {
+        "name": "characters outside the allowed set are replaced",
+        "incoming": "bad id with spaces!",
+        "propagated": false
+      },
+      {
+        "name": "no header: one is generated",
+        "incoming": null,
+        "propagated": false
+      }
+    ]
+  },
+  "liveness": {
+    "http": 200,
+    "status": "UP"
+  },
+  "authorization": {
+    "note": "all listed scopes are required; when roles are listed at least one of them is required; an empty requirement allows any authenticated principal",
+    "cases": [
+      {
+        "name": "no requirement",
+        "requirement": {
+          "scopes": [],
+          "roles": []
+        },
+        "principal": {
+          "scopes": [],
+          "roles": []
+        },
+        "allowed": true
+      },
+      {
+        "name": "required scope present",
+        "requirement": {
+          "scopes": [
+            "orders:read"
+          ],
+          "roles": []
+        },
+        "principal": {
+          "scopes": [
+            "orders:read"
+          ],
+          "roles": []
+        },
+        "allowed": true
+      },
+      {
+        "name": "required scope missing",
+        "requirement": {
+          "scopes": [
+            "orders:read"
+          ],
+          "roles": []
+        },
+        "principal": {
+          "scopes": [
+            "orders:write"
+          ],
+          "roles": []
+        },
+        "allowed": false
+      },
+      {
+        "name": "all of several scopes",
+        "requirement": {
+          "scopes": [
+            "a",
+            "b"
+          ],
+          "roles": []
+        },
+        "principal": {
+          "scopes": [
+            "a",
+            "b",
+            "c"
+          ],
+          "roles": []
+        },
+        "allowed": true
+      },
+      {
+        "name": "one of several scopes is not enough",
+        "requirement": {
+          "scopes": [
+            "a",
+            "b"
+          ],
+          "roles": []
+        },
+        "principal": {
+          "scopes": [
+            "a"
+          ],
+          "roles": []
+        },
+        "allowed": false
+      },
+      {
+        "name": "any one of the roles",
+        "requirement": {
+          "scopes": [],
+          "roles": [
+            "admin",
+            "ops"
+          ]
+        },
+        "principal": {
+          "scopes": [],
+          "roles": [
+            "ops"
+          ]
+        },
+        "allowed": true
+      },
+      {
+        "name": "none of the roles",
+        "requirement": {
+          "scopes": [],
+          "roles": [
+            "admin",
+            "ops"
+          ]
+        },
+        "principal": {
+          "scopes": [],
+          "roles": [
+            "viewer"
+          ]
+        },
+        "allowed": false
+      },
+      {
+        "name": "scopes AND roles: both satisfied",
+        "requirement": {
+          "scopes": [
+            "a"
+          ],
+          "roles": [
+            "admin"
+          ]
+        },
+        "principal": {
+          "scopes": [
+            "a"
+          ],
+          "roles": [
+            "admin"
+          ]
+        },
+        "allowed": true
+      },
+      {
+        "name": "scopes AND roles: scope without role",
+        "requirement": {
+          "scopes": [
+            "a"
+          ],
+          "roles": [
+            "admin"
+          ]
+        },
+        "principal": {
+          "scopes": [
+            "a"
+          ],
+          "roles": []
+        },
+        "allowed": false
+      },
+      {
+        "name": "scopes AND roles: role without scope",
+        "requirement": {
+          "scopes": [
+            "a"
+          ],
+          "roles": [
+            "admin"
+          ]
+        },
+        "principal": {
+          "scopes": [],
+          "roles": [
+            "admin"
+          ]
+        },
+        "allowed": false
+      },
+      {
+        "name": "a role is not a scope",
+        "requirement": {
+          "scopes": [
+            "admin"
+          ],
+          "roles": []
+        },
+        "principal": {
+          "scopes": [],
+          "roles": [
+            "admin"
+          ]
+        },
+        "allowed": false
+      },
+      {
+        "name": "a scope is not a role",
+        "requirement": {
+          "scopes": [],
+          "roles": [
+            "a"
+          ]
+        },
+        "principal": {
+          "scopes": [
+            "a"
+          ],
+          "roles": []
+        },
+        "allowed": false
+      }
+    ]
+  }
+}

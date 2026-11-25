@@ -1,0 +1,12 @@
+{
+  "name": "user",
+  "version": "0.1.0",
+  "service": "accounts",
+  "operations": [
+    {
+      "id": "userList",
+      "method": "GET",
+      "path": "/accounts/users"
+    }
+  ]
+}

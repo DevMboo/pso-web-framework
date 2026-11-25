@@ -1,0 +1,39 @@
+{
+  "name": "@pso/cli",
+  "version": "0.2.0",
+  "license": "Apache-2.0",
+  "author": "DevMboo",
+  "homepage": "https://devmboo.github.io/pso-web-docs/",
+  "type": "module",
+  "bin": {
+    "pso": "./bin/pso.js"
+  },
+  "dependencies": {
+    "@pso/core": "0.2.0",
+    "highlight.js": "^11.12.0",
+    "lucide-static": "^0.469.0",
+    "marked": "^15.0.12",
+    "typescript": "^5.9.3",
+    "@pso/http": "0.2.0",
+    "@pso/security": "0.2.0",
+    "@pso/dispatch": "0.2.0",
+    "@pso/channels": "0.2.0",
+    "@pso/deploy": "0.2.0",
+    "@pso/frontend": "0.2.0",
+    "@pso/infra": "0.2.0"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "docs",
+    "portal",
+    "studio",
+    "templates",
+    "!**/*.map",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "description": "PSO Web framework: cli"
+}

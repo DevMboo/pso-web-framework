@@ -1,0 +1,6 @@
+{"ts":"2026-11-08T20:02:31.760Z","level":"info","msg":"starting orchestrator","component":"startup","service":"gateway","environment":"development","logLevel":"info","logFormat":"json","node":"v24.18.0"}
+{"ts":"2026-11-08T20:02:31.762Z","level":"info","msg":"upstream configured","service":"catalog","tls":false,"mutualTls":false,"forward":"inherit","audienceBound":false}
+{"ts":"2026-11-08T20:02:31.776Z","level":"info","msg":"security initialized (pem, ES256)","component":"security"}
+{"ts":"2026-11-08T20:02:31.783Z","level":"info","msg":"orchestrator listening","component":"http","host":"127.0.0.1","port":3011,"routes":9,"modules":1}
+{"ts":"2026-11-08T20:02:35.796Z","level":"warn","msg":"authentication failed","component":"security","reason":"missing_header","route":"GET /products"}
+{"ts":"2026-11-08T20:02:35.798Z","level":"info","msg":"request","correlationId":"d902443f-1ecb-4665-a027-e9c0792bdc6d","traceId":"27229900d639c8fc4e0352a561b0353d","method":"GET","path":"/products","status":401,"ms":2.7336}

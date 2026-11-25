@@ -1,0 +1,258 @@
+{
+  "description": "PSO error standard (RFC 9457) catalog: the single contract shared by the TypeScript orchestrator and the Java starters. Each runtime tests its own catalog against this file.",
+  "type": "urn:pso:problem:<slug>",
+  "contentType": "application/problem+json",
+  "members": [
+    "type",
+    "title",
+    "status",
+    "detail",
+    "instance",
+    "code",
+    "correlationId",
+    "errors",
+    "error"
+  ],
+  "kinds": [
+    {
+      "legacy": "bad_request",
+      "status": 400,
+      "code": "PSO_HTTP_BAD_REQUEST",
+      "slug": "http-bad-request",
+      "title": "Bad request",
+      "detail": "The request could not be understood."
+    },
+    {
+      "legacy": "validation_failed",
+      "status": 400,
+      "code": "PSO_VALIDATION_FAILED",
+      "slug": "validation-failed",
+      "title": "Validation failed",
+      "detail": "The request is not valid; see the errors member."
+    },
+    {
+      "legacy": "invalid_json",
+      "status": 400,
+      "code": "PSO_HTTP_INVALID_JSON",
+      "slug": "http-invalid-json",
+      "title": "Malformed JSON body",
+      "detail": "The request body is not valid JSON."
+    },
+    {
+      "legacy": "malformed_multipart",
+      "status": 400,
+      "code": "PSO_HTTP_MALFORMED_MULTIPART",
+      "slug": "http-malformed-multipart",
+      "title": "Malformed multipart body",
+      "detail": "The multipart/form-data body is malformed."
+    },
+    {
+      "legacy": "request_aborted",
+      "status": 400,
+      "code": "PSO_HTTP_REQUEST_ABORTED",
+      "slug": "http-request-aborted",
+      "title": "Request aborted",
+      "detail": "The client closed the request before it was complete."
+    },
+    {
+      "legacy": "unauthorized",
+      "status": 401,
+      "code": "PSO_AUTH_UNAUTHORIZED",
+      "slug": "auth-unauthorized",
+      "title": "Authentication required",
+      "detail": "Valid credentials are required to access this resource."
+    },
+    {
+      "legacy": "forbidden",
+      "status": 403,
+      "code": "PSO_AUTH_FORBIDDEN",
+      "slug": "auth-forbidden",
+      "title": "Access denied",
+      "detail": "The authenticated caller is not allowed to perform this operation."
+    },
+    {
+      "legacy": "not_found",
+      "status": 404,
+      "code": "PSO_HTTP_NOT_FOUND",
+      "slug": "http-not-found",
+      "title": "Resource not found",
+      "detail": "No resource matches the request."
+    },
+    {
+      "legacy": "conflict",
+      "status": 409,
+      "code": "PSO_HTTP_CONFLICT",
+      "slug": "http-conflict",
+      "title": "Conflict",
+      "detail": "The request conflicts with the current state of the resource."
+    },
+    {
+      "legacy": "upstream_not_found",
+      "status": 404,
+      "code": "PSO_UPSTREAM_NOT_FOUND",
+      "slug": "upstream-not-found",
+      "title": "Resource not found",
+      "detail": "A resource this request depends on does not exist in an upstream service."
+    },
+    {
+      "legacy": "upstream_conflict",
+      "status": 409,
+      "code": "PSO_UPSTREAM_CONFLICT",
+      "slug": "upstream-conflict",
+      "title": "Conflict",
+      "detail": "An upstream service refused the operation because it conflicts with the current state of a resource."
+    },
+    {
+      "legacy": "payload_too_large",
+      "status": 413,
+      "code": "PSO_HTTP_PAYLOAD_TOO_LARGE",
+      "slug": "http-payload-too-large",
+      "title": "Request body too large",
+      "detail": "The request body exceeds the configured limit."
+    },
+    {
+      "legacy": "file_too_large",
+      "status": 413,
+      "code": "PSO_FILE_TOO_LARGE",
+      "slug": "file-too-large",
+      "title": "File too large",
+      "detail": "An uploaded file exceeds the allowed size."
+    },
+    {
+      "legacy": "method_not_allowed",
+      "status": 405,
+      "code": "PSO_HTTP_METHOD_NOT_ALLOWED",
+      "slug": "http-method-not-allowed",
+      "title": "Method not allowed",
+      "detail": "The HTTP method is not supported for this resource."
+    },
+    {
+      "legacy": "multipart_not_enabled",
+      "status": 415,
+      "code": "PSO_HTTP_MULTIPART_DISABLED",
+      "slug": "http-multipart-disabled",
+      "title": "Multipart not enabled",
+      "detail": "Multipart requests are not enabled for this service."
+    },
+    {
+      "legacy": "unsupported_media_type",
+      "status": 415,
+      "code": "PSO_HTTP_UNSUPPORTED_MEDIA_TYPE",
+      "slug": "http-unsupported-media-type",
+      "title": "Unsupported media type",
+      "detail": "The request content type is not supported; use application/json."
+    },
+    {
+      "legacy": "header_fields_too_large",
+      "status": 431,
+      "code": "PSO_HTTP_HEADERS_TOO_LARGE",
+      "slug": "http-headers-too-large",
+      "title": "Request headers too large",
+      "detail": "The request headers exceed the configured limit."
+    },
+    {
+      "legacy": "too_many_requests",
+      "status": 429,
+      "code": "PSO_RATE_LIMITED",
+      "slug": "rate-limited",
+      "title": "Too many requests",
+      "detail": "The rate limit was exceeded; retry after the interval given in Retry-After."
+    },
+    {
+      "legacy": "internal_error",
+      "status": 500,
+      "code": "PSO_INTERNAL_ERROR",
+      "slug": "internal-error",
+      "title": "Internal error",
+      "detail": "The server could not complete the request."
+    },
+    {
+      "legacy": "upstream_policy",
+      "status": 500,
+      "code": "PSO_UPSTREAM_POLICY",
+      "slug": "upstream-policy",
+      "title": "Upstream call refused by policy",
+      "detail": "The outbound call was refused by the destination policy; nothing was sent."
+    },
+    {
+      "legacy": "bad_gateway",
+      "status": 502,
+      "code": "PSO_UPSTREAM_BAD_GATEWAY",
+      "slug": "upstream-bad-gateway",
+      "title": "Bad gateway",
+      "detail": "An upstream service returned an invalid response."
+    },
+    {
+      "legacy": "upstream_rejected",
+      "status": 502,
+      "code": "PSO_UPSTREAM_REJECTED",
+      "slug": "upstream-rejected",
+      "title": "Upstream rejected the request",
+      "detail": "An upstream service refused a request this service made to complete the operation."
+    },
+    {
+      "legacy": "upstream_tls",
+      "status": 502,
+      "code": "PSO_UPSTREAM_TLS",
+      "slug": "upstream-tls",
+      "title": "Upstream TLS failure",
+      "detail": "The TLS connection to an upstream service could not be established or verified."
+    },
+    {
+      "legacy": "upstream_response_too_large",
+      "status": 502,
+      "code": "PSO_UPSTREAM_RESPONSE_TOO_LARGE",
+      "slug": "upstream-response-too-large",
+      "title": "Upstream response too large",
+      "detail": "An upstream service returned a response larger than the configured limit."
+    },
+    {
+      "legacy": "unknown_service",
+      "status": 502,
+      "code": "PSO_UPSTREAM_UNKNOWN_SERVICE",
+      "slug": "upstream-unknown-service",
+      "title": "Upstream not configured",
+      "detail": "The route refers to an upstream service that is not configured."
+    },
+    {
+      "legacy": "upstream_unavailable",
+      "status": 503,
+      "code": "PSO_UPSTREAM_UNAVAILABLE",
+      "slug": "upstream-unavailable",
+      "title": "Upstream unavailable",
+      "detail": "An upstream service could not be reached."
+    },
+    {
+      "legacy": "storage_unavailable",
+      "status": 503,
+      "code": "PSO_STORAGE_UNAVAILABLE",
+      "slug": "storage-unavailable",
+      "title": "Storage unavailable",
+      "detail": "The file storage backend could not complete the operation."
+    },
+    {
+      "legacy": "server_busy",
+      "status": 503,
+      "code": "PSO_SERVER_BUSY",
+      "slug": "server-busy",
+      "title": "Server busy",
+      "detail": "The server is at its concurrency limit; retry shortly."
+    },
+    {
+      "legacy": "rate_limit_unavailable",
+      "status": 503,
+      "code": "PSO_RATE_LIMIT_UNAVAILABLE",
+      "slug": "rate-limit-unavailable",
+      "title": "Rate limiting unavailable",
+      "detail": "The shared rate limit backend is unavailable and the policy is to refuse requests."
+    },
+    {
+      "legacy": "upstream_timeout",
+      "status": 504,
+      "code": "PSO_UPSTREAM_TIMEOUT",
+      "slug": "upstream-timeout",
+      "title": "Upstream timeout",
+      "detail": "An upstream service did not answer in time."
+    }
+  ]
+}

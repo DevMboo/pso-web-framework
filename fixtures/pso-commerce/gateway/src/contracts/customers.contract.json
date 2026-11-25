@@ -1,0 +1,12 @@
+{
+  "name": "customers",
+  "version": "0.1.0",
+  "service": "customers",
+  "operations": [
+    {
+      "id": "customersList",
+      "method": "GET",
+      "path": "/customers"
+    }
+  ]
+}

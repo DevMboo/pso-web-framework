@@ -1,0 +1,10 @@
+{
+  "comment": "DEVELOPMENT identity provider of this workspace (pso idp:dev). Never used in production.",
+  "issuer": "https://idp:8443",
+  "audience": "pso-api",
+  "kid": "dev-20261114-0b7f6146",
+  "alg": "ES256",
+  "host": "idp",
+  "port": 8443,
+  "createdAt": "2026-11-14T19:34:33.166Z"
+}

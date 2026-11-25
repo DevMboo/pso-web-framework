@@ -1,0 +1,45 @@
+(node:30056) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+$ GET /health/ready
+HTTP 200 application/json; charset=utf-8
+{"status":"UP","upstreams":1}
+
+$ GET /reports/summary  (public)
+HTTP 200 application/json; charset=utf-8
+{}
+
+$ GET /customers  (no token)
+HTTP 401 application/problem+json; charset=utf-8
+{"type":"urn:pso:problem:auth-unauthorized","title":"Authentication required","status":401,"detail":"Valid credentials are required to access this resource.","code":"PSO_AUTH_UNAUTHORIZED","error":"unauthorized","instance":"/customers","correlationId":"doc-corr-0002"}
+
+$ GET /customers  (token without the scope)
+HTTP 403 application/problem+json; charset=utf-8
+{"type":"urn:pso:problem:auth-forbidden","title":"Access denied","status":403,"detail":"The authenticated caller is not allowed to perform this operation.","code":"PSO_AUTH_FORBIDDEN","error":"forbidden","instance":"/customers","correlationId":"doc-corr-0003"}
+
+$ GET /customers  (right scope, catalog is not running)
+HTTP 503 application/problem+json; charset=utf-8
+{"type":"urn:pso:problem:upstream-unavailable","title":"Upstream unavailable","status":503,"detail":"An upstream service could not be reached.","code":"PSO_UPSTREAM_UNAVAILABLE","error":"upstream_unavailable","instance":"/customers","correlationId":"doc-corr-0004"}
+
+$ DELETE /customers/1  (not declared)
+HTTP 404 application/problem+json; charset=utf-8
+{"type":"urn:pso:problem:http-not-found","title":"Resource not found","status":404,"detail":"No resource matches the request.","code":"PSO_HTTP_NOT_FOUND","error":"not_found","instance":"/customers/1","correlationId":"doc-corr-0005"}
+
+$ GET /nothing-here
+HTTP 404 application/problem+json; charset=utf-8
+{"type":"urn:pso:problem:http-not-found","title":"Resource not found","status":404,"detail":"No resource matches the request.","code":"PSO_HTTP_NOT_FOUND","error":"not_found","instance":"/nothing-here","correlationId":"doc-corr-0006"}
+
+=== terminal ===
+2026-11-08 18:57:50.807 INFO  [startup] starting orchestrator  service=gateway environment=development logLevel=info logFormat=pretty node=v24.18.0
+2026-11-08 18:57:50.809 INFO  upstream configured  service=catalog tls=false mutualTls=false forward=inherit audienceBound=false
+2026-11-08 18:57:50.823 INFO  [security] security initialized (pem, ES256)
+2026-11-08 18:57:50.829 INFO  [http] orchestrator listening  host=127.0.0.1 port=39003 routes=4 modules=2
+2026-11-08 18:57:50.918 INFO  request (096fdc0a-a62e-40ff-b907-5b48b2ccf895)  traceId=e1cdf70687703ff86d73c4c9b3ecb103 method=GET path=/health/ready status=200 ms=2.205
+2026-11-08 18:57:50.927 INFO  request (doc-corr-0001)  traceId=2bde3f02e4d44335aa87a25678d56f49 method=GET path=/reports/summary status=200 ms=0.4913
+2026-11-08 18:57:50.934 WARN  [security] authentication failed  reason=missing_header route="GET /customers"
+2026-11-08 18:57:50.935 INFO  request (doc-corr-0002)  traceId=2059e2b81c5df00d945d433d48b64a8b method=GET path=/customers status=401 ms=0.7955
+2026-11-08 18:57:50.953 WARN  [security] authorization denied (doc-corr-0003)  missing=scope:customers:read route="GET /customers"
+2026-11-08 18:57:50.953 INFO  request (doc-corr-0003)  traceId=0d453ea124864fc3d6c3d19e223e0057 method=GET path=/customers status=403 ms=4.0437
+2026-11-08 18:57:50.968 INFO  request (doc-corr-0004)  traceId=79345bb3d4f638ac46028737e59edbfa method=GET path=/customers status=503 ms=4.2798
+2026-11-08 18:57:50.981 INFO  request (doc-corr-0005)  traceId=9b055d9386175fc7de3fc4993d115c1f method=DELETE path=/customers/1 status=404 ms=0.3272
+2026-11-08 18:57:50.998 INFO  request (doc-corr-0006)  traceId=7820384a93de04589fb500f821771fbf method=GET path=/nothing-here status=404 ms=0.351

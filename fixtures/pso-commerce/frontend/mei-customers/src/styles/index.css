@@ -1,0 +1,9 @@
+/*
+ * A MEI loads the shared design tokens and the Tailwind UTILITIES layer, and nothing else: no reset (the shell owns Preflight) and no
+ * selectors on bare elements. Anything specific to this domain goes in a CSS Module or under the [data-pso-mei="mei-customers"] attribute.
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "@pso/frontend-react/tokens.css";
+@import "tailwindcss/utilities.css" layer(utilities);
+@source "../";

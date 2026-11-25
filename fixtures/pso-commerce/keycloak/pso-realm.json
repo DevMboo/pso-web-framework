@@ -1,0 +1,63 @@
+{
+  "realm": "pso",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 120,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
+  "roles": {
+    "realm": [
+      { "name": "customers:read" }, { "name": "customers:write" },
+      { "name": "catalog:read" }, { "name": "catalog:write" },
+      { "name": "orders:read" }, { "name": "orders:write" },
+      { "name": "commerce-admin", "composite": true, "composites": { "realm": ["customers:read", "customers:write", "catalog:read", "catalog:write", "orders:read", "orders:write"] } },
+      { "name": "commerce-viewer", "composite": true, "composites": { "realm": ["customers:read", "catalog:read", "orders:read"] } }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "commerce-web",
+      "name": "PSO Commerce frontend (FEI)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "fullScopeAllowed": true,
+      "redirectUris": ["http://localhost:18080/commerce/*"],
+      "webOrigins": ["http://localhost:18080"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:18080/commerce/*",
+        "access.token.lifespan": "120"
+      },
+      "protocolMappers": [
+        { "name": "pso-api audience", "protocol": "openid-connect", "protocolMapper": "oidc-audience-mapper", "config": { "included.custom.audience": "pso-api", "id.token.claim": "false", "access.token.claim": "true" } },
+        { "name": "pso scopes", "protocol": "openid-connect", "protocolMapper": "oidc-usermodel-realm-role-mapper", "config": { "claim.name": "scp", "multivalued": "true", "jsonType.label": "String", "id.token.claim": "false", "access.token.claim": "true", "userinfo.token.claim": "false" } },
+        { "name": "pso roles", "protocol": "openid-connect", "protocolMapper": "oidc-hardcoded-claim-mapper", "config": { "claim.name": "tenant_id", "claim.value": "acme", "jsonType.label": "String", "id.token.claim": "false", "access.token.claim": "true" } }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "ana", "enabled": true, "email": "ana@acme.test", "emailVerified": true, "firstName": "Ana", "lastName": "Admin",
+      "realmRoles": ["commerce-admin"],
+      "credentials": [{ "type": "password", "value": "${ANA_PASSWORD}", "temporary": false }]
+    },
+    {
+      "username": "vera", "enabled": true, "email": "vera@acme.test", "emailVerified": true, "firstName": "Vera", "lastName": "Viewer",
+      "realmRoles": ["commerce-viewer"],
+      "credentials": [{ "type": "password", "value": "${VERA_PASSWORD}", "temporary": false }]
+    },
+    {
+      "username": "nobody", "enabled": true, "email": "nobody@acme.test", "emailVerified": true, "firstName": "No", "lastName": "Access",
+      "credentials": [{ "type": "password", "value": "${NOBODY_PASSWORD}", "temporary": false }]
+    }
+  ]
+}

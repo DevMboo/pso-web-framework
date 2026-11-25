@@ -1,0 +1,17 @@
+# POST /orders {"orderId":"o-100"} -> 201 {"accepted":true,"eventId":"c6568cf7-2d50-41ab-89e5-dc3d70f1b664"}
+# invalid body -> 400 {"type":"urn:pso:problem:http-400","title":"Bad request","status":400,"detail":"orderId is required","code":"PSO_HTTP_ERROR_400","error":"orderId is required","instance":"/orders","correlationId":"da3f1101-8351-474b-91b7-b961c4ec2918"}
+# POST /orders {"orderId":"o-fail","fail":true} -> 201 {"accepted":true,"eventId":"fcbc689d-1641-4e38-ab23-a25d2b7dde1f"}
+# orchestrator log (selected lines)
+2026-11-25 05:18:33.239 INFO  [dispatch] dispatch idempotency store  store=redis durable=true shared=true retentionMs=86400000
+2026-11-25 05:18:33.239 INFO  [dispatch] dispatch publisher trust  mode=off signing=false verifiedSources=[]
+2026-11-25 05:18:33.283 INFO  [readiness] dependency available  dependency=dispatch required=true detail="PING answered"
+2026-11-25 05:18:33.287 INFO  [http] orchestrator listening  host=127.0.0.1 port=39669 routes=3 modules=1
+2026-11-25 05:18:34.846 WARN  consumer failed  event=orders.placed id=fcbc689d-1641-4e38-ab23-a25d2b7dde1f attempt=1 error=Error
+2026-11-25 05:18:35.059 WARN  consumer failed  event=orders.placed id=fcbc689d-1641-4e38-ab23-a25d2b7dde1f attempt=2 error=Error
+2026-11-25 05:18:35.466 WARN  consumer failed  event=orders.placed id=fcbc689d-1641-4e38-ab23-a25d2b7dde1f attempt=3 error=Error
+# orders.confirmed
+{"envelopeVersion":1,"id":"b77e95fe-b89d-44e2-ba95-829fb883ec31","type":"orders.confirmed","version":1,"source":"gw","occurredAt":"2026-11-25T05:18:33.326Z","correlationId":"b42a1458-c146-4841-a57b-b91c50a107e6","contentType":"application/json","payload":{"orderId":"o-100"}}
+# group orders.placed
+{"name":"gw","consumers":1,"pending":0,"last-delivered-id":"1795583913322-0","entries-read":1,"lag":0}
+# dlq headers
+{"envelope":"{\"envelopeVersion\":1,\"id\":\"fcbc689d-1641-4e38-ab23-a25d2b7dde1f\",\"type\":\"orders.placed\",\"version\":1,\"source\":\"gw\",\"occurredAt\":\"2026-11-25T05:18:34.844Z\",\"correlationId\":\"74876b99-ee29-4450-901e-184e21eb9913\",\"contentType\":\"application/json\",\"payload\":{\"fail\":true,\"orderId\":\"o-fail\"}}","h:x-pso-reason":"handler-failed:Error","h:x-pso-attempts":"3","h:x-pso-group":"gw","h:x-pso-original-channel":"orders.placed","h:x-pso-dead-letter-id":"c30d854f-7889-474a-ac9b-74ce0e82a88e"}

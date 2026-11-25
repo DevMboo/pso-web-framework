@@ -1,0 +1,30 @@
+// Inter-service/API security checks against the live deployment (strict TLS).
+import { call, tokenFor } from "./ecv.mjs";
+const good = tokenFor("customers:read customers:write catalog:read catalog:write orders:read orders:write");
+const res = []; const t = (name, got, want, extra = "") => { const ok = Array.isArray(want) ? want.includes(got) : got === want; res.push({ name, got, want, ok }); console.log(ok ? "PASS" : "FAIL", name, `-> ${got}`, extra); };
+const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
+const parts = good.split("."); const claims = JSON.parse(Buffer.from(parts[1], "base64url").toString());
+
+const probe = "/customers/00000000-0000-0000-0000-000000000000";
+t("no token", (await call("GET", probe)).status, 401);
+t("garbage token", (await call("GET", probe, { token: "not.a.jwt" })).status, 401);
+t("tampered signature", (await call("GET", probe, { token: `${parts[0]}.${parts[1]}.${parts[2].slice(0, -4)}AAAA` })).status, 401);
+t("tampered claims (scope escalation, original signature)", (await call("GET", probe, { token: `${parts[0]}.${b64({ ...claims, scope: "customers:read customers:write", sub: "attacker" })}.${parts[2]}` })).status, 401);
+t("alg=none", (await call("GET", probe, { token: `${b64({ alg: "none", typ: "JWT" })}.${parts[1]}.` })).status, 401);
+t("alg=HS256 with the public key id (algorithm confusion)", (await call("GET", probe, { token: `${b64({ alg: "HS256", typ: "JWT", kid: JSON.parse(Buffer.from(parts[0], "base64url").toString()).kid })}.${parts[1]}.${parts[2]}` })).status, 401);
+t("expired token", (await call("GET", probe, { token: tokenFor("customers:read", { ECV_EXP_SECONDS: "-120" }) })).status, 401);
+t("wrong audience", (await call("GET", probe, { token: tokenFor("customers:read", { ECV_AUD: "another-api" }) })).status, 401);
+t("wrong issuer", (await call("GET", probe, { token: tokenFor("customers:read", { ECV_ISS: "https://evil.example" }) })).status, 401);
+const wrongScope = await call("POST", "/customers", { token: tokenFor("customers:read"), body: { name: "x", email: "x@example.test" } });
+t("valid token, missing scope (customers:read on a write route)", wrongScope.status, 403);
+t("valid token, scope of another service (orders:read on /customers)", (await call("GET", probe, { token: tokenFor("orders:read") })).status, 403);
+const bad = await call("POST", "/customers", { token: good, body: { name: "", email: "not-an-email" } });
+t("request validation (blank name, bad email)", bad.status, [400, 422], `| body: ${bad.text.slice(0, 140)}`);
+const unknown = await call("GET", "/definitely-not-a-route", { token: good }); t("unknown route", unknown.status, 404);
+const dup = await call("POST", "/customers", { token: good, body: { name: "Dup", email: "dup-check@example.test" } }); const dup2 = await call("POST", "/customers", { token: good, body: { name: "Dup", email: "dup-check@example.test" } });
+t("duplicate resource (409, no SQL in the answer)", dup2.status, 409, `| ${dup2.text.slice(0, 120)}`);
+const err = await call("GET", "/customers/not-a-uuid", { token: good });
+const leaks = [bad, unknown, dup2, err, wrongScope].some((r) => /at com\.|at org\.|java\.|Exception|SQLState|PSQL|jdbc|\.java:|node_modules|\/home\//i.test(r.text));
+t("error responses are sanitized (no stack, SQL, class or path)", leaks ? "LEAK" : "clean", "clean");
+const hdr = (await call("GET", "/health/ready")).headers; t("server version not disclosed", /nginx\/\d/.test(String(hdr.server ?? "")) ? "disclosed" : "hidden", "hidden", `(${hdr.server ?? "no Server header"})`);
+console.log(JSON.stringify({ passed: res.filter((r) => r.ok).length, failed: res.filter((r) => !r.ok).map((r) => r.name) }));

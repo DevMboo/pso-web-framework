@@ -1,0 +1,107 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by org.fusesource.jansi.internal.JansiLoader in an unnamed module (file:/C:/Users/dev/.m2/wrapper/dists/apache-maven-3.9.9/3477a4f1/lib/jansi-2.4.1.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper (file:/C:/Users/dev/.m2/wrapper/dists/apache-maven-3.9.9/3477a4f1/lib/guava-33.2.1-jre.jar)
+WARNING: Please consider reporting this to the maintainers of class com.google.common.util.concurrent.AbstractFuture$UnsafeAtomicHelper
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------------< com.pso:catalog >---------------------------
+[INFO] Building catalog 0.1.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.6:run (default-cli) > test-compile @ catalog >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ catalog ---
+[INFO] Copying 7 resources from src\main\resources to target\classes
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ catalog ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 18 source files with javac [debug parameters release 21] to target\classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ catalog ---
+[INFO] skip non existing resourceDirectory C:\Users\dev\AppData\Local\Temp\gen-20345\shop\catalog\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ catalog ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 5 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] 
+[INFO] <<< spring-boot:3.5.6:run (default-cli) < test-compile @ catalog <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.6:run (default-cli) @ catalog ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.6)
+
+2026-11-08T13:44:17.152-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] com.pso.catalog.Application              : Starting Application using Java 25.0.3 with PID 44132 (C:\Users\dev\AppData\Local\Temp\gen-20345\shop\catalog\target\classes started by dev in C:\Users\dev\AppData\Local\Temp\gen-20345\shop\catalog)
+2026-11-08T13:44:17.153-03:00 DEBUG [catalog,,] 44132 --- [catalog] [           main] com.pso.catalog.Application              : Running with Spring Boot v3.5.6, Spring v6.2.11
+2026-11-08T13:44:17.153-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] com.pso.catalog.Application              : The following 1 profile is active: "local"
+2026-11-08T13:44:17.837-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-08T13:44:17.877-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 33 ms. Found 2 JPA repository interfaces.
+2026-11-08T13:44:18.267-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8081 (http)
+2026-11-08T13:44:18.277-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-11-08T13:44:18.278-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.46]
+2026-11-08T13:44:18.323-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-11-08T13:44:18.324-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1135 ms
+2026-11-08T13:44:18.553-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.s.boot.web.servlet.RegistrationBean    : Filter psoConcurrencyFilter was not registered (disabled)
+2026-11-08T13:44:18.570-03:00 DEBUG [catalog,,] 44132 --- [catalog] [           main] c.p.s.a.web.CorrelationIdFilter          : Filter 'psoCorrelationFilter' configured for use
+2026-11-08T13:44:18.571-03:00 DEBUG [catalog,,] 44132 --- [catalog] [           main] c.p.s.a.ratelimit.ClientRateLimitFilter  : Filter 'psoRateLimitFilter' configured for use
+2026-11-08T13:44:18.571-03:00 DEBUG [catalog,,] 44132 --- [catalog] [           main] c.p.s.a.web.BodySizeLimitFilter          : Filter 'psoBodySizeFilter' configured for use
+2026-11-08T13:44:18.741-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-11-08T13:44:18.852-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@794cb26b
+2026-11-08T13:44:18.853-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-11-08T13:44:18.872-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://127.0.0.1:55433/catalog (PostgreSQL 16.15)
+2026-11-08T13:44:18.905-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "public"."flyway_schema_history" does not exist yet
+2026-11-08T13:44:18.908-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 2 migrations (execution time 00:00.014s)
+2026-11-08T13:44:18.924-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "public"."flyway_schema_history" ...
+2026-11-08T13:44:18.982-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-11-08T13:44:18.990-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - outbox"
+2026-11-08T13:44:19.027-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "2 - create products"
+2026-11-08T13:44:19.051-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 2 migrations to schema "public", now at version v2 (execution time 00:00.033s)
+2026-11-08T13:44:19.109-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-08T13:44:19.146-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.29.Final
+2026-11-08T13:44:19.168-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-08T13:44:19.367-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-08T13:44:19.427-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 16.15
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-08T13:44:20.066-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-08T13:44:20.105-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-08T13:44:20.119-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] c.p.s.a.PsoAutoConfiguration             : PSO service "catalog" endpoint prefix: /catalog
+2026-11-08T13:44:20.894-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2026-11-08T13:44:21.120-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8081 (http) with context path '/'
+2026-11-08T13:44:21.131-03:00  INFO [catalog,,] 44132 --- [catalog] [           main] com.pso.catalog.Application              : Started Application in 4.442 seconds (process running for 4.713)
+2026-11-08T13:44:23.001-03:00  INFO [catalog,,] 44132 --- [catalog] [0.1-8081-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-11-08T13:44:23.001-03:00  INFO [catalog,,] 44132 --- [catalog] [0.1-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-11-08T13:44:23.003-03:00  INFO [catalog,,] 44132 --- [catalog] [0.1-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  26.353 s
+[INFO] Finished at: 2026-11-08T13:44:38-03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.5.6:run (default-cli) on project catalog: Process terminated with exit code: -1 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

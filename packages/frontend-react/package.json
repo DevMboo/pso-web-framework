@@ -1,0 +1,42 @@
+{
+  "name": "@pso/frontend-react",
+  "version": "0.2.0",
+  "license": "Apache-2.0",
+  "author": "DevMboo",
+  "homepage": "https://devmboo.github.io/pso-web-docs/",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./dev": {
+      "types": "./dist/dev.d.ts",
+      "default": "./dist/dev.js"
+    },
+    "./tokens.css": "./styles/tokens.css",
+    "./shell.css": "./styles/shell.css"
+  },
+  "dependencies": {
+    "@pso/frontend": "0.2.0",
+    "@pso/frontend-client": "0.2.0"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.5",
+    "@module-federation/enhanced": "^2.9.3"
+  },
+  "files": [
+    "dist",
+    "styles",
+    "!**/*.map",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "description": "PSO Web framework: React bindings of the FEI/MEI ecosystem (application shell, microfrontend outlet, shared context, authentication, development host adapter)"
+}

@@ -1,0 +1,373 @@
+{
+  "generatedBy": "scripts/docs-evidence.mjs apply",
+  "note": "Every Verified block of a page must be backed by the listed evidence. Adding a Verified block requires evidence and an update of this file.",
+  "pages": {
+    "architecture/manual-crud-0-1": {
+      "verified": 33,
+      "evidence": [
+        {
+          "kind": "transcript",
+          "artifact": "docs/implementation/evidence/crud-transcript.txt"
+        },
+        {
+          "kind": "transcript",
+          "artifact": "docs/implementation/evidence/crud-extensions-gateway-transcript.txt"
+        },
+        {
+          "kind": "transcript",
+          "artifact": "docs/implementation/evidence/crud-extensions-maven-transcript.txt"
+        },
+        {
+          "kind": "transcript",
+          "artifact": "docs/implementation/evidence/crud-outage-maven-transcript.txt"
+        },
+        {
+          "kind": "transcript",
+          "artifact": "docs/implementation/evidence/crud-catalog-startup.log"
+        },
+        {
+          "kind": "transcript",
+          "artifact": "docs/implementation/evidence/crud-401-gateway.log"
+        },
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/spring-crud-example.test.ts"
+        },
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/spring-crud-extensions.test.ts"
+        },
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-quality.test.ts"
+        }
+      ]
+    },
+    "architecture/reference-crud": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "transcript",
+          "artifact": "docs/implementation/evidence/v020/crud-http-examples.json"
+        }
+      ]
+    },
+    "architecture/structure-migration": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-architecture.test.ts"
+        }
+      ]
+    },
+    "concepts/configuration": {
+      "verified": 2,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-cli-output.test.ts"
+        }
+      ]
+    },
+    "concepts/declarative-architecture": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-cli-output.test.ts"
+        }
+      ]
+    },
+    "concepts/deterministic-manifests": {
+      "verified": 2,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-discovery.test.ts"
+        }
+      ]
+    },
+    "concepts/path-structure-working": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-cli-output.test.ts"
+        }
+      ]
+    },
+    "concepts/structural-discovery": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-discovery.test.ts"
+        }
+      ]
+    },
+    "decisions/why-no-code-execution-in-discovery": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-diagnostics.test.ts"
+        }
+      ]
+    },
+    "devops/build-and-deploy": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "replay",
+          "artifact": "scripts/docs-evidence.mjs"
+        }
+      ]
+    },
+    "devops/docker": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "replay",
+          "artifact": "scripts/docs-evidence.mjs"
+        }
+      ]
+    },
+    "dispatch/diagnostics": {
+      "verified": 16,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-dispatch.test.ts"
+        },
+        {
+          "kind": "transcript",
+          "artifact": "docs/implementation/evidence/dispatch-lab.txt"
+        }
+      ]
+    },
+    "dispatch/walkthrough": {
+      "verified": 2,
+      "evidence": [
+        {
+          "kind": "demo-script",
+          "artifact": "docs/implementation/evidence/demo-*.txt"
+        }
+      ]
+    },
+    "getting-started/first-orchestrator": {
+      "verified": 2,
+      "evidence": [
+        {
+          "kind": "replay",
+          "artifact": "scripts/docs-evidence.mjs"
+        },
+        {
+          "kind": "demo-script",
+          "artifact": "docs/implementation/evidence/demo-*.txt"
+        }
+      ]
+    },
+    "getting-started/first-workspace": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "replay",
+          "artifact": "scripts/docs-evidence.mjs"
+        }
+      ]
+    },
+    "getting-started/quick-start": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "replay",
+          "artifact": "scripts/docs-evidence.mjs"
+        }
+      ]
+    },
+    "getting-started/requirements": {
+      "verified": 2,
+      "evidence": [
+        {
+          "kind": "replay",
+          "artifact": "scripts/docs-evidence.mjs"
+        }
+      ]
+    },
+    "getting-started/running": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "replay",
+          "artifact": "scripts/docs-evidence.mjs"
+        }
+      ]
+    },
+    "infrastructure/deployment": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "transcript",
+          "artifact": "docs/implementation/evidence/v020/deploy-rollback.json"
+        }
+      ]
+    },
+    "infrastructure/local-development": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "transcript",
+          "artifact": "docs/implementation/evidence/v020/process-mode.json"
+        }
+      ]
+    },
+    "infrastructure/resource-lifecycle": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/infra/test/engine.test.ts"
+        },
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/infra-cli.test.ts"
+        }
+      ]
+    },
+    "microservices/project-structure": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "replay",
+          "artifact": "scripts/docs-evidence.mjs"
+        }
+      ]
+    },
+    "microservices/service-contracts": {
+      "verified": 2,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-contracts.test.ts"
+        }
+      ]
+    },
+    "orchestrator/bootstrap": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "demo-script",
+          "artifact": "docs/implementation/evidence/demo-*.txt"
+        }
+      ]
+    },
+    "orchestrator/dto-validation": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "demo-script",
+          "artifact": "docs/implementation/evidence/demo-*.txt"
+        }
+      ]
+    },
+    "orchestrator/upstream-clients": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "demo-script",
+          "artifact": "docs/implementation/evidence/demo-*.txt"
+        }
+      ]
+    },
+    "reference/diagnostics-catalog": {
+      "verified": 16,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-diagnostics.test.ts"
+        },
+        {
+          "kind": "transcript",
+          "artifact": "docs/implementation/evidence/diagnostics-lab.txt"
+        }
+      ]
+    },
+    "reference/startup-failures": {
+      "verified": 9,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-startup.test.ts"
+        }
+      ]
+    },
+    "security/keys-and-pem": {
+      "verified": 2,
+      "evidence": [
+        {
+          "kind": "replay",
+          "artifact": "scripts/docs-evidence.mjs"
+        }
+      ]
+    },
+    "security/rate-limiting": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "demo-script",
+          "artifact": "docs/implementation/evidence/demo-*.txt"
+        }
+      ]
+    },
+    "spring/lombok": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-contracts.test.ts"
+        }
+      ]
+    },
+    "tutorials/authentication": {
+      "verified": 2,
+      "evidence": [
+        {
+          "kind": "transcript",
+          "artifact": "docs/implementation/evidence/v020/crud-http-examples.json"
+        }
+      ]
+    },
+    "tutorials/event-driven": {
+      "verified": 6,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-event-driven.test.ts"
+        },
+        {
+          "kind": "transcript",
+          "artifact": "docs/implementation/evidence/event-driven-transcript.txt"
+        }
+      ]
+    },
+    "tutorials/first-application": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "test",
+          "artifact": "packages/cli/test/docs-architecture.test.ts"
+        }
+      ]
+    },
+    "tutorials/production-deployment": {
+      "verified": 1,
+      "evidence": [
+        {
+          "kind": "replay",
+          "artifact": "scripts/docs-evidence.mjs"
+        }
+      ]
+    }
+  }
+}

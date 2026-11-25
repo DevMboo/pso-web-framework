@@ -1,0 +1,4 @@
+node_modules
+dist
+.pso/generated
+.env

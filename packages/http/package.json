@@ -1,0 +1,40 @@
+{
+  "name": "@pso/http",
+  "version": "0.2.0",
+  "license": "Apache-2.0",
+  "author": "DevMboo",
+  "homepage": "https://devmboo.github.io/pso-web-docs/",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@pso/core": "0.2.0",
+    "reflect-metadata": "^0.2.2",
+    "@pso/security": "0.2.0"
+  },
+  "optionalDependencies": {
+    "@opentelemetry/api": "1.9.1",
+    "@opentelemetry/sdk-metrics": "2.12.0",
+    "@opentelemetry/sdk-trace-base": "2.12.0",
+    "@opentelemetry/resources": "2.12.0",
+    "@opentelemetry/exporter-metrics-otlp-proto": "0.223.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "0.223.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "0.223.0",
+    "@opentelemetry/exporter-trace-otlp-http": "0.223.0"
+  },
+  "files": [
+    "dist",
+    "!**/*.map",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "description": "PSO Web framework: http"
+}

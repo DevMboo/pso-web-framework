@@ -1,0 +1,13 @@
+{
+  "at": "2026-11-24T09:27:20.633Z",
+  "releases": [
+    "20261124092415-9040c90d",
+    "20261124092507-d3715585"
+  ],
+  "current": {
+    "release": "20261124092415-9040c90d",
+    "previous": null,
+    "rolledBackFrom": "20261124092507-d3715585"
+  },
+  "scenario": "release 1 deployed and verified (8 probes); release 2 with docker.images.nginx=nginx:0.0.0-pso-does-not-exist failed to start; PSO restored release 1 configuration + images and re-started it; stack healthy, infra:validate --probe OK after restoring the contract"
+}

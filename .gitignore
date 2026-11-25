@@ -1,0 +1,86 @@
+node_modules
+dist
+target
+*.tsbuildinfo
+.pso/
+
+# fixtures/: validation workloads. Never commit generated artifacts, dependencies, credentials or local environment files.
+fixtures/**/node_modules/
+fixtures/**/target/
+fixtures/**/dist/
+fixtures/**/.pso/
+fixtures/**/.env
+fixtures/**/.env.*
+!fixtures/**/.env.example
+fixtures/**/*.private.pem
+fixtures/**/*.key
+fixtures/**/*.pem
+!fixtures/**/jwks.json
+fixtures/**/.tls/
+fixtures/**/tls/
+fixtures/**/idp/keys/
+fixtures/**/keys/
+fixtures/pso-cloud-validation/artifacts/
+fixtures/pso-cloud-validation/signed/
+
+# Release staging and outputs, internal assessments and generated tools: built locally or in CI, never part of the source.
+/publication-work/
+/release-out/
+/assessment-blind/
+/build/
+
+# Secrets and local state anywhere in the tree: private keys, certificate stores, environment files, generated infrastructure.
+.env
+.env.*
+!**/.env.example
+*.private.pem
+*.pfx
+*.p12
+*.jks
+*.keystore
+*.key
+.infra/
+idp/keys/
+*.log
+
+# Local editor and assistant settings.
+.vscode/
+.idea/
+.claude/
+CLAUDE.md
+AGENTS.md
+
+# Internal implementation reports and run evidence stay private. Only what the documentation tests read is published.
+/docs/implementation/*
+!/docs/implementation/documentation-coverage.md
+!/docs/implementation/evidence/
+/docs/implementation/evidence/*
+!/docs/implementation/evidence/registry.json
+!/docs/implementation/evidence/crud-401-gateway.log
+!/docs/implementation/evidence/crud-catalog-startup.log
+!/docs/implementation/evidence/crud-extensions-gateway-transcript.txt
+!/docs/implementation/evidence/crud-extensions-maven-transcript.txt
+!/docs/implementation/evidence/crud-outage-maven-transcript.txt
+!/docs/implementation/evidence/crud-transcript.txt
+!/docs/implementation/evidence/demo-*.txt
+!/docs/implementation/evidence/diagnostics-lab.txt
+!/docs/implementation/evidence/dispatch-lab.txt
+!/docs/implementation/evidence/event-driven-transcript.txt
+!/docs/implementation/evidence/v020/
+/docs/implementation/evidence/v020/*
+!/docs/implementation/evidence/v020/crud-http-examples.json
+!/docs/implementation/evidence/v020/deploy-rollback.json
+!/docs/implementation/evidence/v020/process-mode.json
+
+# fixtures/pso-cloud-validation: scenarios and administrator scripts written for one private validation server stay local; the workload,
+# the declarations and the generic scenarios (configured through ECV_* variables) are public.
+/fixtures/pso-cloud-validation/scenarios/server-setup/
+/fixtures/pso-cloud-validation/scenarios/tunnel.mjs
+/fixtures/pso-cloud-validation/scenarios/studio-ecv.mjs
+/fixtures/pso-cloud-validation/scenarios/studio-ohv-final.mjs
+/fixtures/pso-cloud-validation/scenarios/studio-termination.mjs
+/fixtures/pso-cloud-validation/scenarios/ohv-studio.mjs
+/fixtures/pso-cloud-validation/scenarios/ohv-nginx.mjs
+/fixtures/pso-cloud-validation/scenarios/playground-browser.mjs
+/fixtures/pso-cloud-validation/scenarios/playground-reconnect.mjs
+/fixtures/pso-cloud-validation/scenarios/package-gateway.mjs

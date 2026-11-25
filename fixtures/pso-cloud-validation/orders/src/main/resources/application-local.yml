@@ -1,0 +1,14 @@
+# local: a developer's machine. Convenient defaults that must never reach production (selected explicitly; `pso dev` activates it).
+logging:
+  level:
+    com.pso: DEBUG
+pso:
+  security:
+    cors:
+      enabled: true
+      allowed-origins:
+        - http://localhost:3000
+        - http://127.0.0.1:3000
+  limits:
+    requests:
+      per-minute: 6000

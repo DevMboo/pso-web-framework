@@ -1,0 +1,208 @@
+{
+  "name": "pso",
+  "version": "0.1.0",
+  "platform": "win32",
+  "arch": "x64",
+  "components": [
+    {
+      "name": "cli",
+      "version": "0.1.0",
+      "include": [
+        {
+          "from": "packages/cli/package.json",
+          "to": "node_modules/@pso/cli"
+        },
+        {
+          "from": "packages/cli/dist",
+          "to": "node_modules/@pso/cli/dist"
+        },
+        {
+          "from": "packages/core/package.json",
+          "to": "node_modules/@pso/core"
+        },
+        {
+          "from": "packages/core/dist",
+          "to": "node_modules/@pso/core/dist"
+        },
+        {
+          "from": "packages/http/package.json",
+          "to": "node_modules/@pso/http"
+        },
+        {
+          "from": "packages/http/dist",
+          "to": "node_modules/@pso/http/dist"
+        },
+        {
+          "from": "packages/security/package.json",
+          "to": "node_modules/@pso/security"
+        },
+        {
+          "from": "packages/security/dist",
+          "to": "node_modules/@pso/security/dist"
+        },
+        {
+          "from": "packages/dispatch/package.json",
+          "to": "node_modules/@pso/dispatch"
+        },
+        {
+          "from": "packages/dispatch/dist",
+          "to": "node_modules/@pso/dispatch/dist"
+        },
+        {
+          "from": "packages/channels-client/package.json",
+          "to": "node_modules/@pso/channels-client"
+        },
+        {
+          "from": "packages/channels-client/dist",
+          "to": "node_modules/@pso/channels-client/dist"
+        },
+        {
+          "from": "packages/react-channels/package.json",
+          "to": "node_modules/@pso/react-channels"
+        },
+        {
+          "from": "packages/react-channels/dist",
+          "to": "node_modules/@pso/react-channels/dist"
+        },
+        {
+          "from": "packages/channels/package.json",
+          "to": "node_modules/@pso/channels"
+        },
+        {
+          "from": "packages/channels/dist",
+          "to": "node_modules/@pso/channels/dist"
+        },
+        {
+          "from": "packages/deploy/package.json",
+          "to": "node_modules/@pso/deploy"
+        },
+        {
+          "from": "packages/deploy/dist",
+          "to": "node_modules/@pso/deploy/dist"
+        },
+        {
+          "from": "packages/deploy/agent",
+          "to": "node_modules/@pso/deploy/agent"
+        },
+        {
+          "from": "packages/frontend/package.json",
+          "to": "node_modules/@pso/frontend"
+        },
+        {
+          "from": "packages/frontend/dist",
+          "to": "node_modules/@pso/frontend/dist"
+        },
+        {
+          "from": "packages/frontend/bin",
+          "to": "node_modules/@pso/frontend/bin"
+        },
+        {
+          "from": "packages/frontend-client/package.json",
+          "to": "node_modules/@pso/frontend-client"
+        },
+        {
+          "from": "packages/frontend-client/dist",
+          "to": "node_modules/@pso/frontend-client/dist"
+        },
+        {
+          "from": "packages/frontend-react/package.json",
+          "to": "node_modules/@pso/frontend-react"
+        },
+        {
+          "from": "packages/frontend-react/dist",
+          "to": "node_modules/@pso/frontend-react/dist"
+        },
+        {
+          "from": "packages/frontend-react/styles",
+          "to": "node_modules/@pso/frontend-react/styles"
+        },
+        {
+          "from": "packages/infra/package.json",
+          "to": "node_modules/@pso/infra"
+        },
+        {
+          "from": "packages/infra/dist",
+          "to": "node_modules/@pso/infra/dist"
+        },
+        {
+          "from": "packages/cli/bin",
+          "to": "node_modules/@pso/cli/bin"
+        },
+        {
+          "from": "packages/cli/diagnostic-codes.json",
+          "to": "node_modules/@pso/cli"
+        },
+        {
+          "from": "packages/cli/docs",
+          "to": "node_modules/@pso/cli/docs"
+        },
+        {
+          "from": "packages/cli/portal",
+          "to": "node_modules/@pso/cli/portal"
+        },
+        {
+          "from": "packages/cli/studio",
+          "to": "node_modules/@pso/cli/studio"
+        },
+        {
+          "from": "packages/cli/templates",
+          "to": "node_modules/@pso/cli/templates"
+        },
+        {
+          "from": "node_modules/highlight.js",
+          "to": "node_modules/highlight.js"
+        },
+        {
+          "from": "node_modules/marked",
+          "to": "node_modules/marked"
+        },
+        {
+          "from": "node_modules/lucide-static",
+          "to": "node_modules/lucide-static"
+        },
+        {
+          "from": "node_modules/typescript",
+          "to": "node_modules/typescript"
+        },
+        {
+          "from": "node_modules/reflect-metadata",
+          "to": "node_modules/reflect-metadata"
+        },
+        {
+          "from": "node_modules/ws",
+          "to": "node_modules/ws"
+        },
+        {
+          "from": "node_modules/jose",
+          "to": "node_modules/jose"
+        },
+        {
+          "from": "release/pso.cmd",
+          "to": "bin"
+        },
+        {
+          "from": "LICENSE",
+          "to": "licenses"
+        },
+        {
+          "from": "NOTICE",
+          "to": "licenses"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "node",
+      "range": ">=24"
+    }
+  ],
+  "installRules": {
+    "integrations": [
+      {
+        "type": "shim",
+        "value": "bin/pso.cmd"
+      }
+    ]
+  }
+}

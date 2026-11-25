@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=com.pso.spring.autoconfigure.PsoEnvironmentPostProcessor
+org.springframework.boot.autoconfigure.AutoConfigurationImportFilter=com.pso.spring.autoconfigure.DatabaseProviderImportFilter

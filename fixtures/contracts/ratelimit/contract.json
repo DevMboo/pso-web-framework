@@ -1,0 +1,50 @@
+{
+  "description": "Language-neutral behavioral contract of PSO rate limiting. The TypeScript orchestrator and the Spring starters both run these cases (packages/cli/test/ratelimit.test.ts and RateLimitContractTests).",
+  "bucket": [
+    {
+      "name": "burst, refill and Retry-After",
+      "policy": { "limit": 60, "windowSeconds": 60, "burst": 3 },
+      "steps": [
+        { "t": 0, "key": "a", "allowed": true, "remaining": 2 },
+        { "t": 0, "key": "a", "allowed": true, "remaining": 1 },
+        { "t": 0, "key": "a", "allowed": true, "remaining": 0 },
+        { "t": 0, "key": "a", "allowed": false, "retryAfter": 1 },
+        { "t": 1100, "key": "a", "allowed": true },
+        { "t": 1150, "key": "a", "allowed": false },
+        { "t": 0, "key": "b", "allowed": true, "remaining": 2 }
+      ]
+    },
+    {
+      "name": "a slow policy gives a longer Retry-After and never exceeds the burst after idling",
+      "policy": { "limit": 6, "windowSeconds": 60, "burst": 2 },
+      "steps": [
+        { "t": 0, "key": "k", "allowed": true, "remaining": 1 },
+        { "t": 0, "key": "k", "allowed": true, "remaining": 0 },
+        { "t": 0, "key": "k", "allowed": false, "retryAfter": 10 },
+        { "t": 3600000, "key": "k", "allowed": true, "remaining": 1 },
+        { "t": 3600000, "key": "k", "allowed": true, "remaining": 0 },
+        { "t": 3600000, "key": "k", "allowed": false }
+      ]
+    }
+  ],
+  "clientAddress": {
+    "trustedProxies": ["10.0.0.0/8", "::1"],
+    "cases": [
+      { "name": "no proxies configured: the header is ignored", "trusted": false, "peer": "203.0.113.9", "xff": ["1.2.3.4"], "expect": "203.0.113.9" },
+      { "name": "peer is not a trusted proxy: the header is ignored", "peer": "203.0.113.9", "xff": ["1.2.3.4"], "expect": "203.0.113.9" },
+      { "name": "trusted proxy: the forwarded client is used", "peer": "10.1.1.1", "xff": ["198.51.100.7"], "expect": "198.51.100.7" },
+      { "name": "a client-prepended value is ignored (rightmost untrusted wins)", "peer": "10.1.1.1", "xff": ["6.6.6.6, 198.51.100.7"], "expect": "198.51.100.7" },
+      { "name": "trusted hops are skipped", "peer": "10.1.1.1", "xff": ["198.51.100.7, 10.2.2.2"], "expect": "198.51.100.7" },
+      { "name": "garbage never selects an identity", "peer": "10.1.1.1", "xff": ["garbage"], "expect": "10.1.1.1" },
+      { "name": "IPv4-mapped peers are normalised", "peer": "::ffff:10.1.1.1", "xff": ["198.51.100.7"], "expect": "198.51.100.7" },
+      { "name": "several header lines are one chain", "peer": "10.1.1.1", "xff": ["6.6.6.6", "198.51.100.7"], "expect": "198.51.100.7" }
+    ]
+  },
+  "keys": {
+    "client": "ip:<address>",
+    "principal": "pr:p:<subject>",
+    "route": "r:<METHOD /route>:<p:subject|ip:address>",
+    "note": "route policies name the route without the service prefix"
+  },
+  "failure": { "closed": { "status": 503, "code": "PSO_RATE_LIMIT_UNAVAILABLE" }, "open": { "allowed": true }, "denied": { "status": 429, "code": "PSO_RATE_LIMITED" } }
+}

@@ -1,0 +1,50 @@
+{
+  "events": [
+    {
+      "name": "channels.publish",
+      "version": 1,
+      "channel": "channels-events",
+      "key": "channel",
+      "compatibility": "full",
+      "schema": {
+        "type": "object",
+        "required": [
+          "v",
+          "id",
+          "type",
+          "channel",
+          "ts",
+          "source",
+          "payload"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "v": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "ts": {
+            "type": "string"
+          },
+          "correlationId": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  ]
+}

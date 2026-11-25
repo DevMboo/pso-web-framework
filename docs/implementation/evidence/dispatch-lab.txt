@@ -1,0 +1,150 @@
+### install redis
+$ pso dispatch:install redis --service gw
+package.json: + @pso/dispatch
+package.json: + ioredis
+pso.config.json: dispatch.provider = redis (enabled stays false; secrets are ${env:...} references)
+src/dispatch/: modules go here, each with an EVENTS.pso.ts
+infra/dispatch/redis.compose.yml: a local development broker (not started by PSO)
+Next: declare your events, then set pso.dispatch.enabled=true (and the broker URL) to activate. See /docs/dispatch/overview.
+
+### redis: not configured
+$ pso dispatch:doctor
+static validation: no findings
+
+NOT-CONFIGURED gw (redis): invalid dispatch configuration:
+
+### redis: broker running
+$ REDIS_URL=redis://127.0.0.1:56379 PSO_DISPATCH_ENABLED=true pso dispatch:doctor
+static validation: no findings
+
+UP             gw (redis): PING answered [42 ms]
+
+### redis: broker unreachable
+$ REDIS_URL=redis://127.0.0.1:1 PSO_DISPATCH_ENABLED=true pso dispatch:doctor
+static validation: no findings
+
+DOWN           gw (redis): cannot connect to Redis (Error)
+[exit 1]
+
+### remove previous
+$ pso dispatch:remove
+package.json: - ioredis (@pso/dispatch stays: declarations still use it)
+pso.config.json: dispatch disabled, provider none
+
+### install rabbitmq
+$ pso dispatch:install rabbitmq --service gw
+package.json: + amqplib
+pso.config.json: dispatch.provider = rabbitmq (enabled stays false; secrets are ${env:...} references)
+infra/dispatch/rabbitmq.compose.yml: a local development broker (not started by PSO)
+Next: declare your events, then set pso.dispatch.enabled=true (and the broker URL) to activate. See /docs/dispatch/overview.
+
+### rabbitmq: not configured
+$ pso dispatch:doctor
+static validation: no findings
+
+NOT-CONFIGURED gw (rabbitmq): invalid dispatch configuration:
+
+### rabbitmq: broker running
+$ RABBITMQ_URL=amqp://guest:guest@127.0.0.1:56672 PSO_DISPATCH_ENABLED=true pso dispatch:doctor
+static validation: no findings
+
+UP             gw (rabbitmq): connection open [107 ms]
+
+### rabbitmq: broker unreachable
+$ RABBITMQ_URL=amqp://guest:guest@127.0.0.1:1 PSO_DISPATCH_ENABLED=true pso dispatch:doctor
+static validation: no findings
+
+DOWN           gw (rabbitmq): cannot connect to RabbitMQ (Error)
+[exit 1]
+
+### remove previous
+$ pso dispatch:remove
+package.json: - amqplib (@pso/dispatch stays: declarations still use it)
+pso.config.json: dispatch disabled, provider none
+
+### install kafka
+$ pso dispatch:install kafka --service gw
+package.json: + kafkajs
+pso.config.json: dispatch.provider = kafka (enabled stays false; secrets are ${env:...} references)
+infra/dispatch/kafka.compose.yml: a local development broker (not started by PSO)
+Next: declare your events, then set pso.dispatch.enabled=true (and the broker URL) to activate. See /docs/dispatch/overview.
+
+### kafka: not configured
+$ pso dispatch:doctor
+static validation: no findings
+
+NOT-CONFIGURED gw (kafka): invalid dispatch configuration:
+
+### kafka: broker running
+$ KAFKA_BOOTSTRAP_SERVERS=127.0.0.1:59092 PSO_DISPATCH_ENABLED=true pso dispatch:doctor
+static validation: no findings
+
+UP             gw (kafka): metadata request answered [193 ms]
+Timeout duration was set to 1.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+### kafka: broker unreachable
+$ KAFKA_BOOTSTRAP_SERVERS=127.0.0.1:1 PSO_DISPATCH_ENABLED=true pso dispatch:doctor
+static validation: no findings
+
+DOWN           gw (kafka): connection timed out after 8 s
+[exit 1]
+
+### remove
+$ pso dispatch:remove
+package.json: - kafkajs (@pso/dispatch stays: declarations still use it)
+pso.config.json: dispatch disabled, provider none
+
+### valid declarations
+$ pso dispatch:validate
+INFO    PSO_DISPATCH_UNLOCKED gw (src/dispatch/orders/EVENTS.pso.ts)
+        orders.placed v1 is not locked yet
+        fix: Run `pso dispatch:lock` to record its contract
+
+valid. Static validation only: event delivery is verified by running the service against a broker.
+
+### events
+$ pso dispatch:events
+orders.placed@1  channel orders.events  gw consumes  schema yes  consumers: gw
+
+### consumers
+$ pso dispatch:consumers
+orders.placed                gw  OrderPlacedConsumer  group gw  (src/dispatch/orders/orders.consumer.ts)
+
+### lock
+$ pso dispatch:lock
+locked: orders.placed@1
+
+### validate after lock
+$ pso dispatch:validate
+no findings
+
+valid. Static validation only: event delivery is verified by running the service against a broker.
+
+### schema file missing
+$ pso dispatch:validate
+ERROR   PSO_DISPATCH_004 gw (src/dispatch/orders/EVENTS.pso.ts)
+        schema file schemas/missing.schema.ts of "orders.placed" does not exist
+ERROR   PSO_DISPATCH_SCHEMA_CHANGED gw (src/dispatch/orders/schemas/missing.schema.ts)
+        the schema of orders.placed v1 changed after it was locked: published events of that version would no longer match
+        fix: Declare version 2 (with a compatible schema or compatibility: "none"), then run `pso dispatch:lock`
+
+2 error(s). Static validation only: event delivery is verified by running the service against a broker.
+[exit 1]
+
+### a new required field in version 1 after the lock
+$ pso dispatch:validate
+ERROR   PSO_DISPATCH_SCHEMA_CHANGED gw (src/dispatch/orders/schemas/order-placed.schema.ts)
+        the schema of orders.placed v1 changed after it was locked: published events of that version would no longer match
+        fix: Declare version 2 (with a compatible schema or compatibility: "none"), then run `pso dispatch:lock`
+
+1 error(s). Static validation only: event delivery is verified by running the service against a broker.
+[exit 1]
+
+### consumer of an undeclared event
+$ pso dispatch:validate
+ERROR   PSO_DISPATCH_007 gw (src/dispatch/orders/orders.consumer.ts)
+        consumer OrderPlacedConsumer handles "orders.shipped", which src/dispatch/orders/EVENTS.pso.ts does not declare
+
+1 error(s). Static validation only: event delivery is verified by running the service against a broker.
+[exit 1]

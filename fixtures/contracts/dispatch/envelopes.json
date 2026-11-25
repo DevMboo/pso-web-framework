@@ -1,0 +1,320 @@
+{
+  "comment": "Shared by the TypeScript and Java test suites. Valid envelopes must serialize to exactly `canonical`; invalid ones must be rejected.",
+  "valid": [
+    {
+      "name": "minimal",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "payload": {
+          "userId": "123"
+        }
+      },
+      "canonical": "{\"envelopeVersion\":1,\"id\":\"7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f\",\"type\":\"users.created\",\"version\":1,\"source\":\"users-service\",\"occurredAt\":\"2026-11-07T12:00:00.000Z\",\"correlationId\":\"c0ffee00-1111-4222-8333-444455556666\",\"contentType\":\"application/json\",\"payload\":{\"userId\":\"123\"}}"
+    },
+    {
+      "name": "with causation and trace",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "causationId": "cause-1",
+        "trace": {
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+          "tracestate": "vendor=1"
+        },
+        "payload": {
+          "userId": "123"
+        }
+      },
+      "canonical": "{\"envelopeVersion\":1,\"id\":\"7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f\",\"type\":\"users.created\",\"version\":1,\"source\":\"users-service\",\"occurredAt\":\"2026-11-07T12:00:00.000Z\",\"correlationId\":\"c0ffee00-1111-4222-8333-444455556666\",\"causationId\":\"cause-1\",\"trace\":{\"traceparent\":\"00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01\",\"tracestate\":\"vendor=1\"},\"contentType\":\"application/json\",\"payload\":{\"userId\":\"123\"}}"
+    },
+    {
+      "name": "payload keys are sorted, nesting and arrays kept",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "payload": {
+          "z": 1,
+          "a": {
+            "y": [
+              3,
+              2,
+              1
+            ],
+            "b": null
+          },
+          "m": "text",
+          "flag": true
+        }
+      },
+      "canonical": "{\"envelopeVersion\":1,\"id\":\"7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f\",\"type\":\"users.created\",\"version\":1,\"source\":\"users-service\",\"occurredAt\":\"2026-11-07T12:00:00.000Z\",\"correlationId\":\"c0ffee00-1111-4222-8333-444455556666\",\"contentType\":\"application/json\",\"payload\":{\"a\":{\"b\":null,\"y\":[3,2,1]},\"flag\":true,\"m\":\"text\",\"z\":1}}"
+    },
+    {
+      "name": "unicode and escapes",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "payload": {
+          "name": "José \"Zé\"  ção ✓",
+          "n": -5
+        }
+      },
+      "canonical": "{\"envelopeVersion\":1,\"id\":\"7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f\",\"type\":\"users.created\",\"version\":1,\"source\":\"users-service\",\"occurredAt\":\"2026-11-07T12:00:00.000Z\",\"correlationId\":\"c0ffee00-1111-4222-8333-444455556666\",\"contentType\":\"application/json\",\"payload\":{\"n\":-5,\"name\":\"José \\\"Zé\\\"  ção ✓\"}}"
+    },
+    {
+      "name": "scalar and array payloads",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 3,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "payload": [
+          1,
+          "two",
+          {
+            "three": 3
+          }
+        ]
+      },
+      "canonical": "{\"envelopeVersion\":1,\"id\":\"7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f\",\"type\":\"users.created\",\"version\":3,\"source\":\"users-service\",\"occurredAt\":\"2026-11-07T12:00:00.000Z\",\"correlationId\":\"c0ffee00-1111-4222-8333-444455556666\",\"contentType\":\"application/json\",\"payload\":[1,\"two\",{\"three\":3}]}"
+    }
+  ],
+  "invalid": [
+    {
+      "name": "unknown field",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "payload": {},
+        "secret": "x"
+      },
+      "problemCount": 1
+    },
+    {
+      "name": "missing id",
+      "envelope": {
+        "envelopeVersion": 1,
+        "type": "users.created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "payload": {}
+      },
+      "problemCount": 1
+    },
+    {
+      "name": "bad type",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "Users.Created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "payload": {}
+      },
+      "problemCount": 1
+    },
+    {
+      "name": "bad source",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 1,
+        "source": "Users Service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "payload": {}
+      },
+      "problemCount": 1
+    },
+    {
+      "name": "version zero",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 0,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "payload": {}
+      },
+      "problemCount": 1
+    },
+    {
+      "name": "version not integer",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 1.5,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "payload": {}
+      },
+      "problemCount": 1
+    },
+    {
+      "name": "bad time",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07 12:00:00",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "payload": {}
+      },
+      "problemCount": 1
+    },
+    {
+      "name": "no payload",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json"
+      },
+      "problemCount": 1
+    },
+    {
+      "name": "wrong content type",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "text/plain",
+        "payload": {}
+      },
+      "problemCount": 1
+    },
+    {
+      "name": "envelope version 2",
+      "envelope": {
+        "envelopeVersion": 2,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "payload": {}
+      },
+      "problemCount": 1
+    },
+    {
+      "name": "bad traceparent",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "trace": {
+          "traceparent": "nope"
+        },
+        "payload": {}
+      },
+      "problemCount": 1
+    },
+    {
+      "name": "unknown trace field",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "7d1f6c8e-0a52-4a3e-9d6f-0c1b2a3d4e5f",
+        "type": "users.created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "trace": {
+          "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+          "extra": 1
+        },
+        "payload": {}
+      },
+      "problemCount": 1
+    },
+    {
+      "name": "id with spaces",
+      "envelope": {
+        "envelopeVersion": 1,
+        "id": "a b",
+        "type": "users.created",
+        "version": 1,
+        "source": "users-service",
+        "occurredAt": "2026-11-07T12:00:00.000Z",
+        "correlationId": "c0ffee00-1111-4222-8333-444455556666",
+        "contentType": "application/json",
+        "payload": {}
+      },
+      "problemCount": 1
+    },
+    {
+      "name": "not an object",
+      "envelope": [
+        "x"
+      ],
+      "problemCount": 1
+    }
+  ]
+}

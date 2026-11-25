@@ -1,0 +1,241 @@
+{
+ "schema": 1,
+ "codes": [
+  {
+   "code": "PSO_BAD_NAME",
+   "message": "\"…\" is not …-case"
+  },
+  {
+   "code": "PSO_CONFIG_PLAINTEXT_SECRET",
+   "message": "\"…\" looks like a secret stored as plain text"
+  },
+  {
+   "code": "PSO_CONFIG_UNKNOWN_KEY",
+   "message": "Unknown configuration key \"…\""
+  },
+  {
+   "code": "PSO_CONFIG_UNREADABLE",
+   "message": "Cannot read configuration: …"
+  },
+  {
+   "code": "PSO_CONTRACT_DRIFT",
+   "message": "Contract \"…\" differs from its copy in service \"…\""
+  },
+  {
+   "code": "PSO_CONTRACT_INVALID_JSON",
+   "message": "Cannot parse contract: …"
+  },
+  {
+   "code": "PSO_CONTRACT_OPERATION",
+   "message": "Each operation needs string id, method and a path starting with \"/\""
+  },
+  {
+   "code": "PSO_CONTRACT_SHAPE",
+   "message": "Contract must be a JSON object"
+  },
+  {
+   "code": "PSO_CONTRACT_UNKNOWN_SERVICE",
+   "message": "Contract targets unknown service \"…\""
+  },
+  {
+   "code": "PSO_CONTRACT_VERSION",
+   "message": "Contract version \"…\" is not semver"
+  },
+  {
+   "code": "PSO_CRUD_UNBOUND",
+   "message": "Module \"…\" is bound to the service \"…\", which this workspace does not declare yet: its routes answer 502 (upstream not configured) until it exists."
+  },
+  {
+   "code": "PSO_CYCLE",
+   "message": "Circular service dependency: …"
+  },
+  {
+   "code": "PSO_DISPATCH_012",
+   "message": "…: dispatch is enabled but no provider is selected"
+  },
+  {
+   "code": "PSO_DISPATCH_013",
+   "message": "…: provider \"…\" is configured but ${d.installed ? "
+  },
+  {
+   "code": "PSO_DISPATCH_014",
+   "message": "…: the … adapter is installed but dispatch is disabled (nothing connects)"
+  },
+  {
+   "code": "PSO_DISPATCH_015",
+   "message": "…: dispatch is enabled but no events are declared"
+  },
+  {
+   "code": "PSO_DUPLICATE_ID",
+   "message": "Duplicate … \"…\" (also declared in …)"
+  },
+  {
+   "code": "PSO_DUPLICATE_SERVICE",
+   "message": "Duplicate service \"…\""
+  },
+  {
+   "code": "PSO_FEI_ORCHESTRATOR_MISSING",
+   "message": "… talks to orchestrator \"…\" but this workspace has none"
+  },
+  {
+   "code": "PSO_FEI_ORCHESTRATOR_UNKNOWN",
+   "message": "…: … names orchestrator \"…\" but the workspace's orchestrator is \"…\""
+  },
+  {
+   "code": "PSO_FRONTEND_CONTRACT_STALE",
+   "message": "…: … is from orchestrator contract …, the orchestrator is now at …"
+  },
+  {
+   "code": "PSO_FRONTEND_PATH",
+   "message": "Frontend \"…\": path must be relative and stay inside the workspace"
+  },
+  {
+   "code": "PSO_FRONTEND_PORT",
+   "message": "Frontend \"…\": port must be an integer between 1024 and 65535"
+  },
+  {
+   "code": "PSO_FRONTEND_SHAPE",
+   "message": "\"frontends\" must be an array"
+  },
+  {
+   "code": "PSO_JWT_ISSUER",
+   "message": "PSO_JWT_AUDIENCE"
+  },
+  {
+   "code": "PSO_MEI_DIRECT_URL",
+   "message": "…: … calls an absolute URL with fetch: backend calls go through usePsoContext().api (orchestrator only)"
+  },
+  {
+   "code": "PSO_MEI_OWN_ROUTER",
+   "message": "…: … uses …: a microfrontend renders inside the router of its host and must not create its own history"
+  },
+  {
+   "code": "PSO_MISPLACED_RESOURCE",
+   "message": "… \"…\" must live in ${owners.map((o) => "
+  },
+  {
+   "code": "PSO_MISSING_DEPENDENCY",
+   "message": "Service \"…\" depends on unknown service \"…\""
+  },
+  {
+   "code": "PSO_MODULE_001",
+   "message": "Module declaration missing."
+  },
+  {
+   "code": "PSO_MODULE_002",
+   "message": "Route registry missing."
+  },
+  {
+   "code": "PSO_MODULE_003",
+   "message": "Controller is not declared in MODULE.pso.ts."
+  },
+  {
+   "code": "PSO_MODULE_004",
+   "message": "Duplicate module name."
+  },
+  {
+   "code": "PSO_MODULE_005",
+   "message": "Module does not reference its route registry."
+  },
+  {
+   "code": "PSO_MODULE_006",
+   "message": "Dependency cannot be resolved."
+  },
+  {
+   "code": "PSO_MODULE_007",
+   "message": "Circular provider dependency."
+  },
+  {
+   "code": "PSO_MODULE_008",
+   "message": "Imported module not found."
+  },
+  {
+   "code": "PSO_NO_SOURCE_ROOT",
+   "message": "Source root \"…\" does not exist"
+  },
+  {
+   "code": "PSO_PORT_CONFLICT",
+   "message": "Services \"…\" and \"…\" both use port …"
+  },
+  {
+   "code": "PSO_ROUTE_001",
+   "message": "Route references a controller that is not part of the module."
+  },
+  {
+   "code": "PSO_ROUTE_002",
+   "message": "Controller action does not exist."
+  },
+  {
+   "code": "PSO_ROUTE_003",
+   "message": "Controller is not decorated."
+  },
+  {
+   "code": "PSO_ROUTE_004",
+   "message": "Route declaration mismatch."
+  },
+  {
+   "code": "PSO_ROUTE_005",
+   "message": "Route path does not match the controller."
+  },
+  {
+   "code": "PSO_ROUTE_006",
+   "message": "Duplicate or conflicting route declaration."
+  },
+  {
+   "code": "PSO_ROUTE_007",
+   "message": "Security policy conflict."
+  },
+  {
+   "code": "PSO_ROUTE_008",
+   "message": "Unknown …."
+  },
+  {
+   "code": "PSO_ROUTE_009",
+   "message": "Invalid route declaration."
+  },
+  {
+   "code": "PSO_ROUTE_010",
+   "message": "Route targets an unknown service."
+  },
+  {
+   "code": "PSO_SCHEMA_VERSION",
+   "message": "Unsupported schemaVersion … (this CLI supports 1)"
+  },
+  {
+   "code": "PSO_SERVICE_DEV",
+   "message": "Service \"…\": dev.command must be a non-empty array of strings"
+  },
+  {
+   "code": "PSO_SERVICE_MISSING",
+   "message": "Service \"…\" path \"…\" does not exist"
+  },
+  {
+   "code": "PSO_SERVICE_PATH",
+   "message": "Service \"…\": path must be relative and stay inside the workspace"
+  },
+  {
+   "code": "PSO_SERVICE_PORT",
+   "message": "Service \"…\": port must be an integer between 1024 and 65535"
+  },
+  {
+   "code": "PSO_SERVICE_PREFIX",
+   "message": "Service \"…\": …"
+  },
+  {
+   "code": "PSO_SERVICE_SHAPE",
+   "message": "Service name must be kebab-case: …"
+  },
+  {
+   "code": "PSO_WORKSPACE",
+   "message": "PSO_SERVICE"
+  },
+  {
+   "code": "PSO_WORKSPACE_SHAPE",
+   "message": "Workspace file must be a JSON object"
+  },
+  {
+   "code": "PSO_WORKSPACE_UNREADABLE",
+   "message": "Cannot read …: …"
+  }
+ ]
+}

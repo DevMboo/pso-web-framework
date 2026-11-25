@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "name": "my-platform",
+  "services": [
+    {
+      "name": "gateway",
+      "path": "gateway",
+      "runtime": "node",
+      "role": "orchestrator",
+      "port": 3000,
+      "health": "/health/ready"
+    },
+    {
+      "name": "catalog",
+      "path": "catalog",
+      "runtime": "spring-boot",
+      "role": "service",
+      "port": 8081,
+      "health": "/actuator/health"
+    }
+  ]
+}

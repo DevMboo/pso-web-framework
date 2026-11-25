@@ -1,0 +1,9 @@
+spring-outbox (0.1 layout, compatibility material only)
+
+This example keeps the **0.1 package layout** (`application/`, `domain/`, `events/`, `persistence/`). It exists only to verify
+that the transactional outbox keeps working in services created before the official structure (it is compiled and run by
+`packages/cli/test/spring-outbox.test.ts` in a service created with `--structure legacy`).
+
+Do not copy it into a new service. New services use the layered structure: entities in `infrastructure/entity/`, repositories in
+`infrastructure/persistence/`, transactional services in `application/service/` and event classes in `application/event/`
+(see the Java microservice architecture page and `pso dispatch:outbox`).

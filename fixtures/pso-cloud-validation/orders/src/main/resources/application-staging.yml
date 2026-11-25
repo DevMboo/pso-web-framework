@@ -1,0 +1,12 @@
+# staging: production-like. JWT validation must be configured (PSO_JWT_*) or the service refuses to start; H2 is refused.
+# Structured JSON logs on the console (Spring Boot ECS format) with secrets removed from every string. Switch format with LOGGING_STRUCTURED_FORMAT_CONSOLE=logstash|gelf.
+logging:
+  structured:
+    format:
+      console: ecs
+    json:
+      customizer: com.pso.spring.autoconfigure.logging.PsoStructuredLogRedaction
+pso:
+  limits:
+    requests:
+      per-minute: ${PSO_RATE_LIMIT_PER_MINUTE:300}

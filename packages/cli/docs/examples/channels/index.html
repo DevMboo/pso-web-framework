@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Candidate updates</title>
+</head>
+<body>
+  <h1>Candidate <span id="candidate">c1</span></h1>
+  <p>Connection: <strong id="status">connecting</strong></p>
+  <p id="error" role="alert" hidden></p>
+  <ul id="events" aria-live="polite"></ul>
+
+  <!-- the SDK is one dependency-free ES module: copy node_modules/@pso/channels-client/dist/index.js next to this page as client.js -->
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
