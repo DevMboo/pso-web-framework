@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.0-rc.6 — Sign-in mode of a FEI per environment (2026-11-25)
+
+Sixth release candidate of 0.2.0 (npm packages stay `0.2.0`; PSO Java is `0.2.0-rc.6`; rc.1 to rc.5 are kept for rollback).
+**The Windows installer is not Authenticode-signed.**
+
+### Fixed
+- `pso frontend:config --env <name>` was rejected as an unknown option although the command recommended it. It is now accepted, takes
+  `--fei` when the workspace has several shells, and records the sign-in mode as `environments.<env>.frontends.<fei>.auth` in
+  `pso.infra.json`; the infrastructure engine re-renders that FEI's site configuration, so `infra:apply`, `docker:up` and
+  `frontend:publish` keep it. Other FEIs and environments are unchanged. OIDC, API-path and signature options stay with `--site`.
+- A shell honours a runtime `auth: none`: it opens without sign-in (before, it showed a login page that could not sign in).
+- In a shell without sign-in, a page that requires scopes answers "Access denied" instead of opening.
+- Generated FEI and MEI templates: an anonymous shell shows its full layout without user or sign-out, and "Signed in as" is only shown
+  with a session (new projects only).
+
+### Unchanged
+- The orchestrator and the services keep enforcing every protected route (`401` without a token).
+
 ## 0.2.0-rc.5 — Mandatory workspace organization (2026-11-25)
 
 Fifth release candidate of 0.2.0 (npm packages stay `0.2.0`; PSO Java is `0.2.0-rc.5`; rc.1 to rc.4 are kept for rollback).

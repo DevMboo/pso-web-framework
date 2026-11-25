@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <div className="mx-auto max-w-4xl">
       <h1 className="text-2xl font-semibold">Welcome{session.user?.name ? `, ${session.user.name}` : ""}</h1>
-      <p className="mt-1 text-sm text-muted">Signed in as <span className="font-mono">{session.user?.id}</span>{session.tenant ? <> · tenant <span className="font-mono">{session.tenant.id}</span></> : null}</p>
+      {session.user ? <p className="mt-1 text-sm text-muted">Signed in as <span className="font-mono">{session.user.id}</span>{session.tenant ? <> · tenant <span className="font-mono">{session.tenant.id}</span></> : null}</p> : null}
       {items.length === 0 ? (
         <p className="mt-8 rounded-pso border border-dashed border-line p-6 text-sm text-muted">No microfrontend is available to your session yet. Register one with <code>pso fei:register &lt;name&gt;</code>, or ask for the scopes it requires.</p>
       ) : (

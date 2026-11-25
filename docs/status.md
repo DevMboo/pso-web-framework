@@ -1,6 +1,6 @@
 # PSO Web Framework: implementation status
 
-Current release: **`0.2.0-rc.5`** ([GitHub release](https://github.com/DevMboo/pso-web-framework/releases/tag/v0.2.0-rc.5); release candidate, Authenticode-unsigned; the CLI reports `0.2.0`). The user documentation is
+Current release: **`0.2.0-rc.6`** ([GitHub release](https://github.com/DevMboo/pso-web-framework/releases/tag/v0.2.0-rc.6); release candidate, Authenticode-unsigned; the CLI reports `0.2.0`). The user documentation is
 https://devmboo.github.io/pso-web-docs/; this page summarises what exists, what does not, and how it is verified. The authoritative lists
 of unimplemented commands and capabilities are in `packages/cli/src/unimplemented.ts`, which the documentation and the AI contexts read and
 which `packages/cli/test/docs-parity.test.ts` checks against the sources.
@@ -37,7 +37,7 @@ Capabilities that do not exist in this version (from `UNSUPPORTED_CAPABILITIES`)
 - Published packages on npm or Maven Central.
 - A production identity provider (`pso idp:dev` is for development only).
 
-Release executables are not Authenticode-signed yet, including `0.2.0-rc.5`
+Release executables are not Authenticode-signed yet, including `0.2.0-rc.6`
 ([code signing policy](https://devmboo.github.io/pso-web-docs/downloads/code-signing-policy.html)).
 
 ## Verified only in part

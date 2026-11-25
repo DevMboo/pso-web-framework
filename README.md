@@ -36,7 +36,7 @@ databases, containers), Studio, and a deployment agent.
 - Documentation: https://devmboo.github.io/pso-web-docs/
 - License: [Apache License 2.0](LICENSE) (see also [NOTICE](NOTICE))
 - Maintainer: [DevMboo](https://github.com/DevMboo)
-- Current release: `0.2.0-rc.5` (release candidate; Windows x64 distribution; the CLI reports version `0.2.0`)
+- Current release: `0.2.0-rc.6` (release candidate; Windows x64 distribution; the CLI reports version `0.2.0`)
 
 PSO Web Framework is free and open-source software. It contains no telemetry and transfers nothing unless you ask for it
 ([privacy policy](https://devmboo.github.io/pso-web-docs/downloads/privacy-policy.html)). Release executables are not Authenticode-signed

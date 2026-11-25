@@ -28,7 +28,9 @@ export function AppShell({ children }: { children?: ReactNode }) {
   useEffect(() => { setOpen(false); }, [loc.pathname]);
   useEffect(() => { document.title = crumbs.length ? `${crumbs[crumbs.length - 1]!.title} · ${fei.name}` : fei.name; }, [crumbs, fei.name]);
 
-  if (session.status !== "signed-in" && fei.name) {
+  // a shell without sign-in (FEI.pso.ts, or `pso frontend:config --env <name> --auth none`) shows its full layout to every visitor
+  const anonymous = fei.authentication === "none";
+  if (!anonymous && session.status !== "signed-in" && fei.name) {
     return <div className="min-h-screen bg-bg text-fg">{fei.devTokenBuild ? <DevTokenBanner /> : null}<main id="main">{children}</main><Notifications /></div>;
   }
   return (
@@ -44,8 +46,8 @@ export function AppShell({ children }: { children?: ReactNode }) {
         <div className="ml-auto flex items-center gap-3">
           <ConnectionBadge />
           <button type="button" className="rounded p-2 text-muted hover:bg-surface-2" onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}>{theme === "dark" ? <FiSun aria-hidden="true" /> : <FiMoon aria-hidden="true" />}</button>
-          <span className="hidden max-w-40 truncate text-sm text-muted sm:block" title={session.user?.id}>{session.user?.name ?? session.user?.id}</span>
-          <button type="button" className="flex items-center gap-2 rounded-pso border border-line px-3 py-1.5 text-sm hover:bg-surface-2" onClick={() => { void signOut(); }}><FiLogOut aria-hidden="true" /><span className="hidden sm:inline">Sign out</span></button>
+          {anonymous ? null : <span className="hidden max-w-40 truncate text-sm text-muted sm:block" title={session.user?.id}>{session.user?.name ?? session.user?.id}</span>}
+          {anonymous ? null : <button type="button" className="flex items-center gap-2 rounded-pso border border-line px-3 py-1.5 text-sm hover:bg-surface-2" onClick={() => { void signOut(); }}><FiLogOut aria-hidden="true" /><span className="hidden sm:inline">Sign out</span></button>}
         </div>
       </header>
       <div className="md:grid md:grid-cols-[14rem_1fr]">

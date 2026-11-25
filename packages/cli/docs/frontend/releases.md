@@ -22,6 +22,25 @@ The shell never loads a script URL it was handed. Its **runtime configuration** 
 
 Locations must be same-origin under `/_mei/`, or an origin the configuration lists over HTTPS. A failure at any step shows a "module unavailable" page for that MEI and nothing else; configuration, trust, compatibility and signature failures are not retried, network failures are retried a bounded number of times.
 
+## Sign-in mode of a shell in an environment
+
+In a workspace with `pso.infra.json`, each FEI's site configuration is managed by the infrastructure engine. Choose how users sign in to
+one shell in one environment with `--env`; run it from the workspace root:
+
+```bash
+pso frontend:config --env local --fei shop --auth none     # the shop shell becomes public in "local"
+pso frontend:config --env local --fei admin --auth oidc    # admin signs in through the environment's identity provider
+```
+
+The choice is recorded as `environments.<env>.frontends.<fei>.auth` in `pso.infra.json` and the engine re-renders that FEI's
+`pso-runtime-config.json` (`.infra/sites/<env>/<fei>/`), so a later `pso infra:apply`, `pso docker:up` or `pso frontend:publish` keeps it.
+Other FEIs and other environments are unchanged. `--auth none` only removes the shell's sign-in: the shell then shows its full layout to
+every visitor, a microfrontend page that requires scopes answers "Access denied" (no visitor can hold a scope), public microfrontends
+open (they are not listed in the navigation unless their entry in `FEI.pso.ts` sets `nav: true`), routes the orchestrator protects still
+answer `401` to its requests, and the services keep their own rules. A production environment refuses `dev-token`, and a shell whose
+`FEI.pso.ts` declares `security.authentication: "none"` stays without sign-in whatever the environment says. The OIDC, API-path and
+signature options belong to a site you manage yourself (`--site`) and are refused with `--env`.
+
 ## Releases on a site root
 
 ```bash

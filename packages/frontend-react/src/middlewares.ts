@@ -46,7 +46,9 @@ export function defaultMiddlewares(d: MiddlewareDeps): Record<string, Middleware
     authorization: defineMiddleware({
       name: "authorization",
       execute(ctx, next) {
-        if (d.authentication === "none" || isPublic(ctx.to.meta)) return next();
+        if (isPublic(ctx.to.meta)) return next();
+        // a shell without sign-in has no session, so no visitor can hold a scope: a page that requires scopes is denied, not opened
+        if (d.authentication === "none") return ctx.to.scopes.length ? ctx.deny(403, `this application runs without sign-in, and this page requires: ${ctx.to.scopes.join(", ")}`) : next();
         const have = new Set(d.auth.getState().scopes);
         const missing = ctx.to.scopes.filter((s) => !have.has(s));
         if (missing.length) return ctx.deny(403, `missing scope${missing.length > 1 ? "s" : ""}: ${missing.join(", ")}`);

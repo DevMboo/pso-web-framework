@@ -82,3 +82,14 @@ test("an expired session on a protected route ends it and redirects once; on a p
   assert.deepEqual(publicResult.outcome, { type: "continue" });
   assert.deepEqual(b.calls, { refresh: 0, signOut: 0 }, "no refresh storm and no sign-out caused by a public page");
 });
+
+test("a shell without sign-in (declared, or switched off for the environment): open pages load, pages that require scopes are denied", async () => {
+  const auth = { getState: () => SIGNED_OUT, refresh: async () => false, signOut: async () => undefined } as unknown as AuthManager;
+  const m = defaultMiddlewares({ auth, authentication: "none", loginPath: fei.loginPath, locale: { default: "en" } });
+  const host = [m["authentication"]!, m["authorization"]!, m["session"]!, m["context"]!];
+  for (const path of ["/", "/welcome", "/about"]) assert.deepEqual((await runNavigation({ host, to: target(path) })).outcome, { type: "continue" }, path);
+  const denied = await runNavigation({ host, to: target("/members", {}, ["members:read"]) });
+  assert.equal(denied.outcome.type, "denied", "no visitor can hold a scope, so the protected page is not opened");
+  assert.match(JSON.stringify(denied.outcome), /runs without sign-in[^"]*members:read/);
+  assert.equal((await runNavigation({ host, to: target("/members") })).outcome.type, "continue", "a page without scopes stays open");
+});

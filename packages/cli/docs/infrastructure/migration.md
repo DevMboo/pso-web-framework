@@ -10,7 +10,7 @@ A 0.1 workspace keeps working with the 0.2.0 CLI without any change: `pso dev`, 
 
 ## Upgrading the CLI first
 
-Download the `0.2.0-rc.5` portable ZIP ([Downloads](/downloads/index)), or update an installed distribution that trusts the same key with `pso update install --package <extracted-zip>\.pso-install\packages\0.2.0-rc.5.psopkg`. The rc.5 Windows installer is unsigned and unvalidated end to end, so it is not an upgrade path. See [Installation](/getting-started/installation) and [release integrity and Windows installation](/infrastructure/release-integrity-and-signing). Workspaces live outside the installation and are not touched by an update, rollback (`pso update rollback`) or removal of the portable folder.
+Download the `0.2.0-rc.6` portable ZIP ([Downloads](/downloads/index)), or update an installed distribution that trusts the same key with `pso update install --package <extracted-zip>\.pso-install\packages\0.2.0-rc.6.psopkg`. The rc.6 Windows installer is unsigned and unvalidated end to end, so it is not an upgrade path. See [Installation](/getting-started/installation) and [release integrity and Windows installation](/infrastructure/release-integrity-and-signing). Workspaces live outside the installation and are not touched by an update, rollback (`pso update rollback`) or removal of the portable folder.
 
 ## Preparing to migrate an application
 

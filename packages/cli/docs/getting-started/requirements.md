@@ -13,7 +13,7 @@ related: [getting-started/installation, getting-started/troubleshooting]
 | Maven | **not required** | each service carries a project-local Maven Wrapper (Maven 3.9.9, SHA-256 pinned) that downloads Maven from Maven Central on first use |
 | Docker | optional | `pso docker:build`, the generated Compose stack, and running real brokers or PostgreSQL locally |
 
-Windows, macOS and Linux are supported by the CLI from a checkout of the source. The current release, PSO Web V2 `0.2.0-rc.5`, is distributed for Windows 10/11 x64 as a portable ZIP (recommended) and an experimental, unsigned installer that is not validated end to end ([Downloads](/downloads/index)).
+Windows, macOS and Linux are supported by the CLI from a checkout of the source. The current release, PSO Web V2 `0.2.0-rc.6`, is distributed for Windows 10/11 x64 as a portable ZIP (recommended) and an experimental, unsigned installer that is not validated end to end ([Downloads](/downloads/index)).
 
 > [!NOTE]
 > **Which Node version?** Node 24 or newer. The framework packages and the generated orchestrator declare `engines.node >=24`, `pso doctor` requires 24 (it prints `>=24`), and every test of this framework ran on Node 24.

@@ -38,7 +38,7 @@ Generated services include Lombok with explicit annotation processing. See [Lomb
 
 ## Development workflow
 
-The artifacts are not published to Maven Central. Install them once into your local Maven repository with `pso java:install`: the installed rc.5 distribution copies its bundled `com.pso:*:0.2.0-rc.5` repository, a framework checkout builds `com.pso:*:0.1.0-SNAPSHOT` (see [Maven BOM and Java versions](/spring/maven-bom)).
+The artifacts are not published to Maven Central. Install them once into your local Maven repository with `pso java:install`: the installed rc.6 distribution copies its bundled `com.pso:*:0.2.0-rc.6` repository, a framework checkout builds `com.pso:*:0.1.0-SNAPSHOT` (see [Maven BOM and Java versions](/spring/maven-bom)).
 
 ## Not implemented
 

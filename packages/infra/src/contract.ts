@@ -46,6 +46,8 @@ export interface EnvironmentDecl {
    * `pso connection:add` (`ssh`: `connection` names it, `root` is the directory PSO manages there), or a reviewable bundle (`bundle`)
    */
   deploy?: { target?: "docker" | "bundle" | "ssh"; dockerContext?: string; connection?: string; root?: string };
+  /** per-environment frontend settings that win over the workspace-wide `frontends` section (written by `pso frontend:config --env`) */
+  frontends?: Record<string, { auth?: "oidc" | "dev-token" | "none" }>;
 }
 
 export interface FrontendInfraDecl {
@@ -149,6 +151,15 @@ export function validateContract(raw: unknown): ContractIssue[] {
     if (isObj(e["hosts"])) for (const [k, h] of Object.entries(e["hosts"])) if (typeof h !== "string" || !FQDN.test(h)) err(`${p}.hosts.${k}`, "PSO_INFRA_HOST", `host "${String(h)}" must be a fully-qualified DNS name`);
     const tls = isObj(e["tls"]) ? e["tls"] : {};
     const source = tls["source"] ?? (kind === "development" ? "pso-dev-ca" : "external");
+    if (e["frontends"] !== undefined) {
+      if (!isObj(e["frontends"])) err(`${p}.frontends`, "PSO_INFRA_FRONTEND", "must be an object of FEI names");
+      else for (const [n, f] of Object.entries(e["frontends"])) {
+        if (!isObj(f)) { err(`${p}.frontends.${n}`, "PSO_INFRA_FRONTEND", "must be an object"); continue; }
+        for (const k of Object.keys(f)) if (k !== "auth") err(`${p}.frontends.${n}.${k}`, "PSO_INFRA_FRONTEND", `only "auth" can be set per environment (host, basePath and clientId are workspace-wide in $.frontends)`);
+        if (f["auth"] !== undefined && !["oidc", "dev-token", "none"].includes(String(f["auth"]))) err(`${p}.frontends.${n}.auth`, "PSO_INFRA_FRONTEND_AUTH", `"auth" must be oidc, dev-token or none`);
+        if (f["auth"] === "dev-token" && kind === "production") err(`${p}.frontends.${n}.auth`, "PSO_INFRA_DEV_TOKEN_PRODUCTION", "dev-token sign-in is not accepted in a production environment");
+      }
+    }
     if (source !== "pso-dev-ca" && source !== "external") err(`${p}.tls.source`, "PSO_INFRA_TLS_SOURCE", `"tls.source" must be "pso-dev-ca" or "external"`);
     // production never runs on certificates nobody trusts: a development authority is refused, not warned about
     if (kind === "production" && source === "pso-dev-ca") err(`${p}.tls.source`, "PSO_INFRA_TLS_PRODUCTION", `a production environment cannot use certificates from the PSO development authority`, `Set "tls": { "source": "external", "dir": "<directory with your certificates>" }`);

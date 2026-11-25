@@ -84,9 +84,9 @@ export function useAuth(): Pick<AuthManager, "signIn" | "signInWithToken" | "sig
   const { auth, config } = useFeiState();
   return { signIn: auth.signIn, signInWithToken: auth.signInWithToken, signOut: auth.signOut, handleCallback: auth.handleCallback, devTokenAllowed: ALLOW_DEV_TOKEN && config.auth?.kind === "dev-token", kind: (config.auth?.kind ?? "none") };
 }
-export function useFei(): { name: string; locale: string; loginPath: string; microfrontends: FeiRuntimeDefinition["microfrontends"]; devTokenBuild: boolean; devBuild: boolean } {
+export function useFei(): { name: string; locale: string; loginPath: string; microfrontends: FeiRuntimeDefinition["microfrontends"]; /** "none" when this shell runs without sign-in (declared in FEI.pso.ts, or switched off for this environment by the runtime configuration) */ authentication: "jwt" | "none"; devTokenBuild: boolean; devBuild: boolean } {
   const s = useFeiState();
-  return { name: s.fei.name, locale: s.fei.locale.default, loginPath: s.fei.security.loginPath, microfrontends: s.fei.microfrontends, devTokenBuild: ALLOW_DEV_TOKEN && !IS_DEV, devBuild: IS_DEV };
+  return { name: s.fei.name, locale: s.fei.locale.default, loginPath: s.fei.security.loginPath, authentication: s.fei.security.authentication, microfrontends: s.fei.microfrontends, devTokenBuild: ALLOW_DEV_TOKEN && !IS_DEV, devBuild: IS_DEV };
 }
 export interface NavItem { name: string; path: string; title: string; icon?: string; enabled: boolean; status: RemoteStatus["state"] }
 /** Navigation entries the current session may open (UX filtering: the orchestrator enforces access to data). */
@@ -321,6 +321,10 @@ export async function startFei(o: StartFeiOptions): Promise<{ unmount(): void }>
   catch (e) { root.render(<o.pages.Crash error={e as Error} reset={() => location.reload()} />); throw e; }
   if (config.fei !== o.fei.name) { const e = new Error(`the runtime configuration is for "${config.fei}", this application is "${o.fei.name}"`); root.render(<o.pages.Crash error={e} reset={() => location.reload()} />); throw e; }
   if (!IS_DEV && config.mode === "development") { const e = new Error("a production build refuses a development runtime configuration"); root.render(<o.pages.Crash error={e} reset={() => location.reload()} />); throw e; }
+  // the environment can run this shell without sign-in (`pso frontend:config --env <name> --auth none`): the shell is then public there.
+  // Only an explicit runtime `auth: none` does this (a missing auth section keeps the declared behaviour), and it changes the shell only:
+  // the orchestrator and the services still enforce every protected route, so its API calls without a token still answer 401.
+  if (o.fei.security.authentication === "jwt" && config.auth?.kind === "none") o = { ...o, fei: { ...o.fei, security: { ...o.fei.security, authentication: "none", session: "none" } } };
   // the shell's own routes, resolved once: the start-up decision below and the navigation gate use the same table
   const routes: ResolvedRoute[] = o.feiRoutes ? flattenRoutes({ routes: toDecl(o.feiRoutes) }, o.fei.name, "/", "ROUTES.pso.ts") : [];
   const authCfg: AuthConfig = o.fei.security.authentication === "none" ? { kind: "none" } : (config.auth ?? { kind: "none" });

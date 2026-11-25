@@ -11,7 +11,7 @@ export default function Home() {
         <h1 className="text-2xl font-semibold">{{Domain}}</h1>
         <button type="button" onClick={list.reload} className="inline-flex items-center gap-2 rounded-pso border border-line px-3 py-1.5 text-sm hover:bg-surface-2"><FiRefreshCw aria-hidden="true" /> Refresh</button>
       </div>
-      <p className="mt-1 text-sm text-muted">Signed in as <span className="font-mono">{user?.id}</span>{tenant ? <> · tenant <span className="font-mono">{tenant.id}</span></> : null} · {permissions.length} scope(s)</p>
+      {user ? <p className="mt-1 text-sm text-muted">Signed in as <span className="font-mono">{user.id}</span>{tenant ? <> · tenant <span className="font-mono">{tenant.id}</span></> : null} · {permissions.length} scope(s)</p> : null}
 
       {list.status === "loading" ? <p role="status" className="mt-6 text-sm text-muted">Loading…</p> : null}
       {list.status === "error" ? (

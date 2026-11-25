@@ -13,7 +13,7 @@ import { CliError, writeFiles } from "./fsx.ts";
 import { str } from "./args.ts";
 import { CONTRACT_FILE, buildContract, contractVersionOf, diffContracts, renderContractTs, type OrchestratorContract } from "./frontend-contracts.ts";
 import { writeFileSync as write } from "node:fs";
-import { paths, plan } from "@pso/infra";
+import { INFRA_FILE, apply, paths, plan } from "@pso/infra";
 import { INFRA_HOOKS, engine } from "./commands-infra.ts";
 import { trustedKeyOfSigner } from "./frontend-signing.ts";
 
@@ -47,6 +47,56 @@ export function siteFor(ctx: Ctx, project?: string): { site: string; basePath?: 
   if (!s) throw new CliError("--site <directory> or --env <name> is required", "The site root is the directory your web server serves (see `pso frontend:nginx`); with pso.infra.json, --env publishes into that environment's site of the right FEI");
   return { site: resolve(ctx.cwd, s) };
 }
+/** Options that describe a hand-managed site; with --env they come from pso.infra.json and the FEI declarations instead. */
+const SITE_ONLY_OPTIONS = ["oidc-issuer", "oidc-authorize", "oidc-token", "oidc-client", "oidc-scope", "api-base", "channels-path", "require-signature", "trust-signer", "trust-key", "key-id"];
+
+/**
+ * `pso frontend:config --env <name> [--fei <name>] --auth oidc|dev-token|none`: the sign-in mode of ONE shell in ONE environment. The
+ * runtime configuration of an environment's site is a resource of the infrastructure engine (rendered from pso.infra.json), so writing
+ * the file directly would be undone by the next infra:apply, docker:up or publication. The choice is recorded as
+ * `environments.<env>.frontends.<fei>.auth` and the engine re-renders that FEI's site configuration; other FEIs and other environments
+ * are untouched, and the orchestrator and services keep enforcing their own route security whatever a shell does.
+ */
+function configureEnvironment(ctx: Ctx): number {
+  const { root, config } = requireWorkspace(ctx);
+  const env = str(ctx.flags["env"])!;
+  if (str(ctx.flags["site"]) !== undefined) throw new CliError("--site and --env both choose the site root: use one");
+  const manual = SITE_ONLY_OPTIONS.filter((k) => ctx.flags[k] !== undefined);
+  if (manual.length) throw new CliError(`${manual.map((k) => `--${k}`).join(", ")} only apply to a site you manage yourself (--site <dir>)`, "With --env the identity provider, the orchestrator path and the microfrontends come from pso.infra.json and the FEI declarations; only --auth is chosen here");
+  const file = join(root, INFRA_FILE);
+  if (!existsSync(file)) throw new CliError(`--env needs ${INFRA_FILE}`, "Run pso infra:init first, or configure a site you manage with --site <dir>");
+  const loaded = loadFrontends(root, frontends(config));
+  const feiFlag = str(ctx.flags["fei"]);
+  const shell = feiFlag !== undefined ? feiOf(loaded, feiFlag) : loaded.feis.length === 1 ? loaded.feis[0] : undefined;
+  if (!shell) throw new CliError(feiFlag !== undefined ? `Unknown or invalid FEI "${feiFlag}"` : loaded.feis.length > 1 ? `This workspace has ${loaded.feis.length} FEIs: pass --fei <name>` : "This workspace has no valid FEI", loaded.feis.length > 1 ? `Known: ${loaded.feis.map((x) => x.project.name).join(", ")}` : "pso frontend:validate");
+  const auth = str(ctx.flags["auth"]);
+  if (auth === undefined) throw new CliError("--auth oidc|dev-token|none is required with --env");
+  if (auth !== "dev-token" && auth !== "oidc" && auth !== "none") throw new CliError(`Invalid --auth "${auth}"`, "Use oidc, dev-token or none");
+  const fei = shell.definition.name;
+  const original = readFileSync(file, "utf8");
+  const raw = JSON.parse(original) as { environments?: Record<string, { frontends?: Record<string, { auth?: string }> }> };
+  const e = raw.environments?.[env];
+  if (!e) throw new CliError(`Unknown environment "${env}"`, `Declared in ${INFRA_FILE}: ${Object.keys(raw.environments ?? {}).join(", ") || "none"}`);
+  const before = engine(() => plan(root, env, INFRA_HOOKS)).topology.frontends.find((x) => x.name === fei)?.auth;
+  e.frontends = { ...(e.frontends ?? {}), [fei]: { ...(e.frontends?.[fei] ?? {}), auth } };
+  writeFileSync(file, JSON.stringify(raw, null, 2) + "\n");
+  let result: ReturnType<typeof apply>;
+  try {
+    const p = engine(() => plan(root, env, INFRA_HOOKS)); // validates the contract and the topology (dev-token is refused in production)
+    const effective = p.topology.frontends.find((x) => x.name === fei)?.auth;
+    if (effective !== auth) throw new CliError(`${fei} declares its own authentication in FEI.pso.ts, which wins: the effective sign-in stays "${effective}"`, "Change security.authentication in the FEI declaration instead");
+    result = engine(() => apply(root, { env, hooks: INFRA_HOOKS, only: [`site:${fei}`, `runtime-config:${fei}`], by: "pso frontend:config" }));
+  } catch (err) { writeFileSync(file, original); throw err; }
+  const site = join(root, ...paths.site(env, fei).split("/"));
+  const cfg = readRuntimeConfig(site);
+  emit(ctx, { environment: env, fei, before, auth, contract: `${INFRA_FILE}: environments.${env}.frontends.${fei}.auth`, site, runtimeConfig: cfg, applied: result.applied.map((a) => a.id) },
+    [`${fei} in ${env}: sign-in ${before ?? "?"} -> ${auth}   (recorded in ${INFRA_FILE}: environments.${env}.frontends.${fei}.auth)`,
+      `wrote ${join(site, "pso-runtime-config.json")}   auth: ${cfg?.auth?.kind ?? "?"}`,
+      "other FEIs and other environments are unchanged; the orchestrator and the services keep enforcing their own route security",
+      ...(auth === "none" ? ["note: the shell shows no sign-in; routes that need a token still answer 401 to its requests"] : [])].join("\n"));
+  return 0;
+}
+
 function siteOf(ctx: Ctx, project?: string): string {
   return siteFor(ctx, project).site;
 }
@@ -137,9 +187,11 @@ export const FRONTEND_RELEASE_COMMANDS: Record<string, Command> = {
     },
   },
   "frontend:config": {
-    usage: "pso frontend:config --site <dir> [--fei <name>] [--auth dev-token|oidc|none] [--oidc-issuer <url>] [--oidc-authorize <url>] [--oidc-token <url>] [--oidc-client <id>] [--oidc-scope \"openid\"] [--api-base /api] [--channels-path /channels] [--require-signature] [--trust-signer <name>] [--trust-key <public-or-private-pem>] [--key-id <id>]",
-    summary: "Write the FEI's runtime configuration on a site root: where each approved MEI's release pointer is, who may sign releases, how users sign in and the orchestrator's same-origin path. It holds no secret and is never built into the bundle",
+    usage: "pso frontend:config --env <name> [--fei <name>] --auth oidc|dev-token|none [--json] | --site <dir> [--fei <name>] [--auth dev-token|oidc|none] [--oidc-issuer <url>] [--oidc-authorize <url>] [--oidc-token <url>] [--oidc-client <id>] [--oidc-scope \"openid\"] [--api-base /api] [--channels-path /channels] [--require-signature] [--trust-signer <name>] [--trust-key <public-or-private-pem>] [--key-id <id>]",
+    summary: "Configure how users sign in to a FEI. With --env: record the sign-in mode of that FEI in that environment of pso.infra.json and re-render its site configuration through the infrastructure engine (other FEIs and environments unchanged). With --site: write the FEI's runtime configuration on a site root you manage: where each approved MEI's release pointer is, who may sign releases, how users sign in and the orchestrator's same-origin path. It holds no secret and is never built into the bundle",
     run(ctx) {
+      // with --env the infrastructure engine owns the file: record the choice in pso.infra.json and render it from there
+      if (str(ctx.flags["env"]) !== undefined) return configureEnvironment(ctx);
       const { root, config } = requireWorkspace(ctx);
       const site = siteOf(ctx);
       const loaded = loadFrontends(root, frontends(config));

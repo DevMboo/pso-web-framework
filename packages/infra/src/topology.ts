@@ -161,7 +161,8 @@ export function resolveTopology(ws: WorkspaceConfig, c: InfraContract, envName: 
     const basePath = fc.basePath ?? "/";
     const o = origin(host);
     // the shell decides whether it authenticates; the contract decides HOW in this environment
-    const auth = f.authentication === "none" ? "none" : fc.auth ?? (identity && identity.provider !== "pso-dev" ? "oidc" : "dev-token");
+    // precedence: the shell itself (FEI.pso.ts security.authentication "none"), then this environment, then the workspace, then the default
+    const auth = f.authentication === "none" ? "none" : decl.frontends?.[f.name]?.auth ?? fc.auth ?? (identity && identity.provider !== "pso-dev" ? "oidc" : "dev-token");
     if (auth === "dev-token" && decl.kind === "production") throw new InfraError(`${f.name}: dev-token sign-in is not accepted in the production environment "${envName}"`, "PSO_INFRA_DEV_TOKEN_PRODUCTION", "Declare an identity provider (keycloak or external) or set frontends.<fei>.auth to oidc");
     const devServer = `http://localhost:${f.port}`;
     const redirectUris = [`${o}${basePath}auth/callback`, ...(decl.kind === "development" ? [`${devServer}/auth/callback`] : [])];
