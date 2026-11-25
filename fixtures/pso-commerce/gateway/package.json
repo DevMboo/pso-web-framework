@@ -12,9 +12,9 @@
     "typecheck": "tsc --noEmit -p ."
   },
   "dependencies": {
-    "@pso/core": "file:vendor/pso/pso-core-0.1.0.tgz",
-    "@pso/http": "file:vendor/pso/pso-http-0.1.0.tgz",
-    "@pso/security": "file:vendor/pso/pso-security-0.1.0.tgz",
+    "@pso/core": "file:../../../packages/core",
+    "@pso/http": "file:../../../packages/http",
+    "@pso/security": "file:../../../packages/security",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {

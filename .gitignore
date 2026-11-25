@@ -84,3 +84,7 @@ AGENTS.md
 /fixtures/pso-cloud-validation/scenarios/playground-browser.mjs
 /fixtures/pso-cloud-validation/scenarios/playground-reconnect.mjs
 /fixtures/pso-cloud-validation/scenarios/package-gateway.mjs
+
+# Vendored framework artifacts (`pso docker:init --vendor` writes vendor/pso/*.tgz and vendor/maven/** for container image builds):
+# generated from the current source on demand, never committed. Fixtures reference the framework source (file:../../packages/<pkg>).
+fixtures/**/vendor/

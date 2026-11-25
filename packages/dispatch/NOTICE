@@ -12,3 +12,7 @@ reproduced in THIRD-PARTY-NOTICES.txt, which accompanies every release:
 
 The Windows installer and uninstaller are built with Inno Setup, Copyright (C) 1997-2026 Jordan Russell, Portions Copyright (C) 2000-2026
 Martijn Laan, https://jrsoftware.org/ (Inno Setup License).
+
+Earlier commits of the source repository contain vendored build outputs of this product (@pso/* 0.1.0 npm tarballs and
+com.pso:*:0.1.0-SNAPSHOT Java artifacts under fixtures/*/vendor/). They are builds of this product's own code; their embedded
+"UNLICENSED" metadata predates the license decision, and the copyright holder licenses them under the Apache License, Version 2.0.

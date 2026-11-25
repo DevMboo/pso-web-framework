@@ -72,3 +72,25 @@ test("distribution metadata carries the product identity and no proprietary or w
   assert.match(dist, /VersionInfoCopyright=Copyright 2026 DevMboo\. Licensed under the Apache License 2\.0/);
   for (const x of ["installer.xml", "inno-uninstaller.xml"]) assert.match(read(`.signpath/artifact-configurations/${x}`), /product-name="PSO Web Framework"/);
 });
+
+test("fixtures use the framework source, not committed vendored binaries: relative file: references, Apache-2.0 links in lockfiles", () => {
+  const found: string[] = [];
+  const walk = (d: string): void => { for (const n of readdirSync(join(root, d))) { if (["node_modules", "vendor", "dist", "target", ".pso", ".infra", "artifacts", "signed", ".tls"].includes(n)) continue; /* generated and Git-ignored */ const p = `${d}/${n}`; if (existsSync(join(root, p, "package.json"))) found.push(p); try { if (readdirSync(join(root, p)).length >= 0 && !n.includes(".")) walk(p); } catch { /* a file */ } } };
+  walk("fixtures");
+  assert.ok(found.length >= 11, `fixture projects found: ${found.length}`);
+  for (const p of found) {
+    const j = JSON.parse(read(`${p}/package.json`)) as { dependencies?: Record<string, string> };
+    for (const [name, spec] of Object.entries(j.dependencies ?? {}).filter(([n]) => n.startsWith("@pso/"))) {
+      assert.doesNotMatch(spec, /vendor\//, `${p}: ${name} must not point at a vendored tarball`);
+      const m = /^file:((?:\.\.\/)+)packages\/([a-z-]+)$/.exec(spec);
+      assert.ok(m, `${p}: ${name} is a relative file: reference to packages/<pkg> (${spec})`);
+      assert.ok(existsSync(join(root, p, spec.slice(5), "package.json")), `${p}: ${spec} resolves to a framework package`);
+    }
+    if (existsSync(join(root, p, "package-lock.json"))) {
+      const t = read(`${p}/package-lock.json`);
+      assert.doesNotMatch(t, /vendor\/pso/, `${p}/package-lock.json pins no vendored tarball`);
+      const lock = JSON.parse(t) as { packages: Record<string, { license?: string; link?: boolean }> };
+      for (const [k, v] of Object.entries(lock.packages)) if (/^(\.\.\/)+packages\/[a-z-]+$/.test(k)) assert.equal(v.license, "Apache-2.0", `${p}: ${k}`);
+    }
+  }
+});
