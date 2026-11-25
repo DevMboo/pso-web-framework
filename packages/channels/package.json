@@ -27,7 +27,7 @@
     "@pso/http": "0.2.0",
     "@pso/security": "0.2.0",
     "reflect-metadata": "^0.2.2",
-    "ws": "^8.18.3"
+    "ws": "^8.23.0"
   },
   "optionalDependencies": {
     "ioredis": "^5.4.1"

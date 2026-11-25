@@ -22,23 +22,23 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/react-test-renderer": "^18.3.0",
-    "@types/ws": "^8.18.1",
-    "axe-core": "^4.14.0",
-    "esbuild": "^0.25.5",
-    "jose": "^6.2.15",
-    "playwright-core": "^1.65.0",
+    "@types/ws": "^8.18.2",
+    "axe-core": "^4.14.1",
+    "esbuild": "^0.28.2",
+    "jose": "^6.2.18",
+    "playwright-core": "^1.65.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.18.5",
+    "react-router-dom": "^7.18.6",
     "react-test-renderer": "^18.3.1",
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/exporter-metrics-otlp-http": "^0.223.0",
-    "@opentelemetry/exporter-metrics-otlp-proto": "^0.223.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
-    "@opentelemetry/exporter-trace-otlp-proto": "^0.223.0",
+    "@opentelemetry/api": "^1.10.0",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.301.2",
+    "@opentelemetry/exporter-metrics-otlp-proto": "^0.301.2",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.301.2",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.301.2",
     "@opentelemetry/resources": "^2.12.0",
     "@opentelemetry/sdk-metrics": "^2.12.0",
     "@opentelemetry/sdk-trace-base": "^2.12.0",
@@ -46,6 +46,6 @@
     "amqplib": "^0.10.9",
     "ioredis": "^5.11.1",
     "kafkajs": "^2.2.4",
-    "ws": "^8.18.3"
+    "ws": "^8.23.0"
   }
 }
