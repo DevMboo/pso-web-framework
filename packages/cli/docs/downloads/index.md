@@ -28,10 +28,10 @@ PSO Web Framework is free and open-source software, licensed under the [Apache L
 
 | Release detail | Value |
 | --- | --- |
-| Release | [`v0.2.0-rc.5`](https://github.com/DevMboo/pso-web-framework/releases/tag/v0.2.0-rc.5) (public prerelease, built from the tagged commit of the source repository) |
+| Release | [`v0.2.0-rc.5`](https://github.com/DevMboo/pso-web-framework/releases/tag/v0.2.0-rc.5) (public prerelease, built from commit `cb7cfc8` of the source repository) |
 | Platform | Windows 10/11 x64 |
-| Recommended asset | `PSO-Web-0.2.0-rc.5-win-x64-portable.zip` |
-| Experimental asset | `PSO-Web-0.2.0-rc.5-win-x64.exe` (**Authenticode-unsigned**) |
+| Recommended asset | `PSO-Web-0.2.0-rc.5-win-x64-portable.zip`, 50.5 MB (50,458,589 bytes) |
+| Experimental asset | `PSO-Web-0.2.0-rc.5-win-x64.exe`, 31.4 MB (31,396,358 bytes), **Authenticode-unsigned** |
 | Also on the release page | the npm tarballs of the 13 `@pso/*` packages (0.2.0) and the `com.pso:*:0.2.0-rc.5` Maven file repository, with their SBOMs |
 | Node.js requirement | Bundled private runtime; no system Node.js installation |
 | Java | JDK 21 or newer for Spring services; the matching `com.pso` Maven repository is included (`pso java:install`) |
@@ -41,7 +41,7 @@ PSO Web Framework is free and open-source software, licensed under the [Apache L
 :::download-button url="https://github.com/DevMboo/pso-web-framework/releases/download/v0.2.0-rc.5/PSO-Web-0.2.0-rc.5-win-x64-portable.zip" label="Download PSO Web V2 — Windows x64 portable (0.2.0-rc.5, recommended)"
 
 The **portable ZIP is the recommended download**. It installs nothing: extract it and run `pso.cmd`
-([Installation](/getting-started/installation)). Its validation results are in the release notes.
+([Installation](/getting-started/installation)). The exact ZIP passed 21/21 portable validation checks, and the installed rc.5 CLI passed the 34-check workspace acceptance (structure, validation, infrastructure, Docker, edge, frontends).
 
 :::download-button url="https://github.com/DevMboo/pso-web-framework/releases/download/v0.2.0-rc.5/PSO-Web-0.2.0-rc.5-win-x64.exe" label="Download the experimental, Authenticode-unsigned Windows x64 installer (0.2.0-rc.5)"
 
@@ -61,8 +61,14 @@ Get-FileHash .\PSO-Web-0.2.0-rc.5-win-x64-portable.zip -Algorithm SHA256
 Get-Content .\SHA256SUMS
 ```
 
-The SHA-256 of every asset is listed in `SHA256SUMS` (Windows files) and `SHA256SUMS-PACKAGES` (package archives), both signed, and
-repeated in the release notes.
+| File | SHA-256 |
+| --- | --- |
+| `PSO-Web-0.2.0-rc.5-win-x64-portable.zip` | `e3d3c85daf0eea6f1a6a4db812ac0e63a26b9cba77d0df6aade848ba67586187` |
+| `PSO-Web-0.2.0-rc.5-win-x64.exe` | `9099ce0da97327b4857a08262ceaf842dc25b56f73bc68ed577b9948368604db` |
+| `pso-npm-0.2.0-packages.zip` | `03d72525a551529b79dd4e8bd5df6435dbb122fb7f7a79728605f656b904e919` |
+| `pso-java-0.2.0-rc.5-maven-repository.zip` | `ce66786455921667be3c827e908a6f2bcff145fc0232941716fb4f0ef8623f88` |
+
+The Windows files are listed in `SHA256SUMS` and the package archives in `SHA256SUMS-PACKAGES`, both signed.
 
  `SHA256SUMS` is signed with Ed25519 by the
 release key `7ebced006968027b3ca9939c1e245637ce93ba8bb6261a125a0fd31f957dcc89` (fingerprint of `release-signing-key.public.pem`,
