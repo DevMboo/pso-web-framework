@@ -27,7 +27,7 @@ version information, the same values in every file of a release. Signatures use 
 
 ## How a release is built and approved
 
-1. A release is built by GitHub Actions on GitHub-hosted runners from a tagged commit of the public source repository. Build scripts and
+1. A release is built by GitHub Actions on GitHub-hosted runners from a tagged commit of the public source repository ([github.com/DevMboo/pso-web-framework](https://github.com/DevMboo/pso-web-framework)). Build scripts and
    CI configuration are part of that repository. No artifact built on a developer's machine is submitted for signing.
 2. The build submits each artifact to the signing service by its GitHub artifact identifier, so the service can verify that it was built
    by that workflow from that commit.

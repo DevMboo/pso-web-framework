@@ -11,7 +11,7 @@ related: [getting-started/installation, getting-started/requirements, infrastruc
 
 **One ecosystem. Independent teams. Unified architecture.**
 
-PSO Web Framework is free and open-source software, licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). It has no telemetry, license check or paid tier ([privacy policy](/downloads/privacy-policy)). The maintainer is [DevMboo](https://github.com/DevMboo).
+PSO Web Framework is free and open-source software, licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). It has no telemetry, license check or paid tier ([privacy policy](/downloads/privacy-policy)). The maintainer is [DevMboo](https://github.com/DevMboo). The source code is public at [github.com/DevMboo/pso-web-framework](https://github.com/DevMboo/pso-web-framework).
 
 > [!NOTE]
 > **The current release is PSO Web V2, `0.2.0-rc.3`** (release candidate, private prerelease). It is the release this documentation

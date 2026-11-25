@@ -9,7 +9,7 @@ https://signpath.org/terms (marked "Draft" by SignPath on that date); re-read th
 |---|---|---|
 | OSI-approved license, no commercial dual licensing, for **all** components | **Apache-2.0** for every PSO component: `LICENSE` (official text), `NOTICE`, every `package.json`, the Maven parent POM and BOM, the installed distribution and the release SBOMs; no dual licensing | **met** (2026-11-25) |
 | no proprietary component (especially code of the maintainer) | all PSO code is Apache-2.0; bundled third-party npm packages are MIT/Apache-2.0/BSD-3-Clause/ISC; the Node.js runtime is MIT. The PSD build still bundles and minifies the JavaScript (class A/B protection) and can encrypt packages per recipient: for a signed OSS release build it unencrypted and without `--obfuscate`, so the shipped code corresponds to the public source | met for the code; build mode to follow for OSS releases |
-| public source repository; verifiable build from source | prepared for `DevMboo/pso-web-framework`: `.gitignore` excludes release outputs, internal reports and secrets; the publication audit removed internal infrastructure identifiers; a clean copy of the 2,126 publishable files builds (`npm ci`, `npm run build`, Maven package). **Not published**: it needs the owner's approval of the audit | **BLOCKER** until published |
+| public source repository; verifiable build from source | prepared for `DevMboo/pso-web-framework`: `.gitignore` excludes release outputs, internal reports and secrets; the publication audit removed internal infrastructure identifiers; a clean copy of the 2,126 publishable files builds (`npm ci`, `npm run build`, Maven package). **Not published**: it needs the owner's approval of the audit | **met**: public since 2026-11-25 (https://github.com/DevMboo/pso-web-framework), main protected against deletion and force pushes |
 | released in the form to be signed | `0.2.0-rc.3` installer and portable ZIP are published as a **private** prerelease (`DevMboo/pso-web-releases`) | **BLOCKER** until a public release exists |
 | functionality described on the download page | the Downloads page and documentation describe it | met |
 | actively maintained | yes | met |
@@ -53,7 +53,7 @@ https://signpath.org/terms (marked "Draft" by SignPath on that date); re-read th
 | Download page | https://devmboo.github.io/pso-web-docs/downloads/index.html (must point at a **public** release when applying) |
 | Code signing policy | https://devmboo.github.io/pso-web-docs/downloads/code-signing-policy.html |
 | Privacy policy | https://devmboo.github.io/pso-web-docs/downloads/privacy-policy.html |
-| Source repository | https://github.com/DevMboo/pso-web-framework (prepared, not published yet) |
+| Source repository | https://github.com/DevMboo/pso-web-framework (public) |
 | License | Apache-2.0, all components |
 | Build system | GitHub Actions, GitHub-hosted Windows runners (`.github/workflows/signpath-release.yml`) |
 | Artifacts per release | 2 signing requests: `inno-uninstaller` (uninst-*.e32) and `installer` (PSO-Web-<version>-win-x64.exe) |

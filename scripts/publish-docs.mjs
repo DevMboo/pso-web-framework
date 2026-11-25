@@ -10,12 +10,13 @@ const flag = (n) => { const i = args.indexOf(`--${n}`); return i < 0 ? undefined
 const out = resolve(flag('out') ?? join(root, 'publication-work', 'run'));
 const repo = flag('repo') ? resolve(flag('repo')) : undefined;
 const denyPath = flag('denylist') ? resolve(flag('denylist')) : undefined;
+const sourceRepository = flag('source-repository'); // shown in the portal header (pso docs --repository)
 if (repo && !denyPath) throw new Error('publishing to a repository requires --denylist <private indicator file>');
 if (existsSync(out) && readdirSync(out).length) throw new Error(`output must be empty: ${out}`);
 mkdirSync(out, { recursive: true });
 const stage = join(out, 'stage');
 const site = join(stage, 'docs-site');
-execFileSync(process.execPath, [join(root, 'packages/cli/bin/pso.js'), 'docs', '--build', site], { cwd: root, stdio: 'inherit' });
+execFileSync(process.execPath, [join(root, 'packages/cli/bin/pso.js'), 'docs', '--build', site, ...(sourceRepository ? ['--repository', sourceRepository] : [])], { cwd: root, stdio: 'inherit' });
 const exceptions = JSON.parse(readFileSync(join(root, 'scripts/psd/exceptions.json'), 'utf8')).exceptions;
 const denylist = denyPath ? readFileSync(denyPath, 'utf8').split(/\r?\n/).map(s => s.trim()).filter(s => s && !s.startsWith('#')) : [];
 const result = scan(stage, { exceptions, denylist });
