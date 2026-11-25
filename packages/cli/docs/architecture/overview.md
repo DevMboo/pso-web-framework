@@ -20,13 +20,19 @@ A PSO workspace has one **orchestrator** (TypeScript, the single public entry po
 workspace/
   .infra/  # operational infrastructure PSO manages: certificates, secrets, generated configuration (never edited)
   pso.workspace.json  # the projects and how they relate
-  gateway/  # the orchestrator (modular structure)
+  README.md
+  shared/  # workspace-level shared material (the orchestrator contract the frontends use)
+  docs/  # workspace documentation
+  tests/  # cross-project tests
+  frontends/  # FEIs, one directory each (fei-shop/, fei-admin/)
+    modules/  # MEIs, one directory each (mei-catalog/, mei-orders/)
+  orchestrators/gateway/  # the orchestrator (modular structure)
     src/
       .app/  # application-wide components: guards, middlewares, interceptors, filters, configs, contracts, decorators
       modules/  # business modules (products/, orders/), each with its controllers, services, providers, DTOs, routes
       shared/  # reusable code that belongs to no single module
       main.ts
-  catalog/  # a microservice (layered structure)
+  services/catalog/  # a microservice (layered structure)
     src/main/java/<package>/
       application/  # rest/, service/, dto/request and dto/response, mapper/
       infrastructure/  # persistence/, entity/, config/, security/, filter/, client/

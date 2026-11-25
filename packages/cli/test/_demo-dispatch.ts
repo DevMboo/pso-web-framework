@@ -9,7 +9,7 @@ import { pso, prepare, randomPort } from "./helpers.ts";
 
 const REDIS = (sessionEnv(undefined, ["redis"]) as Record<string, string | undefined>)["PSO_TEST_REDIS_URL"] ?? "redis://127.0.0.1:1";
 const base = mkdtempSync(join(tmpdir(), "pso-demo-dsp-"));
-await pso(base, "create", "workspace", "shop");
+await pso(base, "create", "workspace", "shop", "--layout", "flat");
 const root = join(base, "shop");
 await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");
 const inst = await pso(root, "dispatch:install", "redis", "--service", "gw");

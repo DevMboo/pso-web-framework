@@ -11,7 +11,7 @@ Environments are `development`, `test`, `staging` and `production`. Select one w
 my-platform/
   pso.workspace.json  # generated: layer 2, workspace-wide "config"
   pso.config.production.json  # optional: layer 4, workspace-wide production overrides
-  gateway/
+  orchestrators/gateway/
     pso.config.json  # optional: layer 3, service settings
     pso.config.production.json  # optional: layer 4, service production overrides
 ```
@@ -22,11 +22,11 @@ Runtime variables (`PSO_CFG_server__port=9000`) and `--set` override files. Secr
 
 Common settings in the service file; only what differs in the production file:
 
-```json title="gateway/pso.config.json" evidence="illustrative"
+```json title="orchestrators/gateway/pso.config.json" evidence="illustrative"
 { "http": { "limits": { "maxBodyBytes": 1048576 } }, "security": { "authentication": { "algorithms": ["ES256"] } } }
 ```
 
-```json title="gateway/pso.config.production.json" evidence="illustrative"
+```json title="orchestrators/gateway/pso.config.production.json" evidence="illustrative"
 { "logging": { "level": "info" }, "http": { "rateLimit": { "perMinute": 300, "provider": "redis", "redisUrl": "${env:RATE_LIMIT_REDIS_URL}" } } }
 ```
 
@@ -91,7 +91,7 @@ DB_PASSWORD=customers-dev
 PSO_LOG_LEVEL=debug
 ```
 
-```ini title="orders/.env"
+```ini title="services/orders/.env"
 DB_URL=jdbc:postgresql://localhost:5432/orders
 DB_USER=orders_app
 DB_PASSWORD=orders-dev

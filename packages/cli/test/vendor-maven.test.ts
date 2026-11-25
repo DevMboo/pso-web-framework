@@ -26,7 +26,7 @@ const walk = (d: string, acc: string[] = []): string[] => { for (const e of read
 
 async function workspace(): Promise<{ root: string; svc: string }> {
   const base = tmp("pso-vendor-mvn-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "w")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "w", "--layout", "flat")).code, 0);
   const root = join(base, "w");
   assert.equal((await pso(root, "create", "service", "catalog", "--structure", "legacy")).code, 0);
   return { root, svc: join(root, "catalog") };

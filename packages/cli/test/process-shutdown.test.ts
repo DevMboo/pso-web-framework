@@ -33,7 +33,7 @@ let gw = "";
 let pub = "";
 before(async () => {
   const base = tmp("pso-proc-shutdown-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "lab")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "lab", "--layout", "flat")).code, 0);
   const ws = join(base, "lab");
   assert.equal((await pso(ws, "create", "orchestrator", "gw", "--structure", "legacy")).code, 0);
   gw = join(ws, "gw");

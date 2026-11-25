@@ -11,7 +11,7 @@ const page = readFileSync(resolve(import.meta.dirname, "..", "docs", "reference"
 /** "Why the orchestrator refuses to start": each refusal is produced by starting the compiled orchestrator with one setting changed. */
 test("every start-up refusal on the page is what the orchestrator logs", { timeout: 240_000 }, async () => {
   const base = tmp("pso-startup-doc-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "lab")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "lab", "--layout", "flat")).code, 0);
   const ws = join(base, "lab");
   assert.equal((await pso(ws, "create", "orchestrator", "gateway", "--template", "empty")).code, 0);
   assert.equal((await pso(ws, "create", "service", "catalog", "--template", "empty", "--port", "8081")).code, 0);

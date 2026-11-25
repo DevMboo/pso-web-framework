@@ -12,6 +12,10 @@ You are working with **PSO Web Framework**. PSO stands for Path Structure Workin
 
 > Structure declares. Modules compose. Contracts validate. The framework executes.
 
+## Workspace layout (mandatory for new workspaces)
+
+`pso create workspace` creates `.infra/` (managed infrastructure: only its ignore rule until `pso infra:init`), `orchestrators/`, `services/`, `frontends/`, `frontends/modules/`, `shared/`, `docs/`, `tests/`, `pso.workspace.json` and `README.md`. The generators place projects themselves: `pso create orchestrator` -> `orchestrators/<name>`, `pso create service` -> `services/<name>`, `pso create fei` -> `frontends/fei-<name>`, `pso create mei` -> `frontends/modules/mei-<name>`. Never create, move or rename project directories by hand; always find a project through its `path` in `pso.workspace.json`. A flat 0.1 workspace (projects at the root, frontends under `frontend/`) stays flat: new projects follow it, and `pso structure:inspect` only proposes the moves to the standard layout.
+
 ## Before modifying a project
 
 1. Inspect the workspace file `pso.workspace.json` and the `Project facts` section if present.

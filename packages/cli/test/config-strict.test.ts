@@ -13,7 +13,7 @@ const dirs: string[] = [];
 after(() => { for (const d of dirs) rmSync(d, { recursive: true, force: true, maxRetries: 3 }); });
 async function ws(): Promise<string> {
   const base = tmp("pso-cfg-strict-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");
   return root;

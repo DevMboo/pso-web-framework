@@ -22,8 +22,15 @@ Real output (verified):
 ```text evidence="verified"
 $ pso create workspace my-platform
 created    .gitignore
+created    .infra/.gitignore
 created    README.md
+created    docs/README.md
+created    frontends/modules/.gitkeep
+created    orchestrators/.gitkeep
 created    pso.workspace.json
+created    services/.gitkeep
+created    shared/README.md
+created    tests/README.md
 
 $ pso validate
 OK
@@ -31,9 +38,17 @@ OK
 
 ```tree title="After pso create workspace my-platform"
 my-platform/
-  pso.workspace.json  # generated: the map of your services, empty for now
-  README.md  # generated
-  .gitignore  # generated: node_modules, dist, target, .pso/ and keys/*.private.pem
+  .infra/  # generated: only its ignore rule; pso infra:init and infra:apply fill it (never committed)
+  orchestrators/  # pso create orchestrator <name> puts the orchestrator here
+  services/  # pso create service <name> puts each microservice here
+  frontends/  # pso create fei <name> puts each FEI (application shell) here
+    modules/  # pso create mei <name> puts each MEI (microfrontend) here
+  shared/  # workspace-level shared material, such as the orchestrator contract of the frontends
+  docs/  # workspace documentation
+  tests/  # cross-project tests
+  pso.workspace.json  # generated: the map of your projects, empty for now
+  README.md  # generated: this structure
+  .gitignore  # generated: node_modules, dist, target, .pso/ and .infra/
 ```
 
 An empty workspace is valid. Every other command (`create`, `make:*`, `routes:list`, `dev`) finds the workspace by looking for `pso.workspace.json` in the current folder and its parents.

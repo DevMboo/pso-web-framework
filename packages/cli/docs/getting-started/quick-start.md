@@ -46,8 +46,15 @@ abridged, and digests and key ids vary between workspaces; read each block's bad
 ```text evidence="verified"
 $ pso create workspace shop
 created    .gitignore
+created    .infra/.gitignore
 created    README.md
+created    docs/README.md
+created    frontends/modules/.gitkeep
+created    orchestrators/.gitkeep
 created    pso.workspace.json
+created    services/.gitkeep
+created    shared/README.md
+created    tests/README.md
 ```
 
 **Service and orchestrator**
@@ -139,7 +146,7 @@ A product request has four explicit hand-offs:
 
 | Hand-off | File or command that proves it | What a failure looks like |
 |---|---|---|
-| Public URL and policy | `gateway/src/modules/products/routes/ROUTES.pso.ts`; `pso routes:list` | an undeclared path is `404`; a missing token is `401` |
+| Public URL and policy | `orchestrators/gateway/src/modules/products/routes/ROUTES.pso.ts`; `pso routes:list` | an undeclared path is `404`; a missing token is `401` |
 | Validation and the call | `controllers/product.controller.ts`, `providers/product.provider.ts`; `pso routes:inspect /products` | an invalid body is `400` before anything is called; a stopped service is `503` |
 | Spring handler and policy | `catalog/.../application/rest/ProductController.java` | Spring checks the token again and can return `401` or `403` independently |
 | Data | `ProductService`, PostgreSQL | a duplicate SKU is `409`; an unknown id `404` |
@@ -152,7 +159,7 @@ Your reports route stops at the orchestrator: it is public because `ROUTES.pso.t
 ```tree title="The workspace at the end of the quick start"
 shop/
   pso.workspace.json  # generated: updated by every create command
-  gateway/
+  orchestrators/gateway/
     src/.app/guards/jwt.guard.ts  # generated
     src/modules/products/  # generated: the reference CRUD module
     src/modules/reports/
@@ -160,7 +167,7 @@ shop/
       routes/ROUTES.pso.ts  # generated
       controllers/reports.controller.ts  # generated
     docs/api/products.collection.json  # generated: the Studio requests
-  catalog/
+  services/catalog/
     src/main/java/com/pso/catalog/
       application/  # generated: rest, service, dto, mapper
       infrastructure/  # generated: entity, persistence

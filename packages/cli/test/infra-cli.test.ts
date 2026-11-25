@@ -9,7 +9,7 @@ import { pso, tmp, read } from "./helpers.ts";
 /** A 0.1-style workspace created by the CLI: orchestrator, two Spring services (one with a database). */
 async function workspace(name = "shop"): Promise<string> {
   const parent = tmp("pso-infra-cli-");
-  assert.equal((await pso(parent, "create", "workspace", name)).code, 0);
+  assert.equal((await pso(parent, "create", "workspace", name, "--layout", "flat")).code, 0);
   const root = join(parent, name);
   for (const args of [["create", "orchestrator", "gateway", "--structure", "legacy"], ["create", "service", "catalog", "--structure", "legacy", "--db", "postgres"], ["create", "service", "accounts", "--structure", "legacy"]]) {
     const r = await pso(root, ...args);

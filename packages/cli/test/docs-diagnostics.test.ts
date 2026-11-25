@@ -11,7 +11,7 @@ const page = readFileSync(resolve(import.meta.dirname, "..", "docs", "reference"
 /** Every mistake of "Validation errors, one by one" is made again here; the page must show the codes (and the Expected/Found lines) the CLI really prints. */
 test("the diagnostics catalog shows exactly what pso validate prints for each mistake", { timeout: 120_000 }, async () => {
   const base = tmp("pso-diag-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "lab")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "lab", "--layout", "flat")).code, 0);
   const ws = join(base, "lab");
   assert.equal((await pso(ws, "create", "orchestrator", "gateway", "--template", "empty")).code, 0);
   assert.equal((await pso(ws, "create", "service", "catalog", "--template", "empty", "--port", "8081")).code, 0);
@@ -77,7 +77,7 @@ test("the diagnostics catalog shows exactly what pso validate prints for each mi
 /** The claim of "Why discovery never executes your code": validation parses files, it does not import them. */
 test("pso validate parses a controller that would throw and write a file if it were executed, and does not run it", { timeout: 120_000 }, async () => {
   const base = tmp("pso-noexec-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "lab")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "lab", "--layout", "flat")).code, 0);
   const ws = join(base, "lab");
   assert.equal((await pso(ws, "create", "orchestrator", "gateway", "--template", "empty")).code, 0);
   assert.equal((await pso(ws, "create", "service", "catalog", "--template", "empty", "--port", "8081")).code, 0);

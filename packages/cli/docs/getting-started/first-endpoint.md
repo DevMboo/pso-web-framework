@@ -22,15 +22,15 @@ pso routes:list
 
 ```text evidence="expected"
 $ pso make:resource customer --service catalog --route /customers --scopes customers:read
-created    gateway/src/.app/contracts/customer.contract.json
-created    catalog/src/main/java/com/pso/catalog/application/dto/response/CustomerResponse.java
-created    catalog/src/main/java/com/pso/catalog/application/rest/CustomerController.java
-created    catalog/src/main/resources/contracts/customer.contract.json
-created    catalog/src/test/java/com/pso/catalog/application/rest/CustomerControllerTests.java
+created    orchestrators/gateway/src/.app/contracts/customer.contract.json
+created    services/catalog/src/main/java/com/pso/catalog/application/dto/response/CustomerResponse.java
+created    services/catalog/src/main/java/com/pso/catalog/application/rest/CustomerController.java
+created    services/catalog/src/main/resources/contracts/customer.contract.json
+created    services/catalog/src/test/java/com/pso/catalog/application/rest/CustomerControllerTests.java
 created    docs/api/customer.md
-created    gateway/src/modules/customer/MODULE.pso.ts
-created    gateway/src/modules/customer/controllers/customer.controller.ts
-created    gateway/src/modules/customer/routes/ROUTES.pso.ts
+created    orchestrators/gateway/src/modules/customer/MODULE.pso.ts
+created    orchestrators/gateway/src/modules/customer/controllers/customer.controller.ts
+created    orchestrators/gateway/src/modules/customer/routes/ROUTES.pso.ts
 
 $ pso routes:list
 GET     /customers               customer.findAll        -> catalog        guard:jwt
@@ -42,7 +42,7 @@ checked for drift). For a complete, database-backed resource use `pso make:crud`
 
 ## 3. The generated code
 
-```typescript title="gateway/src/modules/customer/routes/ROUTES.pso.ts"
+```typescript title="orchestrators/gateway/src/modules/customer/routes/ROUTES.pso.ts"
 import { defineRoutes } from "@pso/http";
 import { CustomerController } from "../controllers/customer.controller";
 
@@ -60,7 +60,7 @@ export default defineRoutes({
 });
 ```
 
-```typescript title="gateway/src/modules/customer/controllers/customer.controller.ts"
+```typescript title="orchestrators/gateway/src/modules/customer/controllers/customer.controller.ts"
 import { Controller, RestController, Get, Req, Res, Upstream } from "@pso/http";
 import { IncomingMessage, ServerResponse } from "node:http";
 
@@ -76,7 +76,7 @@ export class CustomerController {
 }
 ```
 
-```java title="catalog/.../application/rest/CustomerController.java"
+```java title="services/catalog/.../application/rest/CustomerController.java"
 @RestController
 @RequestMapping("/customers")
 public class CustomerController {

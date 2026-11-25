@@ -15,7 +15,7 @@ const allDirs = (d: string): string[] => readdirSync(d).flatMap((n) => { const p
 
 test("new orchestrators and services have the complete official structure, CRUD or empty; Java has no providers, modules or .app", { timeout: 120_000 }, async () => {
   const base = tmp("pso-structure-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "shop")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "shop", "--layout", "flat")).code, 0);
   const ws = join(base, "shop");
   for (const a of [["service", "catalog"], ["service", "billing", "--template", "empty"], ["orchestrator", "gateway"]]) assert.equal((await pso(ws, "create", ...a)).code, 0, a.join(" "));
   for (const d of ORCH) assert.ok(existsSync(join(ws, "gateway", "src", ...d.split("/"))), `gateway/src/${d}`);

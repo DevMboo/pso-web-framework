@@ -15,7 +15,7 @@ import { pso, tmp } from "./helpers.ts";
 
 async function workspace(): Promise<{ base: string; root: string }> {
   const base = tmp("pso-args-");
-  assert.equal((await pso(base, "create", "workspace", "w")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "w", "--layout", "flat")).code, 0);
   const root = join(base, "w");
   assert.equal((await pso(root, "create", "orchestrator", "gw", "--structure", "legacy")).code, 0);
   assert.equal((await pso(root, "create", "service", "reports", "--structure", "legacy")).code, 0);

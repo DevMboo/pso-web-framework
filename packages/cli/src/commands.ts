@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import {
   derivePrefix, normalizePrefix, servicePrefix, discover, validateProject, buildManifest, serializeManifest, hasErrors, formatDiagnostic, findWorkspaceRoot, loadWorkspace,
-  WORKSPACE_FILE, topoOrder, NAME_PATTERNS, type Diagnostic, type Runtime, type ServiceDecl, type WorkspaceConfig,
+  WORKSPACE_FILE, WORKSPACE_DIRS, projectPath, topoOrder, NAME_PATTERNS, type Diagnostic, type Runtime, type ServiceDecl, type WorkspaceConfig,
 } from "@pso/core";
 import { CliError, writeFiles, type WriteResult } from "./fsx.ts";
 import { str } from "./args.ts";
@@ -81,14 +81,49 @@ function nextPort(c: WorkspaceConfig, start: number): number {
   return p;
 }
 
+function workspaceReadme(name: string): string {
+  return `# ${name}
+
+PSO workspace. The directory structure is the PSO standard; the generators put every project in its place:
+
+\`\`\`text
+${name}/
+├── .infra/            managed infrastructure (pso infra:init, infra:apply); never committed
+├── orchestrators/     TypeScript orchestrators        pso create orchestrator <name>
+├── services/          Spring Boot microservices       pso create service <name>
+├── frontends/         FEIs (application shells)       pso create fei <name>
+│   └── modules/       MEIs (microfrontends)           pso create mei <name>
+├── shared/            workspace-level shared material (contracts)
+├── docs/              workspace documentation
+├── tests/             cross-project tests
+├── pso.workspace.json
+└── README.md
+\`\`\`
+
+Next: \`pso create service <name>\`, \`pso create orchestrator <name>\`, then \`pso validate\` and \`pso infra:init\`.
+`;
+}
+
 function createWorkspace(ctx: Ctx): number {
   const name = kebabName(ctx.positionals[1], "workspace");
   const root = resolve(ctx.cwd, name);
   const cfg: WorkspaceConfig = { schemaVersion: 1, name, services: [] };
-  const files = {
+  const write = (files: Record<string, string>) => reportWrites(ctx, writeFiles(root, files, { dryRun: ctx.flags["dry-run"] === true, force: ctx.flags["force"] === true }));
+  const layout = str(ctx.flags["layout"]) ?? "standard";
+  if (layout !== "standard" && layout !== "flat") throw new CliError(`Invalid --layout "${layout}"`, "Use standard (the default) or flat (the 0.1 layout: projects at the root, frontends under frontend/)");
+  // the 0.1 layout, still supported: no standard directories, so the generators keep putting projects at the root
+  if (layout === "flat") return write({ [WORKSPACE_FILE]: JSON.stringify(cfg, null, 2) + "\n", "README.md": `# ${name}\n\nPSO workspace (flat 0.1 layout). Add projects with \`pso create orchestrator <name>\` and \`pso create service <name>\`, then run \`pso validate\`.\n`, ".gitignore": "node_modules\ndist\ntarget\n.pso/\n" });
+  const D = WORKSPACE_DIRS;
+  const files: Record<string, string> = {
     [WORKSPACE_FILE]: JSON.stringify(cfg, null, 2) + "\n",
-    "README.md": `# ${name}\n\nPSO workspace. Add projects with \`pso create orchestrator <name>\` and \`pso create service <name> --runtime spring-boot\`, then run \`pso validate\`.\n`,
-    ".gitignore": "node_modules\ndist\ntarget\n.pso/\n",
+    "README.md": workspaceReadme(name),
+    // .infra/ is managed by the infra:* commands; at creation it holds only its ignore rule (no credential, certificate or state)
+    ".gitignore": "node_modules\ndist\ntarget\n.pso/\n# PSO infrastructure (.infra/): key material, secrets, state and generated configuration are never committed\n.infra/\n",
+    [`${D.infra}/.gitignore`]: "*\n",
+    [`${D.orchestrators}/.gitkeep`]: "", [`${D.services}/.gitkeep`]: "", [`${D.modules}/.gitkeep`]: "",
+    [`${D.shared}/README.md`]: `# shared\n\nWorkspace-level material shared by several projects (for example the orchestrator contract the frontends are generated from, in \`contracts/\`). Code shared inside one project stays in that project's own \`shared/\`.\n`,
+    [`${D.docs}/README.md`]: `# docs\n\nDocumentation of the ${name} workspace (architecture decisions, runbooks). Each project keeps its own \`docs/\` as well.\n`,
+    [`${D.tests}/README.md`]: `# tests\n\nCross-project tests of the ${name} workspace (end-to-end, contract and load tests). Unit tests stay inside each project.\n`,
   };
   return reportWrites(ctx, writeFiles(root, files, { dryRun: ctx.flags["dry-run"] === true, force: ctx.flags["force"] === true }));
 }
@@ -181,8 +216,9 @@ async function createProjectIn(ctx: Ctx, role: "orchestrator" | "service"): Prom
     }
   }
 
-  const decl: ServiceDecl = { name, path: name, runtime, role: role === "orchestrator" ? "orchestrator" : "service", ...(role !== "orchestrator" && runtime === "spring-boot" ? { prefix } : {}), ...(db ? { db: "postgres" as const } : {}), port, health: role === "orchestrator" ? "/health/ready" : "/actuator/health" };
-  const results = writeFiles(join(root, name), files, { dryRun: ctx.flags["dry-run"] === true, force: ctx.flags["force"] === true });
+  const projectDir = projectPath(config, role, name, root);
+  const decl: ServiceDecl = { name, path: projectDir, runtime, role: role === "orchestrator" ? "orchestrator" : "service", ...(role !== "orchestrator" && runtime === "spring-boot" ? { prefix } : {}), ...(db ? { db: "postgres" as const } : {}), port, health: role === "orchestrator" ? "/health/ready" : "/actuator/health" };
+  const results = writeFiles(join(root, ...projectDir.split("/")), files, { dryRun: ctx.flags["dry-run"] === true, force: ctx.flags["force"] === true });
   const code = reportWrites(ctx, results);
   if (code === 0 && ctx.flags["dry-run"] !== true) {
     config.services.push(decl);
@@ -316,7 +352,7 @@ export function validateAll(ctx: Ctx): { diagnostics: Diagnostic[]; manifests: A
 
 export const COMMANDS: Record<string, Command> = {
   "create": {
-    usage: "pso create workspace <name> | orchestrator <name> [--crud-service <service>] | service <name> --runtime spring-boot [--package com.example.name] [--db postgres|none] | fei <name> | mei <name> [--host <fei>] [--register [--public | --scopes a,b]] [--install]  [--template crud|empty] [--structure legacy] [--port <1024-65535>] [--prefix /path] [--dry-run] [--force] [--json]",
+    usage: "pso create workspace <name> [--layout standard|flat] | orchestrator <name> [--crud-service <service>] | service <name> --runtime spring-boot [--package com.example.name] [--db postgres|none] | fei <name> | mei <name> [--host <fei>] [--register [--public | --scopes a,b]] [--install]  [--template crud|empty] [--structure legacy] [--port <1024-65535>] [--prefix /path] [--dry-run] [--force] [--json]",
     summary: "Create a workspace, an orchestrator, a Spring Boot service, or a frontend project: the application shell (fei) or a microfrontend (mei)",
     run(ctx) {
       const what = ctx.positionals[0];

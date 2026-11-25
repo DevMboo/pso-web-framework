@@ -4,7 +4,7 @@ import { existsSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pso, tmp } from "./helpers.ts";
 
-// The CRUD pages show the generated code itself: every block titled with a generated file (catalog/... or gateway/...) must be that
+// The CRUD pages show the generated code itself: every block titled with a generated file (services/catalog/... or orchestrators/gateway/...) must be that
 // file's text, line for line and in order ("..." lines mark an omission). A template change that the pages do not follow fails here.
 const PAGES = ["tutorials/crud-api", "spring/postgresql-crud", "architecture/reference-crud", "architecture/java-microservice", "architecture/typescript-orchestrator"];
 const dirs: string[] = [];
@@ -21,7 +21,7 @@ test("code shown on the CRUD and architecture pages is the generated code", { ti
   let checked = 0;
   const problems: string[] = [];
   for (const id of PAGES) {
-    for (const m of doc(id).matchAll(/```[a-z]+ title="((?:catalog|gateway)\/[^" ]+)[^"]*"[^\n]*\n([\s\S]*?)\n```/g)) {
+    for (const m of doc(id).matchAll(/```[a-z]+ title="((?:services\/catalog|orchestrators\/gateway)\/[^" ]+)[^"]*"[^\n]*\n([\s\S]*?)\n```/g)) {
       const [, file, body] = m as unknown as [string, string, string];
       const path = join(ws, ...file.split("/"));
       if (!existsSync(path)) { problems.push(`${id}: ${file} is not a generated file`); continue; }

@@ -36,7 +36,7 @@ before(async () => {
   if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 
   const base = tmp("pso-studio-ui-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   root = join(base, "w");
   await pso(root, "create", "service", "users", "--structure", "legacy");
   await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");
@@ -61,7 +61,7 @@ before(async () => {
 
   // a second, empty workspace for empty states
   const b2 = tmp("pso-studio-empty-"); dirs.push(b2);
-  await pso(b2, "create", "workspace", "e");
+  await pso(b2, "create", "workspace", "e", "--layout", "flat");
   emptyRoot = join(b2, "e");
   emptyStudio = await startStudio({ root: emptyRoot });
 });
@@ -230,7 +230,7 @@ test("observability: the runtime telemetry panel shows states and reasons, and n
 
 test("dispatch: declared topology, channel drawer, findings, and a REAL broker connection check", { skip, timeout: 120_000 }, async () => {
   const base = tmp("pso-studio-dsp-"); dirs.push(base);
-  await pso(base, "create", "workspace", "d");
+  await pso(base, "create", "workspace", "d", "--layout", "flat");
   const droot = join(base, "d");
   await pso(droot, "create", "service", "users-service", "--structure", "legacy");
   await pso(droot, "dispatch:install", "redis", "--service", "users-service");
@@ -382,7 +382,7 @@ test("empty workspace: useful empty states instead of blank screens", { skip, ti
 
 test("connection failure: the UI says so and offers a retry, never stale 'connected' state", { skip, timeout: 120_000 }, async () => {
   const b3 = tmp("pso-studio-down-"); dirs.push(b3);
-  await pso(b3, "create", "workspace", "d");
+  await pso(b3, "create", "workspace", "d", "--layout", "flat");
   const s = await startStudio({ root: join(b3, "d") });
   const { page, ctx } = await open("#/overview", { s });
   try {

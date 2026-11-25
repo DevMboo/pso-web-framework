@@ -43,7 +43,7 @@ export class OrdersController {
  */
 test("event-driven tutorial: publish from an action, consume, retry, dead-letter, acknowledge (real Redis)", { timeout: 240_000, skip: reachable ? false : "no local Redis (node scripts/dispatch-brokers.mjs up)" }, async () => {
   const base = tmp("pso-event-doc-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "lab")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "lab", "--layout", "flat")).code, 0);
   const ws = join(base, "lab");
   assert.equal((await pso(ws, "create", "orchestrator", "gw", "--template", "empty")).code, 0);
   // the tutorial's development identity provider: a key generated here, tokens signed by the CLI

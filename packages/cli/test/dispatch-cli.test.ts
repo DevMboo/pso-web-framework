@@ -25,7 +25,7 @@ const mavenSkip = !javaOk ? "JDK or PSO Java artifacts not available (run `pso j
 
 async function workspace(): Promise<string> {
   const base = tmp("pso-dsp-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   return join(base, "w");
 }
 

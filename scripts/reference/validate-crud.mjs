@@ -8,6 +8,9 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+// the directory of a project, from the workspace file (standard layout: services/<name>, orchestrators/<name>; flat layout: <name>)
+const dirOf = (ws, name) => { const c = JSON.parse(readFileSync(join(ws, "pso.workspace.json"), "utf8")); const p = [...c.services, ...(c.frontends ?? [])].find((x) => x.name === name)?.path; if (!p) throw new Error(`project ${name} is not declared in ${ws}`); return join(ws, ...p.split("/")); };
+
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, "..", "..");
@@ -49,7 +52,7 @@ try {
   check("structure:inspect: modular orchestrator, layered service", /gateway \(node\): modular/.test(inspect.out) && /catalog \(spring-boot\): layered/.test(inspect.out), inspect.out.slice(0, 200));
 
   // ---------------------------------------------------------------- structural checks
-  const C = join(ws, "catalog", "src", "main", "java", "com", "pso", "catalog"), G = join(ws, "gateway", "src");
+  const C = join(dirOf(ws, "catalog"), "src", "main", "java", "com", "pso", "catalog"), G = join(dirOf(ws, "gateway"), "src");
   const has = (...p) => existsSync(join(...p));
   check("Java packages: application/{rest,service,dto/request,dto/response,mapper}, infrastructure/{entity,persistence}, shared/{exception,validation}",
     ["application/rest/ProductController.java", "application/service/ProductService.java", "application/dto/request/CreateProductRequest.java", "application/dto/response/ProductResponse.java", "application/mapper/ProductMapper.java", "infrastructure/entity/ProductEntity.java", "infrastructure/persistence/ProductRepository.java", "shared/exception/ConflictException.java", "shared/validation/PageRequests.java"].every((f) => has(C, ...f.split("/"))));
@@ -61,15 +64,15 @@ try {
   check("PostgreSQL is declared for the CRUD service (provisioned by the infrastructure engine)", JSON.parse(readFileSync(join(ws, "pso.workspace.json"), "utf8")).services.find((s) => s.name === "catalog")?.db === "postgres");
 
   // ---------------------------------------------------------------- generated tests of both projects
-  const npmI = sh("npm", ["install", "--no-audit", "--no-fund"], join(ws, "gateway"));
+  const npmI = sh("npm", ["install", "--no-audit", "--no-fund"], join(dirOf(ws, "gateway")));
   check("orchestrator dependencies install", npmI.status === 0, npmI.stderr.slice(-200));
-  const ot = sh("npm", ["test"], join(ws, "gateway"));
+  const ot = sh("npm", ["test"], join(dirOf(ws, "gateway")));
   // node --test prints "# pass N" (TAP) or "ℹ pass N" (spec reporter, the default when the output is not a terminal on Node 24)
   check("orchestrator: tsc build of src (with .app) and its generated tests pass", ot.status === 0 && /(#|ℹ) pass [1-9]\d*/.test(ot.stdout) && /(#|ℹ) fail 0/.test(ot.stdout), (ot.stdout.match(/(#|ℹ) (pass|fail) \d+/g) ?? []).join(" ") + ot.stderr.slice(-200));
-  check("the build contains the compiled .app components", existsSync(join(ws, "gateway", "dist", ".app", "guards", "jwt.guard.js")) || existsSync(join(ws, "gateway", ".test-dist", "src", ".app", "guards", "jwt.guard.js")));
-  const mvnw = join(ws, "catalog", process.platform === "win32" ? "mvnw.cmd" : "mvnw");
+  check("the build contains the compiled .app components", existsSync(join(dirOf(ws, "gateway"), "dist", ".app", "guards", "jwt.guard.js")) || existsSync(join(dirOf(ws, "gateway"), ".test-dist", "src", ".app", "guards", "jwt.guard.js")));
+  const mvnw = join(dirOf(ws, "catalog"), process.platform === "win32" ? "mvnw.cmd" : "mvnw");
   t0 = now();
-  const mt = spawnSync(mvnw, ["-B", "-ntp", "-o", "test"], { cwd: join(ws, "catalog"), encoding: "utf8", shell: process.platform === "win32", timeout: 1_200_000, maxBuffer: 64 * 1024 * 1024 });
+  const mt = spawnSync(mvnw, ["-B", "-ntp", "-o", "test"], { cwd: join(dirOf(ws, "catalog")), encoding: "utf8", shell: process.platform === "win32", timeout: 1_200_000, maxBuffer: 64 * 1024 * 1024 });
   const summary = (mt.stdout.match(/Tests run: \d+, Failures: \d+, Errors: \d+, Skipped: \d+\s*$/m) ?? [""])[0];
   check("catalog: the generated Spring tests pass (embedded PostgreSQL, Flyway, JWT, HTTP)", mt.status === 0, summary || (mt.stdout + mt.stderr).slice(-400));
   timings.springTestsMs = Math.round(now() - t0);
@@ -208,7 +211,7 @@ try {
   t0 = now();
   const crud = pso(ws, "make:crud", "order", "--service", "catalog", "--orchestrator", "--fields", "code:string:unique:length=3-32:filter:sort,total:decimal:precision=12:scale=2:min=0:sort,paid:boolean:default=false:filter");
   timings.makeCrudMs = Math.round(now() - t0);
-  check("make:crud order: Spring resource (V2 migration) + orchestrator module", crud.code === 0 && existsSync(join(C, "application", "rest", "OrderController.java")) && existsSync(join(ws, "catalog", "src", "main", "resources", "db", "migration", "V2__create_orders.sql")) && existsSync(join(G, "modules", "orders", "routes", "ROUTES.pso.ts")));
+  check("make:crud order: Spring resource (V2 migration) + orchestrator module", crud.code === 0 && existsSync(join(C, "application", "rest", "OrderController.java")) && existsSync(join(dirOf(ws, "catalog"), "src", "main", "resources", "db", "migration", "V2__create_orders.sql")) && existsSync(join(G, "modules", "orders", "routes", "ROUTES.pso.ts")));
   const dup = pso(ws, "make:crud", "order", "--service", "catalog");
   check("make:crud refuses to overwrite an existing resource", dup.code !== 0 && /never overwritten/.test(dup.out));
   const up3 = pso(ws, "docker:up", "--env", "local", "--build", "--vendor", "--timeout", "900");

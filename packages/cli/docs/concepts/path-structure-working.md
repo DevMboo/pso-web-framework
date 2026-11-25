@@ -48,9 +48,9 @@ You can watch the model: `pso routes:inspect product.findAll` prints the whole c
 ```text evidence="verified"
 GET /products  ->  catalog:8081
 access:   guard jwt, scopes products:read
-defined:  gateway/src/modules/product/routes/ROUTES.pso.ts
+defined:  orchestrators/gateway/src/modules/product/routes/ROUTES.pso.ts
 contract: present
-handlers: catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java
+handlers: services/catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java
 ```
 
 One command shows the route, its policy, where it is declared, whether a contract exists and which class handles it on the service side. That is the payoff of making structure meaningful.

@@ -8,7 +8,7 @@ import { pso, tmp } from "./helpers.ts";
 /** A workspace as 0.1 generated it: a public and a protected resource, and NO PUBLIC rule in the Spring service. */
 async function legacy() {
   const parent = tmp("pso-mig-sec-");
-  await pso(parent, "create", "workspace", "w");
+  await pso(parent, "create", "workspace", "w", "--layout", "flat");
   const root = join(parent, "w");
   for (const a of [["create", "orchestrator", "gateway", "--structure", "legacy"], ["create", "service", "catalog", "--structure", "legacy"], ["make:resource", "product", "--service", "catalog", "--route", "/catalog/products", "--method", "GET", "--public"], ["make:resource", "order", "--service", "catalog", "--route", "/catalog/orders", "--method", "POST", "--scopes", "orders:write"]]) {
     const r = await pso(root, ...a); assert.equal(r.code, 0, r.out + r.err);

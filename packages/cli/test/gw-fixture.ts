@@ -19,7 +19,7 @@ export interface Gw {
 
 export async function buildGateway(prefix = "pso-gw-", setup?: (ctx: { root: string; gw: string }) => Promise<void> | void): Promise<Gw> {
   const base = tmp(prefix);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");
   await pso(root, "create", "service", "users", "--structure", "legacy", "--port", String(await unusedPort()));

@@ -52,7 +52,7 @@ migration with the `pso_outbox` table and enables the relay; `make:dispatch-even
 
 Change the generated service: inject the starter's `Outbox` and store the event in the transaction that creates the order.
 
-```java title="orders/src/main/java/com/pso/orders/application/service/OrderService.java"
+```java title="services/orders/src/main/java/com/pso/orders/application/service/OrderService.java"
 package com.pso.orders.application.service;
 
 import com.pso.orders.application.dto.request.CreateOrderRequest;
@@ -98,7 +98,7 @@ The outbox stores events only while Dispatch is enabled. With `pso.dispatch.enab
 throws `PSO_DISPATCH_DISABLED` and the transaction is not completed: the order is not created either. Enable it for the service's
 tests, which use the in-process adapter and need no broker:
 
-```yaml title="orders/src/main/resources/application-test.yml"
+```yaml title="services/orders/src/main/resources/application-test.yml"
 pso:
   dispatch:
     enabled: true      # the outbox stores events only while Dispatch is enabled; the memory provider needs no broker
@@ -106,7 +106,7 @@ pso:
 ```
 
 ```bash
-cd orders
+cd services/orders
 ./mvnw test
 ```
 

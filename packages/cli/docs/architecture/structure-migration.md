@@ -33,10 +33,22 @@ pso structure:inspect --service gateway   # one project, --json for tools
 For a 0.1 project it lists every file to move and where, the files whose relative imports, route declarations, module registrations or
 Java package declarations change with it, and what needs a decision (a hexagonal port has no layered equivalent). Nothing is moved.
 
-For a 0.1 orchestrator with one resource (`pso create orchestrator gateway --structure legacy`, then `pso make:resource product`):
+The report starts at the workspace level. A workspace whose projects are not in `orchestrators/`, `services/`, `frontends/` and
+`frontends/modules/` (the 0.1 flat layout, still supported) gets the list of directory moves to the standard layout; PSO never moves a
+project directory itself.
+
+For a 0.1 orchestrator in a flat workspace (`pso create workspace shop --layout flat`) with one resource (`pso create orchestrator gateway --structure legacy`, then `pso make:resource product`):
 
 ```text evidence="verified"
 $ pso structure:inspect --service gateway
+workspace layout: flat (0.1: projects outside the standard directories; still supported)
+  plan to the standard layout (inspection only: nothing is moved):
+    move    gateway  ->  orchestrators/gateway   (orchestrator)
+    move    catalog  ->  services/catalog   (service)
+    update  pso.workspace.json: the "path" of 2 project(s)
+    then    pso infra:apply (regenerates the compose files and environments from the new paths), pso validate
+  Stop running processes first (pso dev, pso docker:down), commit, move the directories, edit the paths, then validate.
+  note: .infra/ does not exist yet; pso infra:init creates it
 gateway (node): legacy
   migration plan to the modular structure (inspection only: nothing is moved):
     move    src/contracts/product.contract.json  ->  src/.app/contracts/product.contract.json

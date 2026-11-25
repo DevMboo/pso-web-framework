@@ -13,7 +13,7 @@ after(() => { for (const d of dirs) { try { rmSync(d, { recursive: true, force: 
 
 test("route scopes reach the identity provider, and --users name:scope+scope keeps the colons of a scope", { timeout: 120_000 }, async () => {
   const base = tmp("pso-scopes-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "shop")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "shop", "--layout", "flat")).code, 0);
   const ws = join(base, "shop");
   assert.equal((await pso(ws, "create", "service", "catalog")).code, 0);
   assert.equal((await pso(ws, "create", "orchestrator", "gateway")).code, 0);

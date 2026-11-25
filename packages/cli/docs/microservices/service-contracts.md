@@ -8,18 +8,18 @@ related: [concepts/contracts, getting-started/first-endpoint, orchestrator/dto-v
 `pso make:resource customer --service catalog --route /customers` creates the contract in two places:
 
 ```text evidence="verified"
-created    gateway/src/.app/contracts/customer.contract.json
-created    catalog/src/main/java/com/pso/catalog/application/dto/response/CustomerResponse.java
-created    catalog/src/main/java/com/pso/catalog/application/rest/CustomerController.java
-created    catalog/src/main/resources/contracts/customer.contract.json
-created    catalog/src/test/java/com/pso/catalog/application/rest/CustomerControllerTests.java
+created    orchestrators/gateway/src/.app/contracts/customer.contract.json
+created    services/catalog/src/main/java/com/pso/catalog/application/dto/response/CustomerResponse.java
+created    services/catalog/src/main/java/com/pso/catalog/application/rest/CustomerController.java
+created    services/catalog/src/main/resources/contracts/customer.contract.json
+created    services/catalog/src/test/java/com/pso/catalog/application/rest/CustomerControllerTests.java
 created    docs/api/customer.md
-created    gateway/src/modules/customer/MODULE.pso.ts
-created    gateway/src/modules/customer/controllers/customer.controller.ts
-created    gateway/src/modules/customer/routes/ROUTES.pso.ts
+created    orchestrators/gateway/src/modules/customer/MODULE.pso.ts
+created    orchestrators/gateway/src/modules/customer/controllers/customer.controller.ts
+created    orchestrators/gateway/src/modules/customer/routes/ROUTES.pso.ts
 ```
 
-The two contract files (`gateway/src/.app/contracts/` and `catalog/src/main/resources/contracts/`) are identical copies; the rest of the output is the Spring controller and response record (in the layered packages), its test, an API note and the orchestrator module that go with them. A JSON contract is the shared, versioned description of a forwarding resource; a module that calls its service through `UpstreamClient` (the reference CRUD, `make:crud`) types that API in `modules/<module>/contracts/<name>.contract.ts` instead.
+The two contract files (`orchestrators/gateway/src/.app/contracts/` and `services/catalog/src/main/resources/contracts/`) are identical copies; the rest of the output is the Spring controller and response record (in the layered packages), its test, an API note and the orchestrator module that go with them. A JSON contract is the shared, versioned description of a forwarding resource; a module that calls its service through `UpstreamClient` (the reference CRUD, `make:crud`) types that API in `modules/<module>/contracts/<name>.contract.ts` instead.
 
 ```json title="customer.contract.json (generated)"
 {
@@ -35,14 +35,14 @@ The two contract files (`gateway/src/.app/contracts/` and `catalog/src/main/reso
 `pso validate` checks that the contract is valid JSON of the expected shape, has a semantic version, unique operation ids and a `service` that is declared in the workspace, and that the two copies are byte-identical (`PSO_CONTRACT_DRIFT` otherwise). Reproduced here by changing `version` in the gateway copy only: changing `version` in the gateway copy only makes `pso validate` print
 
 ```text evidence="verified"
-ERROR   PSO_CONTRACT_DRIFT gateway/src/.app/contracts/customer.contract.json: Contract "customer" differs from its copy in service "catalog"
+ERROR   PSO_CONTRACT_DRIFT orchestrators/gateway/src/.app/contracts/customer.contract.json: Contract "customer" differs from its copy in service "catalog"
         hint: Update both copies together (pso make:resource --force regenerates them)
 gateway: 5 resource(s), digest 90d8f1f4cc8a
 catalog: 6 resource(s), digest 986a7750032c
 FAILED
 ```
 
-and exit with code 1. Regenerating with `--force` rewrites the copy you changed (`overwritten gateway/src/.app/contracts/customer.contract.json`; the other files are reported `unchanged`) and `pso validate` is `OK` again.
+and exit with code 1. Regenerating with `--force` rewrites the copy you changed (`overwritten orchestrators/gateway/src/.app/contracts/customer.contract.json`; the other files are reported `unchanged`) and `pso validate` is `OK` again.
 
 ## Changing a contract: step by step
 

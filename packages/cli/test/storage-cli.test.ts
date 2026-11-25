@@ -15,7 +15,7 @@ const read = (...p: string[]) => readFileSync(join(...p), "utf8");
 
 async function workspace() {
   const base = tmp("pso-sto-cli-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");
   await pso(root, "create", "service", "docs-service", "--structure", "legacy");

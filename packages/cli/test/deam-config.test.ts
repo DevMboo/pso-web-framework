@@ -110,7 +110,7 @@ http.createServer((q, r) => { r.writeHead(200); r.end("ok"); }).listen(Number(pr
 test("static security commands evaluate the sources the application runs with, for one named environment", async () => {
   const base = tmp("pso-parity-"); dirs.push(base);
   const root = join(base, "w");
-  assert.equal((await pso(base, "create", "workspace", "w")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "w", "--layout", "flat")).code, 0);
   assert.equal((await pso(root, "create", "orchestrator", "gw", "--structure", "legacy")).code, 0);
   assert.equal((await pso(root, "create", "service", "users", "--structure", "legacy")).code, 0);
   assert.equal((await pso(root, "make:resource", "customer", "--service", "users", "--route", "/customers", "--scopes", "customers:read")).code, 0);

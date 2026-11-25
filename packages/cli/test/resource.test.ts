@@ -9,7 +9,7 @@ after(() => { for (const d of dirs) { try { rmSync(d, { recursive: true, force: 
 
 async function ws() {
   const base = tmp("pso-res-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "service", "users", "--structure", "legacy");
   await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");

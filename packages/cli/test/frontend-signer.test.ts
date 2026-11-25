@@ -32,7 +32,7 @@ test("a local signer signs a microfrontend release, the shell trusts it by name,
   const home = tmp("pso-sig-home-"); dirs.push(home);
   process.env["PSO_CLOUD_HOME"] = home; process.env["PSO_CREDENTIAL_PROVIDER"] = "encrypted-file"; process.env["PSO_CREDENTIAL_PASSPHRASE"] = "frontend-signer-test-passphrase";
   const base = tmp("pso-sig-ws-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "shop")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "shop", "--layout", "flat")).code, 0);
   const root = join(base, "shop");
   assert.equal((await pso(root, "create", "orchestrator", "shop-gateway", "--structure", "legacy")).code, 0);
   assert.equal((await pso(root, "create", "fei", "shop")).code, 0);

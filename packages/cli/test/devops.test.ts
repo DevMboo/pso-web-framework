@@ -12,7 +12,7 @@ after(() => { for (const s of servers) s.close(); for (const d of dirs) { try { 
 
 async function ws(withSpring = true) {
   const base = tmp("pso-ops-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   if (withSpring) await pso(root, "create", "service", "users", "--structure", "legacy");
   await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");

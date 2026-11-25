@@ -18,7 +18,7 @@ interface Fx { root: string; gw: string; mod: string; write(rel: string, text: s
 
 async function fixture(withUsers = true): Promise<Fx> {
   const base = tmp("pso-http-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "orchestrator", "gw", "--template", "empty");
   const gw = join(root, "gw");

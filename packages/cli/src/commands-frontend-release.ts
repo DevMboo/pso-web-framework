@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import type { FrontendDecl, WorkspaceConfig } from "@pso/core";
-import { formatDiagnostic } from "@pso/core";
+import { formatDiagnostic, frontendContractPath } from "@pso/core";
 import {
   FEI_FILE, ReleaseRefused, activeFei, activePointer, history, loadFrontends, renderSiteServer, publicKeyRaw, publishFei, publishMei, readRuntimeConfig, rollbackMei, versions, feiOf,
   writeRuntimeConfig, validateEcosystem,
@@ -255,7 +255,7 @@ export const FRONTEND_RELEASE_COMMANDS: Record<string, Command> = {
       try { c = buildContract(root, config); } catch (e) { throw new CliError((e as Error).message); }
       const ts = renderContractTs(c);
       // what changed since the contract the frontends were last generated from: breaking changes are reported before anything is overwritten
-      const prevFile = join(root, "frontend", "contracts", "orchestrator.contract.json");
+      const prevFile = join(root, ...frontendContractPath(config, root).split("/"));
       let diff: ReturnType<typeof diffContracts> = { breaking: [], additive: [] };
       try { if (existsSync(prevFile)) { const prev = JSON.parse(readFileSync(prevFile, "utf8")) as OrchestratorContract; if (prev.version !== c.version) diff = diffContracts(prev, c); } } catch { /* an unreadable previous copy is just replaced */ }
       const stale: string[] = [];
@@ -265,7 +265,7 @@ export const FRONTEND_RELEASE_COMMANDS: Record<string, Command> = {
         if (have !== c.version) stale.push(p.name);
         if (ctx.flags["check"] !== true && have !== c.version) { mkdirSync(join(file, ".."), { recursive: true }); write(file, ts); }
       }
-      if (ctx.flags["check"] !== true) { const f = join(root, "frontend", "contracts", "orchestrator.contract.json"); mkdirSync(join(f, ".."), { recursive: true }); write(f, JSON.stringify(c, null, 2) + "\n"); }
+      if (ctx.flags["check"] !== true) { const f = join(root, ...frontendContractPath(config, root).split("/")); mkdirSync(join(f, ".."), { recursive: true }); write(f, JSON.stringify(c, null, 2) + "\n"); }
       const lim = (a: string[], mark: string): string => a.slice(0, 15).map((x) => `  ${mark} ${x}`).join("\n") + (a.length > 15 ? `\n  ${mark} ... and ${a.length - 15} more (--json lists all)` : "");
       const report = `${diff.breaking.length ? `\nBREAKING since the previous contract:\n${lim(diff.breaking, "-")}` : ""}${diff.additive.length ? `\nadditive:\n${lim(diff.additive, "+")}` : ""}`;
       emit(ctx, { version: c.version, operations: c.operations.length, dtos: Object.keys(c.dtos), breaking: diff.breaking, additive: diff.additive, stale: ctx.flags["check"] === true ? stale : [], updated: ctx.flags["check"] === true ? [] : stale }, `orchestrator contract ${c.version}: ${c.operations.length} operation(s), ${Object.keys(c.dtos).length} DTO(s), ${c.operations.filter((o) => o.responses).length} with declared responses${report}\n${ctx.flags["check"] === true ? (stale.length ? `STALE in: ${stale.join(", ")} (run pso frontend:contracts)` : "all projects are current") : `updated ${stale.length ? stale.join(", ") : "nothing (already current)"}`}`);

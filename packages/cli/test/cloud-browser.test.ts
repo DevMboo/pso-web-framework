@@ -44,7 +44,7 @@ before(async () => {
   for (const channel of ["chrome", "msedge"]) { try { browser = await chromium.launch({ channel }); break; } catch { /* try the next installed browser */ } }
   if (!browser) { skip = "no Chrome or Edge installation found for Playwright"; return; }
   const base = tmp("pso-cloud-ui-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w"); const root = join(base, "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat"); const root = join(base, "w");
   mkdirSync(join(root, "deploy"), { recursive: true });
   writeFileSync(join(root, "deploy", "production.deployment.pso.ts"), `import { defineDeployment } from "@pso/deploy";\nexport default defineDeployment({ name: "shop", environment: "production", connection: { provider: "ssh", credentials: "prod" }, source: { provider: "git", url: "https://git.example.com/shop.git", branch: "main" }, service: { name: "web", runtime: "node", start: ["node", "server.js"], shutdownGraceSeconds: 20, route: { path: "/" } }, strategy: { type: "blue-green", proxy: "nginx" }, proxy: { nginx: { domains: ["shop.example.com"] } }, pipeline: "production" });\n`);
   writeFileSync(join(root, "deploy", "production.pipeline.pso.ts"), `import { definePipeline } from "@pso/deploy";\nexport default definePipeline({ name: "production", stages: [{ type: "integrity" }, { type: "security" }, { type: "tests", enabled: false }, { type: "build" }, { type: "deploy" }] });\n`);

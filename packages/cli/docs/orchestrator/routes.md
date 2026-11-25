@@ -83,9 +83,9 @@ GET     /reports/summary         reports.summary                          public
 $ pso routes:inspect product.findAll
 GET /products  ->  catalog:8081
 access:   guard jwt, scopes products:read
-defined:  gateway/src/modules/product/routes/ROUTES.pso.ts
+defined:  orchestrators/gateway/src/modules/product/routes/ROUTES.pso.ts
 contract: present
-handlers: catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java
+handlers: services/catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java
 ```
 
 Note that the public route's path is the **controller prefix plus the action path**: a module whose controller has `@RestController("/reports")` and an action `@Get("/summary")` is served at `/reports/summary`, and `make:route --path /summary` is relative to the prefix.

@@ -41,7 +41,7 @@ test("a repeated prefix is recognised segment by segment: the resource named lik
 test("make:resource in a service named like the resource, with other resources, nested paths and a custom prefix: generated, compiled, started and called", { skip, timeout: 1_500_000 }, async () => {
   const base = tmp("pso-res-prefix-"); dirs.push(base);
   const root = join(base, "w");
-  assert.equal((await pso(base, "create", "workspace", "w")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "w", "--layout", "flat")).code, 0);
   assert.equal((await pso(root, "create", "orchestrator", "gw", "--structure", "legacy")).code, 0);
   assert.equal((await pso(root, "create", "service", "orders", "--structure", "legacy", "--port", "8082")).code, 0);
   assert.equal((await pso(root, "create", "service", "billing", "--structure", "legacy", "--port", "8083", "--prefix", "/api/billing")).code, 0);

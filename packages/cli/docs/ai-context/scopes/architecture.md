@@ -26,7 +26,8 @@ keywords: [ai, architecture]
 
 - Orchestrator: `src/.app/{configs,contracts,filters,guards,middlewares,interceptors,decorators}` for application-wide components; `src/modules/<module>/` with `MODULE.pso.ts`, `routes/ROUTES.pso.ts`, `controllers/`, `services/`, `providers/`, `contracts/`, `dto/request|response/`, `mappers/`; `src/shared/`; `src/main.ts` (bootstrap only). `tsconfig.json` must include `"src/.app/**/*"` (TypeScript skips dot-directories).
 - Spring service (layered): `application/{rest,service,dto/request,dto/response,mapper}`, `infrastructure/{entity,persistence,config,security,filter,client}`, `shared/{exception,validation,constant}`; Flyway migrations in `src/main/resources/db/migration`; Hibernate `ddl-auto: validate`, never `update`. No providers, modules or `.app` in Java.
-- `.infra/` (workspace) is operational infrastructure PSO generates and reconciles: never put application code there, never edit it by hand.
+- `.infra/` (workspace) is operational infrastructure PSO generates and reconciles: never put application code there, never edit it by hand. It exists from `pso create workspace` on (holding only its ignore rule); `pso infra:init` and `pso infra:apply` fill it.
+- Workspace layout: orchestrators in `orchestrators/`, microservices in `services/`, FEIs in `frontends/`, MEIs in `frontends/modules/`, workspace-level shared material (the frontends' orchestrator contract) in `shared/`, workspace documentation in `docs/`, cross-project tests in `tests/`. The generators decide the path and register it in `pso.workspace.json`; every command reads that `path`.
 - New projects include a reference Product CRUD (`--template empty` omits it); the orchestrator's CRUD module is bound to the service that serves its path (`PRODUCT_SERVICE` + `metadata.services`), rebind with `pso crud:bind`.
 - 0.1 projects (`src/routes/<module>/`, `routes/`, `ports/`, `adapters/` in Java) keep working; never mix the two in one project.
 

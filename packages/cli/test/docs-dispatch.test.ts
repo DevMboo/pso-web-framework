@@ -22,7 +22,7 @@ const DOCTOR_VARS = ["PSO_DISPATCH_ENABLED", "REDIS_URL", "RABBITMQ_URL", "KAFKA
 /** "Checking Dispatch and what its errors mean": the static commands and every error are reproduced; the broker checks run when the local brokers are up. */
 test("dispatch diagnostics page: declarations, lock, and each error are what the CLI prints", { timeout: 120_000 }, async () => {
   const base = tmp("pso-dsp-doc-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "lab")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "lab", "--layout", "flat")).code, 0);
   const ws = join(base, "lab");
   assert.equal((await pso(ws, "create", "orchestrator", "gw", "--template", "empty")).code, 0);
   const inst = await pso(ws, "dispatch:install", "redis", "--service", "gw");
@@ -90,7 +90,7 @@ test("dispatch diagnostics page: declarations, lock, and each error are what the
 test("dispatch diagnostics page: the doctor reports each real broker as UP with the line the page shows", { timeout: 180_000 }, async (t) => {
   if (brokersSkip) return t.skip(brokersSkip);
   const base = tmp("pso-dsp-doc-up-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "lab")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "lab", "--layout", "flat")).code, 0);
   const ws = join(base, "lab");
   assert.equal((await pso(ws, "create", "orchestrator", "gw", "--template", "empty")).code, 0);
   const prev = { ...process.env };

@@ -11,7 +11,7 @@ for (const k of Object.keys(process.env)) if (k.startsWith("PSO_JWT_")) delete p
 
 async function ws() {
   const base = tmp("pso-sec-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "service", "users", "--structure", "legacy");
   await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");

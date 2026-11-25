@@ -12,7 +12,7 @@ const doc = (id: string) => readFileSync(resolve(import.meta.dirname, "..", "doc
 /** "Deterministic manifests" and "Structural discovery": the claims are reproduced on a generated workspace. */
 test("the manifest is byte-identical across runs, changes with the structure and returns when the structure returns; inspect lists what was found", { timeout: 120_000 }, async () => {
   const base = tmp("pso-manifest-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "shop")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "shop", "--layout", "flat")).code, 0);
   const ws = join(base, "shop");
   assert.equal((await pso(ws, "create", "orchestrator", "gateway", "--template", "empty")).code, 0);
   assert.equal((await pso(ws, "create", "service", "catalog", "--template", "empty")).code, 0);

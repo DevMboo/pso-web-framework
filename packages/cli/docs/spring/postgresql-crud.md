@@ -23,7 +23,7 @@ file by file, with the code exactly as generated. The same pattern is what `pso 
 The datasource reads the environment; credentials are never in a file. Hibernate validates the mapping against the schema Flyway
 created and never changes it:
 
-```yaml title="catalog/src/main/resources/application.yml (excerpt, generated)"
+```yaml title="services/catalog/src/main/resources/application.yml (excerpt, generated)"
   jackson:
     deserialization:
       fail-on-unknown-properties: true   # a request with a property the contract does not have is a 400, never silently ignored
@@ -58,7 +58,7 @@ file secret). To run the service from the IDE, point the three variables at a Po
 
 ## 2. The migration
 
-```sql title="catalog/src/main/resources/db/migration/V1__create_products.sql"
+```sql title="services/catalog/src/main/resources/db/migration/V1__create_products.sql"
 CREATE TABLE products (
     id           UUID             PRIMARY KEY,
     sku          VARCHAR(64)      NOT NULL CHECK (char_length(sku) >= 3),
@@ -79,7 +79,7 @@ writes the next version (`V2__<name>.sql`).
 
 ## 3. The entity and the repository
 
-```java title="catalog/src/main/java/com/pso/catalog/infrastructure/entity/ProductEntity.java (excerpt)"
+```java title="services/catalog/src/main/java/com/pso/catalog/infrastructure/entity/ProductEntity.java (excerpt)"
     @Setter
     @Column(name = "price", nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
@@ -90,7 +90,7 @@ writes the next version (`V2__<name>.sql`).
     private long version;
 ```
 
-```java title="catalog/src/main/java/com/pso/catalog/infrastructure/persistence/ProductRepository.java"
+```java title="services/catalog/src/main/java/com/pso/catalog/infrastructure/persistence/ProductRepository.java"
 public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, JpaSpecificationExecutor<ProductEntity> {
 
     boolean existsBySku(String sku);
@@ -102,7 +102,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, J
 Filters are a `Specification`, executed by the database, never a list filtered in memory. The `name` filter is a case-insensitive
 contains whose `%` and `_` are escaped:
 
-```java title="catalog/src/main/java/com/pso/catalog/infrastructure/persistence/ProductSpecifications.java (excerpt)"
+```java title="services/catalog/src/main/java/com/pso/catalog/infrastructure/persistence/ProductSpecifications.java (excerpt)"
         if (sku != null && !sku.isBlank()) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("sku"), sku.strip()));
         }
@@ -113,7 +113,7 @@ contains whose `%` and `_` are escaped:
 Every public method is a transaction (`readOnly` for reads). A write is flushed at once, so a constraint violation is reported inside
 the transaction, by name, as a `409` with a sentence that does not echo the caller's input:
 
-```java title="catalog/src/main/java/com/pso/catalog/application/service/ProductService.java (excerpt)"
+```java title="services/catalog/src/main/java/com/pso/catalog/application/service/ProductService.java (excerpt)"
     /** writes now (not at commit) so a constraint violation is reported here, as a 409, inside this transaction */
     private ProductEntity saveAndFlush(ProductEntity entity) {
         try {

@@ -21,20 +21,20 @@ test("make:resource writes both contract copies, drift is detected and --force r
   for (const l of made.out.split("\n").filter((x) => x.startsWith("created"))) assert.ok(contracts.includes(l), `the page shows: ${l}`);
   assert.equal((await pso(ws, "validate")).code, 0);
 
-  const gateway = join(ws, "gateway/src/.app/contracts/customer.contract.json");
-  const copy = join(ws, "catalog/src/main/resources/contracts/customer.contract.json");
+  const gateway = join(ws, "orchestrators/gateway/src/.app/contracts/customer.contract.json");
+  const copy = join(ws, "services/catalog/src/main/resources/contracts/customer.contract.json");
   assert.equal(readFileSync(gateway, "utf8"), readFileSync(copy, "utf8"), "the two copies are identical");
   writeFileSync(gateway, readFileSync(gateway, "utf8").replace('"version": "0.1.0"', '"version": "0.2.0"'));
   const drift = await pso(ws, "validate");
   assert.equal(drift.code, 1);
-  for (const l of ['ERROR   PSO_CONTRACT_DRIFT gateway/src/.app/contracts/customer.contract.json: Contract "customer" differs from its copy in service "catalog"', "hint: Update both copies together (pso make:resource --force regenerates them)"]) { assert.ok((drift.out + drift.err).includes(l), l); assert.ok(contracts.includes(l), `the page shows ${l}`); }
+  for (const l of ['ERROR   PSO_CONTRACT_DRIFT orchestrators/gateway/src/.app/contracts/customer.contract.json: Contract "customer" differs from its copy in service "catalog"', "hint: Update both copies together (pso make:resource --force regenerates them)"]) { assert.ok((drift.out + drift.err).includes(l), l); assert.ok(contracts.includes(l), `the page shows ${l}`); }
   const forced = await pso(ws, "make:resource", "customer", "--service", "catalog", "--route", "/customers", "--scopes", "customers:read", "--force");
-  assert.ok(forced.out.includes("overwritten gateway/src/.app/contracts/customer.contract.json"));
+  assert.ok(forced.out.includes("overwritten orchestrators/gateway/src/.app/contracts/customer.contract.json"));
   assert.equal((await pso(ws, "validate")).code, 0);
 
   const svc = await pso(ws, "make:service", "pricing", "--service", "catalog");
   assert.ok(svc.out.includes("created    src/main/java/com/pso/catalog/application/service/PricingService.java"));
-  const java = readFileSync(join(ws, "catalog/src/main/java/com/pso/catalog/application/service/PricingService.java"), "utf8").replaceAll("\r\n", "\n");
+  const java = readFileSync(join(ws, "services/catalog/src/main/java/com/pso/catalog/application/service/PricingService.java"), "utf8").replaceAll("\r\n", "\n");
   const lombok = doc("spring/lombok");
   for (const l of java.split("\n").filter((x) => x.trim() !== "")) assert.ok(lombok.includes(l), `the Lombok page shows: ${l}`);
   assert.ok(!/@Data|@ToString/.test(java), "generated services do not use @Data or @ToString");

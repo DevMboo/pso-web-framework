@@ -38,7 +38,7 @@ bootstrap({ appDir: __dirname, workspaceFile: process.env["PSO_WORKSPACE"] ?? re
 
 async function workspace(): Promise<{ root: string; main: string }> {
   const base = tmp("pso-migrate-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "w")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "w", "--layout", "flat")).code, 0);
   const root = join(base, "w");
   assert.equal((await pso(root, "create", "orchestrator", "gw", "--structure", "legacy")).code, 0);
   return { root, main: join(root, "gw", "src", "main.ts") };

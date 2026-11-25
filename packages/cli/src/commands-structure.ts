@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { NAME_PATTERNS, derivePrefix, servicePrefix, type ServiceDecl } from "@pso/core";
+import { NAME_PATTERNS, WORKSPACE_DIRS, derivePrefix, layoutMoves, servicePrefix, workspaceLayout, type ServiceDecl } from "@pso/core";
 import { CliError, writeFiles } from "./fsx.ts";
 import { str } from "./args.ts";
 import { camel, pascal } from "./templates.ts";
@@ -151,7 +151,7 @@ export const STRUCTURE_COMMANDS: Record<string, Command> = {
 
   "structure:inspect": {
     usage: "pso structure:inspect [--service <name>] [--json]",
-    summary: "Show the structural convention of each project (modular / layered / 0.1), mixed or contradictory structures, and for a 0.1 project the migration plan: every file to move, the imports, route declarations, module registrations and Java package declarations it affects. Read-only: nothing is moved",
+    summary: "Show the workspace layout (standard, or flat with the plan to move its projects into orchestrators/, services/, frontends/ and frontends/modules/), the structural convention of each project (modular / layered / 0.1), mixed or contradictory structures, and for a 0.1 project the migration plan: every file to move, the imports, route declarations, module registrations and Java package declarations it affects. Read-only: nothing is moved",
     run(ctx) {
       const { root, config } = requireWorkspace(ctx);
       const only = str(ctx.flags["service"]);
@@ -159,6 +159,15 @@ export const STRUCTURE_COMMANDS: Record<string, Command> = {
       if (only && !targets.length) throw new CliError(`Unknown service "${only}"`);
       const reports = targets.map((s) => structurePlan(join(root, ...s.path.split("/")), s));
       const lines: string[] = [];
+      // the workspace level: where the projects are (inspection only; PSO never moves a project directory)
+      const layout = workspaceLayout(config, root); const moves = layoutMoves(config);
+      lines.push(`workspace layout: ${layout}${layout === "standard" ? " (orchestrators/, services/, frontends/, frontends/modules/)" : " (0.1: projects outside the standard directories; still supported)"}`);
+      if (moves.length) {
+        lines.push("  plan to the standard layout (inspection only: nothing is moved):");
+        for (const m of moves) lines.push(`    move    ${m.from}  ->  ${m.to}   (${m.kind})`);
+        lines.push(`    update  pso.workspace.json: the "path" of ${moves.length} project(s)`, "    then    pso infra:apply (regenerates the compose files and environments from the new paths), pso validate", "  Stop running processes first (pso dev, pso docker:down), commit, move the directories, edit the paths, then validate.");
+      }
+      if (!existsSync(join(root, WORKSPACE_DIRS.infra))) lines.push(`  note: ${WORKSPACE_DIRS.infra}/ does not exist yet; pso infra:init creates it`);
       for (const r of reports) {
         lines.push(`${r.service} (${r.runtime}): ${r.structure}${r.source === "default" ? " (no marker yet: the official structure)" : ""}${r.problems.length ? "  MIXED" : ""}`);
         for (const p of r.problems) lines.push(`  problem: ${p}`);
@@ -170,7 +179,7 @@ export const STRUCTURE_COMMANDS: Record<string, Command> = {
           lines.push(`  ${r.moves.length} file(s) to move, ${r.references.length} file(s) whose imports, package declarations or registrations change. Back up first (commit), move, then pso validate and the project's tests.`);
         }
       }
-      emit(ctx, { projects: reports }, lines.join("\n"));
+      emit(ctx, { layout, layoutMoves: moves, projects: reports }, lines.join("\n"));
       return reports.some((r) => r.problems.length) ? 1 : 0;
     },
   },

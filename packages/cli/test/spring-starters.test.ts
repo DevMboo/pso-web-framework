@@ -119,7 +119,7 @@ test("the TypeScript property schema matches the Java PsoProperties class (no dr
 
 async function workspace(): Promise<{ root: string }> {
   const base = tmp("pso-spring-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   return { root: join(base, "w") };
 }
 

@@ -32,7 +32,7 @@ pso make:resource product --service catalog --route /products --scopes products:
 ```tree title="The files to inspect after generation"
 shop/
   pso.workspace.json  # generated: service names, roles, ports and paths
-  gateway/
+  orchestrators/gateway/
     src/
       .app/
         contracts/product.contract.json  # generated: gateway contract copy
@@ -42,7 +42,7 @@ shop/
           MODULE.pso.ts  # generated: controller composition
           routes/ROUTES.pso.ts  # generated: GET /products and products:read
           controllers/product.controller.ts  # generated: forwards to catalog
-  catalog/
+  services/catalog/
     src/
       main/
         java/com/pso/catalog/application/rest/ProductController.java  # generated: stub response
@@ -73,7 +73,7 @@ GET     /products                product.findAll        -> catalog        guard:
 $ pso routes:inspect product
 GET /products  ->  catalog:8081
 access:   guard jwt, scopes products:read
-defined:  gateway/src/modules/product/routes/ROUTES.pso.ts
+defined:  orchestrators/gateway/src/modules/product/routes/ROUTES.pso.ts
 ```
 
 ![The CLI workflow's expected output in the documentation portal, showing validation, the route list and route inspection](@/assets/screenshots/cli-workflow-output.png)

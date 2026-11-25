@@ -11,7 +11,7 @@ Consider `GET /products` in a workspace with a TypeScript gateway and a Spring `
 | Layer | The question it answers | Where to look | How to check |
 |---|---|---|---|
 | Workspace | Which projects and ports exist? | `pso.workspace.json` | `pso inspect`, `pso services:graph` |
-| Structure | Is this file in a recognized place? | `gateway/src/modules/product/` | `pso inspect --service gateway` |
+| Structure | Is this file in a recognized place? | `orchestrators/gateway/src/modules/product/` | `pso inspect --service gateway` |
 | Module | Which controller and providers belong together? | `MODULE.pso.ts` | `pso validate` |
 | Route | Is this exact method and path exposed? | `ROUTES.pso.ts` | `pso routes:list`, `pso routes:inspect product` |
 | Security | Who may call it? | the route security declaration and the service policy | `pso security:check`, then an HTTP request |

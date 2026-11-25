@@ -155,7 +155,7 @@ test("favicon: the PSO Games favicon files are reused byte for byte", () => {
 test("syntax highlighting, filenames, copy buttons and line highlighting are rendered", () => {
   const html = read("getting-started/first-microservice.html");
   assert.match(html, /<span class="hljs-keyword">/);
-  assert.match(html, /class="code-file">catalog\/src\/main\/java\/com\/pso\/catalog\/application\/rest\/ProductController\.java</);
+  assert.match(html, /class="code-file">services\/catalog\/src\/main\/java\/com\/pso\/catalog\/application\/rest\/ProductController\.java</);
   assert.match(html, /class="code-lang">Java</);
   assert.equal((html.match(/<span class="line hl">/g) ?? []).length, 3, "{1-3} highlights three lines");
   const figures = (html.match(/<figure class="code /g) ?? []).length;
@@ -299,7 +299,7 @@ test("the static server is loopback-only, GET-only, Host-checked and path-contai
 
 test("generated assistant files: no secrets, untrusted text neutralized, existing files never overwritten", async () => {
   const base = tmp("pso-ai-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");
   await pso(root, "create", "service", "catalog", "--structure", "legacy", "--db", "postgres");

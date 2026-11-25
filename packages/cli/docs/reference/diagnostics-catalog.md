@@ -39,14 +39,14 @@ Every failure ends with the same two summary lines and `FAILED`, and the exit co
 
 **The mistake.** `MODULE.pso.ts` lost its controller:
 
-```typescript title="gateway/src/modules/orders/MODULE.pso.ts"
+```typescript title="orchestrators/gateway/src/modules/orders/MODULE.pso.ts"
 export default defineModule({
   name: "orders",
   controllers: [],
 ```
 
 ```text evidence="verified"
-ERROR   PSO_MODULE_003 gateway/src/modules/orders/MODULE.pso.ts: Controller is not declared in MODULE.pso.ts.
+ERROR   PSO_MODULE_003 orchestrators/gateway/src/modules/orders/MODULE.pso.ts: Controller is not declared in MODULE.pso.ts.
 
 Module: orders
 Controller: OrdersController
@@ -54,7 +54,7 @@ Controller: OrdersController
 A controller absent from the module declaration is never registered.
 
 Controller rejected.
-ERROR   PSO_ROUTE_001 gateway/src/modules/orders/routes/ROUTES.pso.ts: Route references a controller that is not part of the module.
+ERROR   PSO_ROUTE_001 orchestrators/gateway/src/modules/orders/routes/ROUTES.pso.ts: Route references a controller that is not part of the module.
 
 Module: orders
 Route: GET /orders
@@ -78,7 +78,7 @@ Route activation denied.
 **The mistake.** `ROUTES.pso.ts` says `action: "listAll"`, the controller has `list`.
 
 ```text evidence="verified"
-ERROR   PSO_ROUTE_002 gateway/src/modules/orders/routes/ROUTES.pso.ts: Controller action does not exist.
+ERROR   PSO_ROUTE_002 orchestrators/gateway/src/modules/orders/routes/ROUTES.pso.ts: Controller action does not exist.
 
 Module: orders
 Route: GET /orders
@@ -98,7 +98,7 @@ Route activation denied.
 **The mistake.** The registry says `POST`, the action is `@Get("/")`.
 
 ```text evidence="verified"
-ERROR   PSO_ROUTE_004 gateway/src/modules/orders/routes/ROUTES.pso.ts: Route declaration mismatch.
+ERROR   PSO_ROUTE_004 orchestrators/gateway/src/modules/orders/routes/ROUTES.pso.ts: Route declaration mismatch.
 
 Module: orders
 Route: POST /orders
@@ -118,7 +118,7 @@ Route activation denied.
 **The mistake.** `path: "/order"` where the controller says `/orders`.
 
 ```text evidence="verified"
-ERROR   PSO_ROUTE_005 gateway/src/modules/orders/routes/ROUTES.pso.ts: Route path does not match the controller.
+ERROR   PSO_ROUTE_005 orchestrators/gateway/src/modules/orders/routes/ROUTES.pso.ts: Route path does not match the controller.
 
 Module: orders
 Route: GET /order
@@ -138,7 +138,7 @@ Route activation denied.
 **The mistake.** `guard: "jwtt"`.
 
 ```text evidence="verified"
-ERROR   PSO_ROUTE_008 gateway/src/modules/orders/routes/ROUTES.pso.ts: Unknown guard.
+ERROR   PSO_ROUTE_008 orchestrators/gateway/src/modules/orders/routes/ROUTES.pso.ts: Unknown guard.
 
 Module: orders
 Route: GET /orders
@@ -158,7 +158,7 @@ Route activation denied.
 **The mistake.** `metadata: { service: "billing" }` while the workspace has only `catalog`.
 
 ```text evidence="verified"
-ERROR   PSO_ROUTE_010 gateway/src/modules/orders/routes/ROUTES.pso.ts: Route targets an unknown service.
+ERROR   PSO_ROUTE_010 orchestrators/gateway/src/modules/orders/routes/ROUTES.pso.ts: Route targets an unknown service.
 
 Module: orders
 Route: GET /orders
@@ -188,7 +188,7 @@ This is **correct behaviour, not a gap**: decorators describe, `ROUTES.pso.ts` d
 **The mistake.** `ROUTES.pso.ts` was removed.
 
 ```text evidence="verified"
-ERROR   PSO_MODULE_002 gateway/src/modules/orders/MODULE.pso.ts: Route registry missing.
+ERROR   PSO_MODULE_002 orchestrators/gateway/src/modules/orders/MODULE.pso.ts: Route registry missing.
 
 Module: orders
 
@@ -215,7 +215,7 @@ ERROR   PSO_PORT_CONFLICT pso.workspace.json: Services "gateway" and "catalog" b
 **The mistake.** A mapper in a `misc/` package:
 
 ```text evidence="verified"
-ERROR   PSO_MISPLACED_RESOURCE catalog/src/main/java/com/pso/catalog/misc/OrderMapper.java: mapper "OrderMapper" must live in "application/mapper/" (under the application package) in the layered structure
+ERROR   PSO_MISPLACED_RESOURCE services/catalog/src/main/java/com/pso/catalog/misc/OrderMapper.java: mapper "OrderMapper" must live in "application/mapper/" (under the application package) in the layered structure
         hint: Move it, or generate it with `pso make:mapper` which places it correctly
 ```
 

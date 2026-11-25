@@ -39,13 +39,13 @@ service of this workspace that serves `/products`. The [reference CRUD page](/ar
 ```tree title="What was generated (main files)"
 shop/
   pso.workspace.json  # generated: the projects, their ports and roles
-  catalog/
+  services/catalog/
     src/main/java/com/pso/catalog/
       application/rest/ProductController.java  # generated: HTTP, validation, scopes
       application/service/ProductService.java  # generated: transactional operations
       infrastructure/entity/ProductEntity.java  # generated: the JPA entity
     src/main/resources/db/migration/V1__create_products.sql  # generated: the table, its constraints and indexes
-  gateway/
+  orchestrators/gateway/
     src/.app/guards/jwt.guard.ts  # generated: application-wide authentication
     src/modules/products/
       MODULE.pso.ts  # generated: the module's controllers and providers
@@ -117,9 +117,9 @@ GET     /products/options        products.options                          publi
 $ pso routes:inspect /products
 GET /products  ->  catalog:8081
 access:   guard jwt, scopes products:read
-defined:  gateway/src/modules/products/routes/ROUTES.pso.ts
-contract: typed (gateway/src/modules/products/contracts/product.contract.ts)
-handlers: catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java
+defined:  orchestrators/gateway/src/modules/products/routes/ROUTES.pso.ts
+contract: typed (orchestrators/gateway/src/modules/products/contracts/product.contract.ts)
+handlers: services/catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java
 ```
 
 `routes:inspect` accepts a module name (`products`), a route id (`products.find`) or an exact path (`/products`; a path shared by

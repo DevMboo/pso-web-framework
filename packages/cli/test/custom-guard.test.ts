@@ -14,7 +14,7 @@ const FRAMEWORK = 'import { JwtGuard } from "@pso/security";\nexport default Jwt
 
 test("a custom jwt guard replaces framework authentication only when declared, identified and consistent", { timeout: 300_000 }, async () => {
   const base = tmp("pso-cg-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");
   await pso(root, "create", "service", "users", "--structure", "legacy", "--port", String(await unusedPort()));

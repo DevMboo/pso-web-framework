@@ -8,6 +8,7 @@ export * from "./graph.ts";
 export * from "./manifest.ts";
 export * from "./lifecycle.ts";
 export * from "./workspace.ts";
+export * from "./layout.ts";
 export * from "./config.ts";
 export * from "./http-model.ts";
 export { createDevCertificate, describeCertificate, type DevCertificate, type DevCertificateOptions, type CertificateFacts } from "./devcert.ts";

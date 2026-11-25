@@ -20,7 +20,7 @@ const read = (...p: string[]) => readFileSync(join(...p), "utf8");
 test("create workspace/orchestrator/service wires ports and passes validate", async () => {
   const base = tmp();
   try {
-    assert.equal((await pso(base, "create", "workspace", "demo")).code, 0);
+    assert.equal((await pso(base, "create", "workspace", "demo", "--layout", "flat")).code, 0);
     const ws = join(base, "demo");
     assert.equal((await pso(ws, "create", "service", "users", "--structure", "legacy")).code, 0);
     assert.equal((await pso(ws, "create", "service", "orders", "--structure", "legacy")).code, 0);
@@ -41,7 +41,7 @@ test("create workspace/orchestrator/service wires ports and passes validate", as
 test("generation is idempotent, never silently overwrites, supports dry-run", async () => {
   const base = tmp();
   try {
-    await pso(base, "create", "workspace", "w");
+    await pso(base, "create", "workspace", "w", "--layout", "flat");
     const ws = join(base, "w");
     await pso(ws, "create", "orchestrator", "gw", "--structure", "legacy");
     const dry = await pso(ws, "make:guard", "authenticated", "--service", "gw", "--dry-run", "--json");
@@ -63,7 +63,7 @@ test("generation is idempotent, never silently overwrites, supports dry-run", as
 test("hostile names, routes and paths are rejected before touching the filesystem", async () => {
   const base = tmp();
   try {
-    await pso(base, "create", "workspace", "w");
+    await pso(base, "create", "workspace", "w", "--layout", "flat");
     const ws = join(base, "w");
     await pso(ws, "create", "orchestrator", "gw", "--structure", "legacy");
     for (const bad of ["../evil", "a/b", "A_B", "..", "x y"]) {
@@ -87,7 +87,7 @@ test("hostile names, routes and paths are rejected before touching the filesyste
 test("spring make:* uses the service package and passes validate", async () => {
   const base = tmp();
   try {
-    await pso(base, "create", "workspace", "w");
+    await pso(base, "create", "workspace", "w", "--layout", "flat");
     const ws = join(base, "w");
     await pso(ws, "create", "service", "users", "--structure", "legacy");
     assert.equal((await pso(ws, "make:controller", "customer", "--service", "users", "--route", "/customers")).code, 0);
@@ -105,7 +105,7 @@ test("spring make:* uses the service package and passes validate", async () => {
 test("validate fails with actionable diagnostics (port conflict, misplaced file)", async () => {
   const base = tmp();
   try {
-    await pso(base, "create", "workspace", "w");
+    await pso(base, "create", "workspace", "w", "--layout", "flat");
     const ws = join(base, "w");
     await pso(ws, "create", "orchestrator", "gw", "--structure", "legacy");
     mkdirSync(join(ws, "gw/src/wrong"), { recursive: true });

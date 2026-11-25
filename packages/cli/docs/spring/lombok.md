@@ -32,7 +32,7 @@ The generated tests check that the template follows these rules (no `@Data` or `
 created    src/main/java/com/pso/catalog/application/service/PricingService.java
 ```
 
-```java title="catalog/src/main/java/com/pso/catalog/application/service/PricingService.java (generated)"
+```java title="services/catalog/src/main/java/com/pso/catalog/application/service/PricingService.java (generated)"
 package com.pso.catalog.application.service;
 
 import lombok.RequiredArgsConstructor;

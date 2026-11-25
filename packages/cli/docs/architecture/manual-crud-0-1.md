@@ -64,7 +64,7 @@ You also need `curl`. The examples use a Unix shell; on Windows use Git Bash, or
 ## 1. Create the workspace
 
 ```bash
-pso create workspace shop
+pso create workspace shop --layout flat   # this page shows the 0.1 layout
 cd shop
 ```
 

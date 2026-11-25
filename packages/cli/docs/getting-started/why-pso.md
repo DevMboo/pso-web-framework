@@ -30,15 +30,15 @@ pso make:resource product --service catalog --route /products --scopes products:
 Expected output:
 
 ```text evidence="expected"
-created    gateway/src/.app/contracts/product.contract.json
-created    catalog/src/main/java/com/pso/catalog/application/dto/response/ProductResponse.java
-created    catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java
-created    catalog/src/main/resources/contracts/product.contract.json
-created    catalog/src/test/java/com/pso/catalog/application/rest/ProductControllerTests.java
+created    orchestrators/gateway/src/.app/contracts/product.contract.json
+created    services/catalog/src/main/java/com/pso/catalog/application/dto/response/ProductResponse.java
+created    services/catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java
+created    services/catalog/src/main/resources/contracts/product.contract.json
+created    services/catalog/src/test/java/com/pso/catalog/application/rest/ProductControllerTests.java
 created    docs/api/product.md
-created    gateway/src/modules/product/MODULE.pso.ts
-created    gateway/src/modules/product/controllers/product.controller.ts
-created    gateway/src/modules/product/routes/ROUTES.pso.ts
+created    orchestrators/gateway/src/modules/product/MODULE.pso.ts
+created    orchestrators/gateway/src/modules/product/controllers/product.controller.ts
+created    orchestrators/gateway/src/modules/product/routes/ROUTES.pso.ts
 ```
 
 The contract is written twice (gateway and service) on purpose. If someone later edits only one copy, `pso validate` fails with `PSO_CONTRACT_DRIFT` before anything runs: the drift is caught by a command, not by an outage. Likewise a route that is not in `ROUTES.pso.ts` simply does not exist, so a forgotten registration is a visible `404`, not a half-exposed endpoint.

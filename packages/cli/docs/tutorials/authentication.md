@@ -30,7 +30,7 @@ environment is applied (`pso infra:plan` lists them as `env:gateway` and `env:ca
 
 The orchestrator's application-wide guard is generated in `src/.app/guards/`:
 
-```ts title="gateway/src/.app/guards/jwt.guard.ts"
+```ts title="orchestrators/gateway/src/.app/guards/jwt.guard.ts"
 import { JwtGuard } from "@pso/security";
 
 // Authentication policy for every route that uses the "jwt" guard.
@@ -42,7 +42,7 @@ export default JwtGuard.create();
 The module's routes decide which URL exists and who may call it. One route is intentionally public; the others name the guard and
 the scope:
 
-```ts title="gateway/src/modules/products/routes/ROUTES.pso.ts"
+```ts title="orchestrators/gateway/src/modules/products/routes/ROUTES.pso.ts"
     { method: "GET", path: "/products/options", controller: ProductController, action: "options", security: { public: true } },
     { method: "GET", path: "/products", controller: ProductController, action: "list", security: { guard: "jwt", scopes: ["products:read"] }, metadata: { services: ["catalog"] }, responses: { 200: "ProductPageResponse", 400: "problem", 401: "problem", 403: "problem" } },
     { method: "POST", path: "/products", controller: ProductController, action: "create", security: { guard: "jwt", scopes: ["products:write"] }, metadata: { services: ["catalog"] }, responses: { 201: "ProductResponse", 400: "problem", 409: "problem" } },
@@ -51,7 +51,7 @@ the scope:
 A decorator on the controller cannot weaken this policy, a route that is both public and guarded is an error, and a route that is
 not listed does not exist. The microservice repeats the check on its own controller:
 
-```java title="catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java"
+```java title="services/catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java"
     @PostMapping
     @PreAuthorize("hasAuthority('SCOPE_products:write')")
 ```

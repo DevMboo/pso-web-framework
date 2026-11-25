@@ -99,7 +99,7 @@ test("every file tree in the documentation parses, and every tree on the CRUD pa
 
 test("the CRUD tutorial: generated trees, application.yml and gateway files are exactly what the CLI produces", { timeout: 240_000 }, async () => {
   const base = tmp("pso-crud-doc-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "shop")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "shop", "--layout", "flat")).code, 0);
   const shop = join(base, "shop");
   assert.equal((await pso(shop, "create", "service", "catalog", "--structure", "legacy", "--db", "postgres", "--port", "8081")).code, 0);
   assert.equal((await pso(shop, "create", "orchestrator", "gateway", "--structure", "legacy")).code, 0);

@@ -70,7 +70,7 @@ export default function Page() {
 test("reference workspace: public routes and a public MEI next to protected ones, in a real browser", { timeout: 600_000 }, async () => {
   // ── generate the workspace with the CLI ──────────────────────────────────────────────────────
   const base = tmp("pso-public-");
-  assert.equal((await pso(base, "create", "workspace", "ref")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "ref", "--layout", "flat")).code, 0);
   const root = join(base, "ref");
   assert.equal((await pso(root, "create", "orchestrator", "ref-gateway", "--structure", "legacy")).code, 0);
   assert.equal((await pso(root, "create", "fei", "demo")).code, 0);
@@ -224,7 +224,7 @@ export default defineFrontendRoutes({ routes: [{ path: "/", page: "./src/pages/A
 
 test("reference workspace: the same FEI without any `public` declaration behaves exactly as before (everything protected)", async () => {
   const base = tmp("pso-public-compat-");
-  assert.equal((await pso(base, "create", "workspace", "ref")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "ref", "--layout", "flat")).code, 0);
   const root = join(base, "ref");
   assert.equal((await pso(root, "create", "orchestrator", "ref-gateway", "--structure", "legacy")).code, 0);
   assert.equal((await pso(root, "create", "fei", "demo")).code, 0);

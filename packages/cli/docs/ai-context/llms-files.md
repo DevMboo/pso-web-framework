@@ -23,7 +23,7 @@ Every documentation build writes these files from the **same sources** as the HT
 
 All of them carry the framework version ({{version}}). They contain no credentials, keys or environment-specific values: the build never reads `.env` files or key material.
 
-The current release, PSO Web V2 `0.2.0-rc.4` ([Downloads](/downloads/index)), reports the CLI/API version `0.2.0`; use the release label when matching an installed binary to these files. The current contexts describe the [official application structures](/architecture/overview), [generator destinations](/architecture/generators), [infrastructure engine](/infrastructure/overview) and [migration path](/reference/migration). Regenerate `pso ai:init` files after changing the installed CLI so an older repository instruction file does not override these conventions.
+The current release, PSO Web V2 `0.2.0-rc.5` ([Downloads](/downloads/index)), reports the CLI/API version `0.2.0`; use the release label when matching an installed binary to these files. The current contexts describe the [official application structures](/architecture/overview), [generator destinations](/architecture/generators), [infrastructure engine](/infrastructure/overview) and [migration path](/reference/migration). Regenerate `pso ai:init` files after changing the installed CLI so an older repository instruction file does not override these conventions.
 
 Generate your own copy of the site:
 

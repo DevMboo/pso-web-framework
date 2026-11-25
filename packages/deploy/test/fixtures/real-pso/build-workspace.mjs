@@ -25,7 +25,7 @@ const run = (cmd, args, cwd, label) => {
 const pso = (args, cwd) => run(process.execPath, [PSO, ...args], cwd, `pso ${args.join(" ")}`);
 
 rmSync(out, { recursive: true, force: true }); mkdirSync(out, { recursive: true });
-pso(["create", "workspace", "shop"], out);
+pso(["create", "workspace", "shop", "--layout", "flat"], out);
 const ws = join(out, "shop");
 pso(["create", "service", "catalog", "--runtime", "spring-boot", "--db", "postgres", "--port", "8101", "--prefix", "/catalog"], ws);
 pso(["create", "service", "inventory", "--runtime", "spring-boot", "--db", "postgres", "--port", "8102", "--prefix", "/inventory"], ws);

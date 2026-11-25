@@ -10,7 +10,7 @@ after(() => { for (const d of dirs) { try { rmSync(d, { recursive: true, force: 
 /** SEC005 must reflect the configuration the runtime really reads: security.authentication.* (modern), security.jwt.* (legacy, mapped onto it) and PSO_JWT_*. */
 test("security:check recognises modern and legacy authentication configuration and still reports genuinely missing settings", { timeout: 120_000 }, async () => {
   const base = tmp("pso-seccfg-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "lab")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "lab", "--layout", "flat")).code, 0);
   const ws = join(base, "lab");
   assert.equal((await pso(ws, "create", "orchestrator", "gateway", "--structure", "legacy")).code, 0);
   assert.equal((await pso(ws, "create", "service", "catalog", "--structure", "legacy", "--port", "8081")).code, 0);

@@ -19,7 +19,7 @@ const json = (file: string): { dependencies: Record<string, string> } => JSON.pa
 
 async function workspace(): Promise<{ root: string; gw: string }> {
   const base = tmp("pso-vendor-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   assert.equal((await pso(root, "create", "orchestrator", "gw", "--structure", "legacy")).code, 0);
   return { root, gw: join(root, "gw") };

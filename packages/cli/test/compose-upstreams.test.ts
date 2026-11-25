@@ -19,7 +19,7 @@ after(() => { for (const d of dirs) { try { rmSync(d, { recursive: true, force: 
 
 async function workspace(): Promise<string> {
   const base = tmp("pso-compose-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "w")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "w", "--layout", "flat")).code, 0);
   const root = join(base, "w");
   assert.equal((await pso(root, "create", "orchestrator", "gw", "--structure", "legacy")).code, 0);
   assert.equal((await pso(root, "create", "service", "catalog", "--structure", "legacy", "--port", "8081")).code, 0);

@@ -70,7 +70,7 @@ async function garbageUpstream(): Promise<{ port: number; close(): Promise<void>
 
 async function orchestrator(env: Record<string, string>) {
   const base = tmp("pso-lim-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");
   await pso(root, "create", "service", "users", "--structure", "legacy");

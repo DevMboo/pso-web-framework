@@ -67,7 +67,7 @@ There is no `providers`, `modules` or `.app` directory: those are orchestrator c
 
 An excerpt of the generated controller:
 
-```java title="catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java" {1-3}
+```java title="services/catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java" {1-3}
 @PostMapping
 @PreAuthorize("hasAuthority('SCOPE_products:write')")
 public ResponseEntity<ProductResponse> create(@Valid @RequestBody CreateProductRequest request) {
@@ -85,12 +85,12 @@ There is no security code in the project: the [security starter](/spring/securit
 ## 4. Run the tests
 
 ```powershell tab="PowerShell" group="run"
-cd catalog
+cd services/catalog
 .\mvnw.cmd test
 ```
 
 ```bash tab="macOS / Linux" group="run"
-cd catalog
+cd services/catalog
 ./mvnw test
 ```
 

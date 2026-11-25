@@ -33,7 +33,7 @@ process.on("SIGTERM", () => process.exit(0));
 
 test("Studio: authenticated, loopback-only, read-only, and shows live runtime data", { timeout: 120_000 }, async () => {
   const base = tmp("pso-studio-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "service", "users", "--structure", "legacy");
   await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");
@@ -153,7 +153,7 @@ test("pso init builds a valid workspace from existing projects", async () => {
 
 test("graph and routes:inspect describe the real workspace", async () => {
   const base = tmp("pso-graph-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "service", "users", "--structure", "legacy"); await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");
   await pso(root, "make:resource", "customer", "--service", "users", "--route", "/customers", "--scopes", "customers:read");

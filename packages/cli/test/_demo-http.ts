@@ -7,7 +7,7 @@ import { exportSPKI, generateKeyPair, SignJWT } from "jose";
 import { pso, prepare, startNode, randomPort, unusedPort } from "./helpers.ts";
 
 const base = mkdtempSync(join(tmpdir(), "pso-demo-http-"));
-await pso(base, "create", "workspace", "shop");
+await pso(base, "create", "workspace", "shop", "--layout", "flat");
 const root = join(base, "shop");
 await pso(root, "create", "orchestrator", "gateway", "--structure", "legacy");
 await pso(root, "create", "service", "catalog", "--structure", "legacy", "--port", String(await unusedPort()));

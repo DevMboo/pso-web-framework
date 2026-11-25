@@ -75,7 +75,7 @@ the empty ones (`src/.app/configs/`, `contracts/`, `decorators/`, `filters/`, `i
 `pso validate` passes and warns, because the module's service does not exist yet:
 
 ```text evidence="expected"
-WARNING PSO_CRUD_UNBOUND gateway/src/modules/products/routes/ROUTES.pso.ts: Module "products" is bound to the service "products", which this workspace does not declare yet: its routes answer 502 (upstream not configured) until it exists.
+WARNING PSO_CRUD_UNBOUND orchestrators/gateway/src/modules/products/routes/ROUTES.pso.ts: Module "products" is bound to the service "products", which this workspace does not declare yet: its routes answer 502 (upstream not configured) until it exists.
         hint: Create it with `pso create service products` (the reference CRUD), or bind the module to an existing service: pso crud:bind products --to <service>
 gateway: 12 resource(s), digest e010c0bcf740
 OK
@@ -86,7 +86,7 @@ The first service created with the reference CRUD binds it (`pso create service 
 
 ## 3. The entry point
 
-```typescript title="gateway/src/main.ts"
+```typescript title="orchestrators/gateway/src/main.ts"
 import "reflect-metadata";
 import { resolve } from "node:path";
 import { bootstrap, log, shutdownOnSignals, StartupError } from "@pso/http";
@@ -115,7 +115,7 @@ Details: [Bootstrap](/orchestrator/bootstrap).
 ## 5. Build and start
 
 ```powershell
-cd gateway
+cd orchestrators/gateway
 npm install
 npm run dev
 ```

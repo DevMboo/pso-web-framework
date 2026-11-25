@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.2.0-rc.5 — Mandatory workspace organization (2026-11-25)
+
+Fifth release candidate of 0.2.0 (npm packages stay `0.2.0`; PSO Java is `0.2.0-rc.5`; rc.1 to rc.4 are kept for rollback).
+**The Windows installer is not Authenticode-signed.**
+
+### Changed
+- `pso create workspace` creates the standard workspace layout: `.infra/` (only its ignore rule; nothing is provisioned before
+  `pso infra:init`), `orchestrators/`, `services/`, `frontends/`, `frontends/modules/`, `shared/`, `docs/`, `tests/`,
+  `pso.workspace.json` and a `README.md` that describes it.
+- The generators place projects there: `pso create orchestrator` → `orchestrators/<name>`, `pso create service` → `services/<name>`,
+  `pso create fei` → `frontends/fei-<name>`, `pso create mei` → `frontends/modules/mei-<name>`. The path is registered in
+  `pso.workspace.json`, which every command reads. The internal structures (modular orchestrator, layered Java service) are unchanged.
+- The orchestrator contract the frontends are generated from is kept in `shared/contracts/` in a standard workspace.
+- One module of `@pso/core` (`layout.ts`) decides every project location.
+
+### Compatibility
+- Existing (flat) workspaces keep working unchanged: new projects follow the existing ones, a workspace never mixes both layouts, and
+  PSO never moves a project directory. `pso create workspace <name> --layout flat` still creates the 0.1 layout.
+- `pso structure:inspect` reports the workspace layout and, for a flat workspace, the directory moves to the standard layout
+  (inspection only).
+
 ## 0.2.0-rc.4 — First public release (2026-11-25)
 
 Fourth release candidate of 0.2.0 and the first one published publicly, built from the public source repository

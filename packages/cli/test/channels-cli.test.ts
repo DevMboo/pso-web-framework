@@ -16,7 +16,7 @@ const read = (...p: string[]) => readFileSync(join(...p), "utf8");
 
 async function workspace() {
   const base = tmp("pso-ch-cli-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");
   await pso(root, "create", "service", "recruitment-service", "--structure", "legacy");
@@ -90,7 +90,7 @@ test("channels:validate reports unregistered, duplicate, ambiguous and unknown c
 
 test("layered service: make:notifier writes the record to application/event/ and the notifier to application/service/; validate and compile", { skip: skipJava, timeout: 900_000 }, async () => {
   const base = tmp("pso-ch-layered-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   const run = async (...a: string[]) => { const r = await pso(root, ...a); assert.equal(r.code, 0, `${a.join(" ")}\n${r.out}${r.err}`); return r; };
   await run("create", "service", "recruitment", "--template", "empty");

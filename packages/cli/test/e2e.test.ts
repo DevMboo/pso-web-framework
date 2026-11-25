@@ -39,7 +39,7 @@ async function fixture(): Promise<{ root: string }> {
   if (shared) return shared;
   const base = tmp("pso-e2e-"); dirs.push(base);
   const root = join(base, "w");
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   await pso(root, "create", "service", "users", "--structure", "legacy");
   await pso(root, "create", "orchestrator", "gw", "--structure", "legacy");
   assert.equal((await pso(root, "make:resource", "customer", "--service", "users", "--route", "/customers", "--scopes", "customers:read")).code, 0);
@@ -132,7 +132,7 @@ test("end to end: pso dev runs Spring + orchestrator; JWT auth, scopes, header h
 
 test("make:migration numbers migrations and refuses services without a database", async () => {
   const base = tmp("pso-mig-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "service", "plain", "--structure", "legacy");
   await pso(root, "create", "service", "orders", "--structure", "legacy", "--db", "postgres");
@@ -151,7 +151,7 @@ test("make:migration numbers migrations and refuses services without a database"
 
 test("PostgreSQL service: Flyway migrations run against a real (embedded) PostgreSQL in the generated tests", { skip, timeout: 900_000 }, async () => {
   const base = tmp("pso-pg-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const root = join(base, "w");
   await pso(root, "create", "service", "orders", "--structure", "legacy", "--db", "postgres");
   await pso(root, "make:migration", "add-orders", "--service", "orders");

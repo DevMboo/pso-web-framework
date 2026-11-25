@@ -32,6 +32,9 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
 
+// the directory of a project, from the workspace file (standard layout: services/<name>, orchestrators/<name>; flat layout: <name>)
+const dirOf = (ws, name) => { const c = JSON.parse(readFileSync(join(ws, "pso.workspace.json"), "utf8")); const p = [...c.services, ...(c.frontends ?? [])].find((x) => x.name === name)?.path; if (!p) throw new Error(`project ${name} is not declared in ${ws}`); return join(ws, ...p.split("/")); };
+
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const args = process.argv.slice(2);
 const flag = (n) => (args.includes(`--${n}`) ? args[args.indexOf(`--${n}`) + 1] : undefined);
@@ -132,6 +135,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+
 @RestController
 @RequestMapping("/product-entries")
 public class ProductEntriesController {
@@ -191,7 +195,7 @@ async function main() {
   const routes = (svc) => join(ws, svc, "src", "main", "java", "com", "pso", svc, "routes");
   writeFileSync(join(routes("catalog"), "ProductsController.java"), PRODUCTS_CONTROLLER);
   writeFileSync(join(routes("catalog"), "ProductEntriesController.java"), PRODUCT_ENTRIES_CONTROLLER);
-  writeFileSync(join(ws, "catalog", "src", "main", "resources", "db", "migration", "V1__create_products.sql"), PRODUCTS_SQL);
+  writeFileSync(join(dirOf(ws, "catalog"), "src", "main", "resources", "db", "migration", "V1__create_products.sql"), PRODUCTS_SQL);
   const ordersFile = join(routes("orders"), "OrdersController.java");
   const generatedOrders = readFileSync(ordersFile, "utf8");
   check("generation", "make:resource orders --service orders declares the repeated path instead of generating a service that cannot start", /@RepeatsServicePrefix\r?\n@RequestMapping\("\/orders"\)/.test(generatedOrders));
@@ -224,7 +228,7 @@ async function main() {
   mkdirSync(join(dsp, "schemas"), { recursive: true });
   writeFileSync(join(dsp, "schemas", "recorded.schema.ts"), 'export default { type: "object", required: ["id"], properties: { id: { type: "string" } } };\n');
   writeFileSync(join(dsp, "EVENTS.pso.ts"), `import { defineEvents } from "@pso/dispatch";\n\nexport default defineEvents({\n  events: [{ name: "audit.recorded", version: 1, channel: "audit.events", schema: "schemas/recorded.schema.ts" }],\n  consumers: [],\n});\n`);
-  writeFileSync(join(ws, "orders", "src", "main", "resources", "dispatch", "orders.events.json"), JSON.stringify({ events: [{ name: "orders.created", version: 1, channel: "orders.created", key: "orderId", schema: { type: "object", required: ["orderId"], properties: { orderId: { type: "string" } } } }] }, null, 2) + "\n");
+  writeFileSync(join(dirOf(ws, "orders"), "src", "main", "resources", "dispatch", "orders.events.json"), JSON.stringify({ events: [{ name: "orders.created", version: 1, channel: "orders.created", key: "orderId", schema: { type: "object", required: ["orderId"], properties: { orderId: { type: "string" } } } }] }, null, 2) + "\n");
   ok = pso(ws, "dispatch:lock").status === 0 && pso(ws, "dispatch:validate").status === 0 && pso(ws, "validate").status === 0;
 
   // secure deployment through the supported mechanisms: development certificates, then the deployment files

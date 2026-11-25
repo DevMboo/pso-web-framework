@@ -28,7 +28,7 @@ Importing modules to read metadata (accurate but unsafe) and a hybrid that execu
 
 Put these three lines at the top of a controller, a file that would write a marker file and then throw if anyone executed it:
 
-```typescript title="gateway/src/modules/orders/controllers/orders.controller.ts (top of the file)"
+```typescript title="orchestrators/gateway/src/modules/orders/controllers/orders.controller.ts (top of the file)"
 import { writeFileSync } from "node:fs";
 writeFileSync("EXECUTED.marker", "executed");
 throw new Error("boom: this file must never be executed by validation");

@@ -13,7 +13,7 @@ const b64 = (o: unknown) => Buffer.from(JSON.stringify(o)).toString("base64url")
 
 async function fixture() {
   const base = tmp("pso-jwt-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const ws = join(base, "w");
   await pso(ws, "create", "service", "users", "--structure", "legacy");
   await pso(ws, "create", "orchestrator", "gw", "--structure", "legacy");
@@ -122,7 +122,7 @@ test("JWT security fails closed at startup: invalid configuration keeps the appl
 
 test("make:route is guarded by default and --public must be explicit", async () => {
   const base = tmp("pso-route-"); dirs.push(base);
-  await pso(base, "create", "workspace", "w");
+  await pso(base, "create", "workspace", "w", "--layout", "flat");
   const ws = join(base, "w");
   await pso(ws, "create", "orchestrator", "gw", "--structure", "legacy");
   await pso(ws, "make:module", "items", "--service", "gw");

@@ -35,7 +35,7 @@ The starters are ordinary auto-configuration: every bean backs off when you defi
 
 ```powershell
 pso java:install      # once: the PSO artifacts into your local Maven repository
-cd catalog
+cd services/catalog
 .\mvnw.cmd test       # ./mvnw test on macOS and Linux
 .\mvnw.cmd package
 ```

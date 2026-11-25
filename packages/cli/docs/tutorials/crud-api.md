@@ -41,7 +41,7 @@ Follow `POST /products` with a token that holds `products:write`.
 **1. The route** decides that the URL exists, who may call it, and which services its action may call. Nothing that is not declared
 here is reachable, whatever a controller's decorators say.
 
-```ts title="gateway/src/modules/products/routes/ROUTES.pso.ts"
+```ts title="orchestrators/gateway/src/modules/products/routes/ROUTES.pso.ts"
 { method: "POST", path: "/products", controller: ProductController, action: "create", security: { guard: "jwt", scopes: ["products:write"] }, metadata: { services: ["catalog"] }, responses: { 201: "ProductResponse", 400: "problem", 409: "problem" } },
 ```
 
@@ -51,7 +51,7 @@ missing token is `401`, a missing scope `403`, before any code of the module run
 **2. The controller** validates the body against its DTO (unknown properties, types, lengths, the money format: a `400` lists every
 field at fault) and answers `201` with a `Location` header:
 
-```ts title="gateway/src/modules/products/controllers/product.controller.ts"
+```ts title="orchestrators/gateway/src/modules/products/controllers/product.controller.ts"
   @Post("/")
   async create(@Body(CreateProductDto) body: CreateProductDto) {
     const product = await this.products.create(body);
@@ -62,7 +62,7 @@ field at fault) and answers `201` with a `Location` header:
 **3. The service** coordinates: it calls the provider and maps the answer to the public response. It persists nothing and does not
 repeat the rules the microservice owns.
 
-```ts title="gateway/src/modules/products/services/product.service.ts"
+```ts title="orchestrators/gateway/src/modules/products/services/product.service.ts"
   async create(body: CreateProductDto): Promise<ProductResponse> {
     return toProductResponse(await this.provider.create(toWrite(body)));
   }
@@ -73,7 +73,7 @@ code), applies its endpoint prefix (`/catalog`), uses its TLS material, propagat
 caller's token because the call asks for it (`credentials: "caller"`) and the route declared the service. A `404`, `409` or `400` of
 the service becomes the same problem here; a service that is down becomes a stable `502`/`503`/`504`.
 
-```ts title="gateway/src/modules/products/providers/product.provider.ts"
+```ts title="orchestrators/gateway/src/modules/products/providers/product.provider.ts"
   create(body: ProductWrite): Promise<ProductRecord> {
     return translate(this.client.post<ProductRecord>(PRODUCT_SERVICE, "/products", body, { credentials: "caller" }));
   }
@@ -85,7 +85,7 @@ together with the routes' `metadata.services`.
 **5. The Spring controller** receives `/catalog/products`. The PSO security starter validates the same token again and
 `@PreAuthorize` checks the same scope: bypassing the orchestrator gains nothing.
 
-```java title="catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java"
+```java title="services/catalog/src/main/java/com/pso/catalog/application/rest/ProductController.java"
     @PostMapping
     @PreAuthorize("hasAuthority('SCOPE_products:write')")
     public ResponseEntity<ProductResponse> create(@Valid @RequestBody CreateProductRequest request) {
@@ -98,7 +98,7 @@ together with the routes' `metadata.services`.
 **6. The Spring service** is the transaction boundary. It checks the SKU, maps the request to an entity and writes it at once, so a
 violation of the unique constraint (two requests racing past the check) is reported inside this transaction as a `409`:
 
-```java title="catalog/src/main/java/com/pso/catalog/application/service/ProductService.java"
+```java title="services/catalog/src/main/java/com/pso/catalog/application/service/ProductService.java"
     @Transactional
     public ProductResponse create(CreateProductRequest request) {
         if (repository.existsBySku(request.sku().strip())) {
@@ -112,7 +112,7 @@ violation of the unique constraint (two requests racing past the check) is repor
 **7. The repository** is Spring Data JPA; lists are filtered, sorted and paginated **by the database** through `Specification` and
 `Pageable`:
 
-```java title="catalog/src/main/java/com/pso/catalog/infrastructure/persistence/ProductRepository.java"
+```java title="services/catalog/src/main/java/com/pso/catalog/infrastructure/persistence/ProductRepository.java"
 public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, JpaSpecificationExecutor<ProductEntity> {
 
     boolean existsBySku(String sku);

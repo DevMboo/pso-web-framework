@@ -63,7 +63,7 @@ const fixture = (): Promise<Fixture> => (built ??= build());
 async function build(): Promise<Fixture> {
   const base = tmp("pso-compose-"); dirs.push(base);
   const ok = async (...argv: string[]): Promise<string> => { const r = await pso(root, ...argv); assert.equal(r.code, 0, `pso ${argv.join(" ")}\n${r.out}${r.err}`); return r.out; };
-  assert.equal((await pso(base, "create", "workspace", "shop")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "shop", "--layout", "flat")).code, 0);
   const root = join(base, "shop");
   const ports = { customers: await unusedPort(), orders: await unusedPort(), catalog: await unusedPort(), ghost: await unusedPort() };
   await ok("create", "orchestrator", "gw", "--structure", "legacy");

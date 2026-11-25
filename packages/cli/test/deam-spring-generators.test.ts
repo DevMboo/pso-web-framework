@@ -43,7 +43,7 @@ test("layered service: make:event, make:listener, make:dispatch-event and make:d
   const base = tmp("pso-deam-layered-"); dirs.push(base);
   const root = join(base, "w");
   const ok = async (...argv: string[]): Promise<string> => { const r = await pso(root, ...argv); assert.equal(r.code, 0, `pso ${argv.join(" ")}\n${r.out}${r.err}`); return r.out; };
-  assert.equal((await pso(base, "create", "workspace", "w")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "w", "--layout", "flat")).code, 0);
   await ok("create", "service", "orders", "--template", "empty");
   assert.match(await ok("make:event", "order-shipped", "--service", "orders"), /created\s+src\/main\/java\/com\/pso\/orders\/application\/event\/OrderShippedEvent\.java/);
   assert.match(await ok("make:listener", "order-shipped", "--service", "orders"), /created\s+src\/main\/java\/com\/pso\/orders\/application\/event\/OrderShippedListener\.java/);
@@ -65,7 +65,7 @@ test("generated controller (prefix named like the service), local events and Dis
   const base = tmp("pso-deam-spring-"); dirs.push(base);
   const root = join(base, "w");
   const ok = async (...argv: string[]): Promise<string> => { const r = await pso(root, ...argv); assert.equal(r.code, 0, `pso ${argv.join(" ")}\n${r.out}${r.err}`); return r.out; };
-  assert.equal((await pso(base, "create", "workspace", "w")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "w", "--layout", "flat")).code, 0);
   const port = await unusedPort();
   await ok("create", "orchestrator", "gw", "--structure", "legacy");
   await ok("create", "service", "orders", "--structure", "legacy", "--port", String(port));

@@ -45,7 +45,7 @@ test("first application: validate, routes:list and routes:inspect print what the
 
 test("structure migration: structure:inspect prints the documented plan for a 0.1 orchestrator", { timeout: 120_000 }, async () => {
   const base = tmp("pso-docmig-"); dirs.push(base);
-  assert.equal((await pso(base, "create", "workspace", "shop")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "shop", "--layout", "flat")).code, 0);
   const ws = join(base, "shop");
   assert.equal((await pso(ws, "create", "orchestrator", "gateway", "--structure", "legacy")).code, 0);
   assert.equal((await pso(ws, "create", "service", "catalog", "--structure", "legacy")).code, 0);

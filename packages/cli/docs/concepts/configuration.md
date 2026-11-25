@@ -56,7 +56,7 @@ server.port                        8081                 <- workspace
 
 Keys that look like secrets (`password`, `token`, `secret`, `apiKey`, ...) must be **references**, never literals:
 
-```json title="gateway/pso.config.json" evidence="expected"
+```json title="orchestrators/gateway/pso.config.json" evidence="expected"
 { "security": { "jwt": { "publicKeyFile": "${env:PSO_PUBKEY}" } } }
 ```
 

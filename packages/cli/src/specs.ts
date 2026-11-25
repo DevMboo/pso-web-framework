@@ -39,7 +39,7 @@ export function bundledMavenRepository(): string | undefined {
  * version: the generated templates and the Java libraries change together, so an older or newer release found on the machine is
  * never used instead (it may lack what the templates need). `pso java:install` installs it from the release's Maven repository.
  */
-export const PSO_JAVA_VERSION = "0.2.0-rc.4";
+export const PSO_JAVA_VERSION = "0.2.0-rc.5";
 
 /**
  * The version of the PSO Java artifacts that generated services depend on: the checkout's (parent pom) when the CLI runs from a

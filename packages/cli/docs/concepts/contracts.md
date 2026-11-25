@@ -11,7 +11,7 @@ PSO uses two kinds of contract.
 
 A JSON file that states which operations a service offers. Services never share domain entities; they agree on contracts. `pso make:resource` writes the contract twice: in the gateway and as a mirror inside the service.
 
-```json title="gateway/src/.app/contracts/product.contract.json (generated)"
+```json title="orchestrators/gateway/src/.app/contracts/product.contract.json (generated)"
 {
   "name": "product",
   "version": "0.1.0",
@@ -29,7 +29,7 @@ Validation checks the shape, a semantic `version`, unique operation ids, that `s
 Edit the version in one copy only and validate (Expected output):
 
 ```text evidence="expected"
-ERROR   PSO_CONTRACT_DRIFT gateway/src/.app/contracts/product.contract.json: Contract "product" differs from its copy in service "catalog"
+ERROR   PSO_CONTRACT_DRIFT orchestrators/gateway/src/.app/contracts/product.contract.json: Contract "product" differs from its copy in service "catalog"
         hint: Update both copies together (pso make:resource --force regenerates them)
 FAILED
 ```

@@ -14,13 +14,13 @@ Only the current documentation version is published; `docs/versions.json` lists 
 ## An upgrade procedure
 
 1. **Commit** your current state so the upgrade is a reviewable diff.
-2. Update a portable installation with the trusted package of the new release (for rc.4: `pso update install --package <extracted-zip>\.pso-install\packages\0.2.0-rc.4.psopkg`, from the ZIP on [Downloads](/downloads/index)), or update and rebuild a framework checkout. Run `pso java:install` after changing releases if you use Spring services ([installation](/getting-started/installation)); the installed rc.4 CLI uses `com.pso:*:0.2.0-rc.4`, while this source checkout builds its own `0.1.0-SNAPSHOT` artifacts.
+2. Update a portable installation with the trusted package of the new release (for rc.5: `pso update install --package <extracted-zip>\.pso-install\packages\0.2.0-rc.5.psopkg`, from the ZIP on [Downloads](/downloads/index)), or update and rebuild a framework checkout. Run `pso java:install` after changing releases if you use Spring services ([installation](/getting-started/installation)); the installed rc.5 CLI uses `com.pso:*:0.2.0-rc.5`, while this source checkout builds its own `0.1.0-SNAPSHOT` artifacts.
 3. `pso validate` and `pso config:validate`: new rules show up as diagnostics, not as run-time surprises.
 4. Preview changes to generated files with the generators' `--dry-run`, e.g. `pso docker:init --dry-run`. A differing file is reported as a conflict and never overwritten silently.
 5. Apply what you want by hand or with `--force` for files you never edited; review the diff.
 6. Run `pso test` and your own checks, then a short smoke run (`pso dev --smoke`).
 
-An installed distribution keeps its previous verified package for `pso update rollback`. Rolling back the CLI does not automatically undo workspace migrations: back up or commit each workspace before `pso workspace:migrate --apply`, and use [structure:inspect](/architecture/structure-migration) before manually moving application files. The unsigned rc.4 installer is not an upgrade path.
+An installed distribution keeps its previous verified package for `pso update rollback`. Rolling back the CLI does not automatically undo workspace migrations: back up or commit each workspace before `pso workspace:migrate --apply`, and use [structure:inspect](/architecture/structure-migration) before manually moving application files. The unsigned rc.5 installer is not an upgrade path.
 
 ## What changed that generated projects may want to adopt
 
@@ -38,6 +38,20 @@ Nothing below changes the behavior of existing code without you opting in, excep
 | Ports | `pso create service --port <n>` | optional |
 | Configuration | `logging.level` is a schema key; `PSO_LOG_FORMAT`/`PSO_LOG_COLOR` are variables | none |
 | Telemetry | OTLP export defaults to protobuf; exporter packages were updated | see [observability](/devops/observability) |
+
+## Workspace layout (0.2.0-rc.5)
+
+New workspaces have a mandatory directory layout: `.infra/`, `orchestrators/`, `services/`, `frontends/`, `frontends/modules/`, `shared/`,
+`docs/` and `tests/` ([first workspace](/getting-started/first-workspace)). The generators place every project there and register its path.
+
+An existing workspace keeps working unchanged: PSO finds every project through its `path` in `pso.workspace.json`, and new projects of a
+flat workspace follow the existing ones, so one workspace never mixes both layouts. PSO never moves a project directory.
+`pso structure:inspect` lists the moves to the standard layout; to adopt it:
+
+1. stop what runs (`pso dev`, `pso docker:down`) and commit;
+2. move each directory as listed (for example `catalog` to `services/catalog`, `frontend/mei-orders` to `frontends/modules/mei-orders`);
+3. change each `path` in `pso.workspace.json` accordingly;
+4. run `pso infra:apply` (compose files and environments are generated from the paths) and `pso validate`.
 
 ## Application structure (0.2.0-rc.2)
 

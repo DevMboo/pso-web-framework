@@ -8,7 +8,7 @@ import { pso, tmp } from "./helpers.ts";
 /** The frontend commands end to end on a generated workspace (no npm install): creation, registration, declaration for the native engine, nginx preview. */
 async function workspace() {
   const base = tmp("pso-fe-cli-");
-  assert.equal((await pso(base, "create", "workspace", "shop")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "shop", "--layout", "flat")).code, 0);
   const root = join(base, "shop");
   assert.equal((await pso(root, "create", "orchestrator", "shop-gateway", "--structure", "legacy")).code, 0);
   assert.equal((await pso(root, "create", "fei", "shop")).code, 0);

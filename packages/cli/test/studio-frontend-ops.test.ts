@@ -13,7 +13,7 @@ import { pso, tmp } from "./helpers.ts";
 const studios: Studio[] = []; after(async () => { for (const s of studios) await s.close(); });
 async function workspace() {
   const base = tmp("pso-studio-ops-");
-  assert.equal((await pso(base, "create", "workspace", "shop")).code, 0);
+  assert.equal((await pso(base, "create", "workspace", "shop", "--layout", "flat")).code, 0);
   const root = join(base, "shop");
   assert.equal((await pso(root, "create", "orchestrator", "shop-gateway", "--structure", "legacy")).code, 0);
   assert.equal((await pso(root, "create", "fei", "shop")).code, 0);

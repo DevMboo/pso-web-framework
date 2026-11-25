@@ -100,18 +100,20 @@ try {
     g(["create", "workspace", "demo"]);
     const gw = (a) => spawnSync(process.execPath, [pso, ...a], { cwd: join(cons, "demo"), encoding: "utf8" });
     const c = gw(["create", "service", "orders", "--runtime", "spring-boot"]);
-    const pom = join(cons, "demo", "orders", "pom.xml");
+    // the project directory comes from the workspace file (standard layout: services/orders; flat layout: orders)
+    const svcDir = (() => { try { const p = JSON.parse(readFileSync(join(cons, "demo", "pso.workspace.json"), "utf8")).services.find((x) => x.name === "orders")?.path; return p ? join(cons, "demo", ...p.split("/")) : join(cons, "demo", "orders"); } catch { return join(cons, "demo", "orders"); } })();
+    const pom = join(svcDir, "pom.xml");
     if (c.status !== 0 || !existsSync(pom)) stage("consumer build", "FAILED", "could not generate a service: " + (c.stderr || c.stdout).slice(-200));
     else {
       writeFileSync(pom, readFileSync(pom, "utf8").replace(/<pso\.version>[^<]*<\/pso\.version>/, `<pso.version>${version}</pso.version>`));
       const settings = join(cons, "settings.xml");
       writeFileSync(settings, `<settings><profiles><profile><id>pso</id><repositories><repository><id>pso-release</id><url>${fileUrl(repo)}</url><releases><enabled>true</enabled></releases><snapshots><enabled>false</enabled></snapshots></repository></repositories></profile></profiles><activeProfiles><activeProfile>pso</activeProfile></activeProfiles></settings>`);
       const iso = join(cons, "m2");
-      const b = mvn(join(cons, "demo", "orders"), ["-s", settings, `-Dmaven.repo.local=${iso}`, "package"], 290_000);
+      const b = mvn(svcDir, ["-s", settings, `-Dmaven.repo.local=${iso}`, "package"], 290_000);
       // the generated service has its own project version (not the PSO release's): read it from its pom
       const own = /<artifactId>orders<\/artifactId>\s*<version>([^<]+)<\/version>/.exec(readFileSync(pom, "utf8"))?.[1] ?? "";
-      const jar = join(cons, "demo", "orders", "target", `orders-${own}.jar`);
-      const rep = existsSync(join(cons, "demo", "orders", "target", "surefire-reports")) ? readdirSync(join(cons, "demo", "orders", "target", "surefire-reports")).filter((f) => f.endsWith(".txt")).length : 0;
+      const jar = join(svcDir, "target", `orders-${own}.jar`);
+      const rep = existsSync(join(svcDir, "target", "surefire-reports")) ? readdirSync(join(svcDir, "target", "surefire-reports")).filter((f) => f.endsWith(".txt")).length : 0;
       const fromRepo = existsSync(join(iso, "com", "pso", "pso-bom", version));
       stage("consumer build", b.status === 0 && existsSync(jar) && fromRepo ? "PASSED" : "FAILED", b.status === 0 ? `generated service built (including its ${rep} test class report(s)) against the release repository with an isolated local repository; PSO artifacts resolved: ${fromRepo}` : (b.stdout + b.stderr).split("\n").filter((l) => /ERROR/.test(l)).slice(0, 4).join(" | ").slice(0, 400));
     }

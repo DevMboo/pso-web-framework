@@ -22,7 +22,7 @@ async function setup() {
   echo.listen(0, "127.0.0.1"); await once(echo, "listening");
   const port = (echo.address() as { port: number }).port;
   const parent = tmp("pso-apiclient-");
-  await pso(parent, "create", "workspace", "w");
+  await pso(parent, "create", "workspace", "w", "--layout", "flat");
   const root = join(parent, "w");
   writeFileSync(join(root, "pso.workspace.json"), JSON.stringify({ schemaVersion: 1, name: "w", services: [{ name: "gateway", path: "gateway", runtime: "node", role: "orchestrator", port }] }, null, 2));
   const studio = await startStudio({ root });

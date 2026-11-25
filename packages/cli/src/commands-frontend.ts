@@ -4,7 +4,7 @@ import { createServer } from "node:net";
 import { join, resolve } from "node:path";
 import { gzipSync } from "node:zlib";
 import ts from "typescript";
-import { formatDiagnostic, hasErrors, type FrontendDecl, type WorkspaceConfig } from "@pso/core";
+import { formatDiagnostic, hasErrors, projectPath, type FrontendDecl, type WorkspaceConfig } from "@pso/core";
 import { BUILTIN_MIDDLEWARES, DEFAULT_FEI_PORT, DEFAULT_MEI_PORT, flattenRoutes } from "@pso/frontend";
 import {
   FEI_FILE, MEI_FILE, ROUTES_FILE, TOOLCHAIN, buildGraph, buildFeiManifest, buildRemoteManifest, freePort, generateProject, loadFrontends, readDecl, renderTree, validateEcosystem,
@@ -22,7 +22,7 @@ import { plan } from "@pso/infra";
 import { releaseSigningFromFlags, withReleaseKey } from "./frontend-signing.ts";
 
 /**
- * FEI / MEI: the distributed frontend of a workspace. Projects live under `frontend/` and are declared in pso.workspace.json
+ * FEI / MEI: the distributed frontend of a workspace. Projects live under `frontends/` (FEIs) and `frontends/modules/` (MEIs) in the standard layout, `frontend/` in a flat 0.1 workspace, and are declared in pso.workspace.json
  * (`frontends`), and their contracts in FEI.pso.ts / MEI.pso.ts / ROUTES.pso.ts (read statically, never executed).
  */
 const GITIGNORE = "node_modules\ndist\n.pso/generated\n.env\n";
@@ -142,7 +142,7 @@ export async function createFrontend(ctx: Ctx, kind: "fei" | "mei"): Promise<num
   const used = [...config.services.map((s) => s.port), ...all.map((f) => f.port)];
   if (portFlag !== undefined && used.includes(Number(portFlag))) throw new CliError(`Port ${portFlag} is already used by another project of this workspace`);
   const port = portFlag !== undefined ? Number(portFlag) : freePort(used, kind === "fei" ? DEFAULT_FEI_PORT : DEFAULT_MEI_PORT);
-  const path = `frontend/${name}`;
+  const path = projectPath(config, kind, name, root);
   const title = pascal(domain);
   const files = renderTemplate(kind, vars({ name, title, Domain: title, domain, domainCamel: camel(domain), port, orchestrator: orch.name, host: host ?? "" }));
   files[".gitignore"] = GITIGNORE;
