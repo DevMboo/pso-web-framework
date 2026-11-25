@@ -1,6 +1,6 @@
 # PSO Web Framework: implementation status
 
-Current release: **`0.2.0-rc.3`** (release candidate; the CLI reports `0.2.0`). The user documentation is
+Current release: **`0.2.0-rc.4`** (release candidate; the CLI reports `0.2.0`). The user documentation is
 https://devmboo.github.io/pso-web-docs/; this page summarises what exists, what does not, and how it is verified. The authoritative lists
 of unimplemented commands and capabilities are in `packages/cli/src/unimplemented.ts`, which the documentation and the AI contexts read and
 which `packages/cli/test/docs-parity.test.ts` checks against the sources.

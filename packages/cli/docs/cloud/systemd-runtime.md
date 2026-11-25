@@ -7,7 +7,7 @@ keywords: [systemd, linger, user unit, journal, restart, reboot, non-containeriz
 related: [cloud/deploy-a-release, cloud/rollback-and-recovery, cloud/deployment-declarations, cloud/deploy-to-a-vps]
 ---
 > [!STATUS]
-> **Implemented and verified** against a real systemd (Debian 12, systemd 252 as PID 1 of a disposable container, reached over SSH) with Node.js, Java 21 and PostgreSQL. It has **not** been run on an external cloud server, and only the **user-manager** scope exists (see [What is not implemented](#what-is-not-implemented)).
+> **Implemented and verified** against a real systemd (Debian 12, systemd 252 as PID 1 of a disposable container, reached over SSH) with Node.js, Java 21 and PostgreSQL. It was also used on an external cloud virtual machine (Ubuntu 24.04, systemd 255) during the owner's [external validation](/cloud/external-validation), and only the **user-manager** scope exists (see [What is not implemented](#what-is-not-implemented)).
 
 By default PSO keeps your services alive itself: it starts each process, remembers who it is and stops it with the grace period you declared. That works anywhere, but a process the agent started does not come back after a server reboot. When the server runs systemd you can ask for the operating system to do that job:
 

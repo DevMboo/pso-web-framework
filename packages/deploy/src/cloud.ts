@@ -357,6 +357,16 @@ export class Cloud {
     const list = this.store.signers(); const s = list.find((x) => x.name === name); if (!s) return { removed: false };
     this.creds().remove(s.privateRef); this.store.saveSigners(list.filter((x) => x.name !== name)); this.store.audit("signer.removed", { name, keyId: s.keyId }); return { removed: true };
   }
+  /**
+   * Signs something on THIS machine with a local signer (a frontend release manifest, for example): `fn` receives the private key and
+   * returns the signed result. The key is registered with the redactor, is never returned by this method, and the use is audited.
+   */
+  signWithSigner<T>(name: string, purpose: string, fn: (privateKeyPem: string, signer: Omit<SignerRecord, "privateRef">) => T): T {
+    const s = this.store.signers().find((x) => x.name === name); if (!s) throw new CloudError(`no signer named "${name}"`, "NOT_FOUND", "Create one with signer:generate");
+    const key = this.creds().get(s.privateRef); if (!key) throw new CloudError("the private key of that signer is not in this machine's credential store", "NOT_FOUND");
+    registerSecret(key); const { privateRef: _p, ...pub } = s;
+    const out = fn(key, pub); this.store.audit("signer.used", { name, keyId: s.keyId, purpose }); return out;
+  }
   /** Builds the manifest of a release from the directory it was built from. For a git source the commit is read from that checkout. */
   buildManifest(o: { app: string; path: string; sequence: number; artifactFile?: string; url?: string; provenance?: ReleaseManifest["provenance"] }): ReleaseManifest {
     const git = (a: string[]) => spawnSync("git", ["-C", o.path, ...a], { encoding: "utf8", windowsHide: true });

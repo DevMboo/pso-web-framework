@@ -27,7 +27,7 @@ PSO uses the operating system when it can: **Windows Credential Manager** (`wind
 |---|---|
 | Windows Credential Manager | **exercised** on Windows (store, read, replace, remove, no secret in arguments) |
 | Encrypted file (AES-256-GCM + scrypt) | **exercised** (wrong passphrase and tampering are refused) |
-| Linux Secret Service (`secret-tool`) | written, **not run**: this was not exercised on a Linux desktop session |
+| Linux Secret Service (`secret-tool`) | **exercised** in a Linux container against a real gnome-keyring on a private D-Bus session (store, read back byte for byte, replace, remove, missing entry, invalid reference refused); without a running keyring the write fails and nothing is written elsewhere |
 | macOS Keychain | written, **not run** on macOS |
 | SSH agent (`--auth agent`) | **exercised** against a real server with a running `ssh-agent`: PSO stores no key path or key, and when the agent no longer holds the key the connection **fails** (no fallback to another credential) |
 | Passphrase-protected SSH key, password login | **exercised** (the secret reaches `ssh` through the askpass helper below) |

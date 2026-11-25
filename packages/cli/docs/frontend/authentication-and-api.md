@@ -7,7 +7,7 @@ keywords: [authentication, pkce, oidc, jwt, session, api client, fetch, problem 
 related: [frontend/security, frontend/routing-and-middleware, security/authentication, concepts/contracts]
 ---
 > [!STATUS]
-> **Partially verified.** The API client, session handling, PKCE flow (against a fake identity provider in unit tests), contract generation and the Channels manager are verified by unit tests; the client, a pasted development token, orchestrator requests and a real `order.updated` Channels event were verified in a real browser. **Authorization Code with PKCE has not been run against a real identity provider**: this repository has none (the development identity provider publishes keys only). Orchestrator-backed cookie sessions are **not implemented**: the orchestrator has no session endpoint.
+> **Implemented and verified.** The API client, session handling, PKCE flow, contract generation and the Channels manager are verified by unit tests. In a real browser: the client, a pasted development token, orchestrator requests, a real `order.updated` Channels event, and **Authorization Code with PKCE against a real Keycloak** (22 of 22 checks: sign-in, the token accepted by the orchestrator, authorization enforced independently of the interface, sign-out). The infrastructure engine provisions that Keycloak for local environments (`pso infra:init`). **Not implemented:** orchestrator-backed cookie sessions (the orchestrator has no session endpoint).
 
 ## Sign-in and session
 

@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.2.0-rc.4 — First public release (2026-11-25)
+
+Fourth release candidate of 0.2.0 and the first one published publicly, built from the public source repository
+(https://github.com/DevMboo/pso-web-framework) under the Apache License 2.0. npm packages stay `0.2.0`; PSO Java is `0.2.0-rc.4`.
+rc.1 to rc.3 are kept unchanged for rollback. **The Windows installer is not Authenticode-signed** (see the code signing policy).
+
+### Added
+- `pso frontend:build --signer <name>` signs microfrontend release manifests with a local signer of `pso signer:generate`: the private
+  key stays in the protected credential store and its use is audited. `pso frontend:config --trust-signer <name>` makes a shell trust it.
+
+### Fixed
+- Studio's Cloud → Signing tab requested an icon that does not exist (`file-signature`, renamed upstream); it now uses `file-pen-line`.
+- The capability list that the documentation and the AI contexts read still called release-signature verification, the Java dependency
+  scan, the systemd driver and static frontend deployment "not implemented", and the cloud pages said no external validation had been
+  performed. Both are corrected, and the parity test now fails if those claims return.
+- The SignPath release workflow verified the bundled `node.exe` against the wrong publisher name (it is signed by the OpenJS Foundation).
+
+### Verified (previously implemented but never run)
+- The Linux Secret Service credential provider, against a real gnome-keyring in a Linux container.
+- The Java dependency scan, with the real OSV-Scanner 2.2.4 against the live osv.dev database (Log4Shell is blocked).
+- Studio's Signing tab in a real browser (signer creation, trust list, typed confirmation, accessibility in both themes).
+
+### Repository
+- Dependabot version updates cover the maintained framework (root npm workspace, `pso-java`, GitHub Actions); test fixtures are left
+  out. Dependabot alerts and security updates still cover every manifest.
+- The SignPath workflow runs only for final version tags and only once the repository variable `PSO_SIGNPATH_ENABLED` is `true`:
+  release-candidate tags never start it.
+
 ## 0.2.0-rc.3 — Structural corrections of the Java event generators (2026-11-25)
 
 Third release candidate of the unpublished 0.2.0 (npm packages stay `0.2.0`; rc.1 and rc.2 artifacts are kept unchanged for rollback).

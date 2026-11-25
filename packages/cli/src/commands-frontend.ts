@@ -19,6 +19,7 @@ import { vendorFramework } from "./vendor.ts";
 import { CONTRACT_FILE, buildContract, contractVersionOf } from "./frontend-contracts.ts";
 import { INFRA_HOOKS, engine, reconcileAfter } from "./commands-infra.ts";
 import { plan } from "@pso/infra";
+import { releaseSigningFromFlags, withReleaseKey } from "./frontend-signing.ts";
 
 /**
  * FEI / MEI: the distributed frontend of a workspace. Projects live under `frontend/` and are declared in pso.workspace.json
@@ -439,7 +440,7 @@ export const FRONTEND_COMMANDS: Record<string, Command> = {
     },
   },
   "frontend:build": {
-    usage: "pso frontend:build [<project>] [--base-path /commerce/ | --env <name>] [--version 1.0.0] [--allow-dev-token] [--sign-key <pem-file> --key-id <id>] [--json]",
+    usage: "pso frontend:build [<project>] [--base-path /commerce/ | --env <name>] [--version 1.0.0] [--allow-dev-token] [--signer <name> | --sign-key <pem-file> --key-id <id>] [--json]",
     summary: "Build the FEI and/or MEIs independently (hashed assets); a MEI also gets its release manifest (file hashes, contract, shared versions, optional ed25519 signature)",
     async run(ctx) {
       const { root, config } = requireWorkspace(ctx);
@@ -454,8 +455,7 @@ export const FRONTEND_COMMANDS: Record<string, Command> = {
       const envBases: Record<string, string> = envName !== undefined ? Object.fromEntries(engine(() => plan(root, envName, INFRA_HOOKS)).topology.frontends.map((x) => [x.name, x.basePath])) : {};
       const basePath = str(ctx.flags["base-path"]) ?? "/";
       if (!/^\/([A-Za-z0-9._~-]+\/)*$/.test(basePath)) throw new CliError(`Invalid --base-path "${basePath}"`, `Use an absolute path ending in "/", such as /commerce/`);
-      const keyFile = str(ctx.flags["sign-key"]), keyId = str(ctx.flags["key-id"]);
-      if ((keyFile && !keyId) || (!keyFile && keyId)) throw new CliError("--sign-key and --key-id go together");
+      const signing = releaseSigningFromFlags(ctx.flags);
       const results: Array<Record<string, unknown>> = [];
       for (const f of list) {
         const dir = projectDir(root, f);
@@ -481,7 +481,7 @@ export const FRONTEND_COMMANDS: Record<string, Command> = {
           const version = str(ctx.flags["version"]) ?? (JSON.parse(readFileSync(join(dir, "package.json"), "utf8")) as { version: string }).version;
           const mount = shell?.definition.microfrontends.find((x) => x.name === f.name)?.path ?? `/${f.name.replace(/^mei-/, "")}`;
           const own = m.routes ? flattenRoutes(m.routes, f.name, mount, ROUTES_FILE) : [];
-          const manifest = buildRemoteManifest({ dir, definition: m.definition, routes: own, version, ...(keyFile && keyId ? { signWith: { keyId, privateKeyPem: readFileSync(keyFile, "utf8") } } : {}) });
+          const manifest = withReleaseKey(signing, `frontend:build ${f.name}@${version}`, (signWith) => buildRemoteManifest({ dir, definition: m.definition, routes: own, version, ...(signWith ? { signWith } : {}) }));
           row["version"] = version; row["signed"] = manifest.signature !== undefined; row["manifestFiles"] = manifest.files.length;
         }
         results.push(row);

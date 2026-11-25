@@ -8,7 +8,7 @@ related: [spring/maven-bom, devops/build-and-deploy, security/auditing, devops/d
 ---
 ## Supported
 
-For the installed `0.2.0-rc.3` distribution, generated services request `com.pso:*:0.2.0-rc.3` through the BOM; its portable package carries matching Maven artifacts for `pso java:install`. A CLI run from this framework checkout instead reads `pso-java/pom.xml` and uses `0.1.0-SNAPSHOT`. See [Maven BOM and Java versions](/spring/maven-bom). The `0.1.0` release run below is an illustrative older fixed-version example, not the installed rc.3 artifact set.
+For the installed `0.2.0-rc.4` distribution, generated services request `com.pso:*:0.2.0-rc.4` through the BOM; its portable package carries matching Maven artifacts for `pso java:install`. A CLI run from this framework checkout instead reads `pso-java/pom.xml` and uses `0.1.0-SNAPSHOT`. See [Maven BOM and Java versions](/spring/maven-bom). The `0.1.0` release run below is an illustrative older fixed-version example, not the installed rc.4 artifact set.
 
 - **Maven Wrapper.** Every service has `mvnw`, `mvnw.cmd` and `.mvn/wrapper/maven-wrapper.properties` pinned to Maven 3.9.9 with `distributionSha256Sum`. Builds do not depend on a global Maven.
 - **One BOM.** Generated POMs import `com.pso:pso-bom`, so every PSO starter shares one version (`pso.version`) and Spring Boot's versions stay managed by the parent. See [Maven BOM and SNAPSHOTs](/spring/maven-bom).

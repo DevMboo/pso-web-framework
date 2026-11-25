@@ -43,6 +43,8 @@ let input: Input = defaultInput;
 export const setInput = (i: Input): void => { input = i; };
 let cloudFactory = (): Cloud => new Cloud();
 export const setCloudFactory = (f: () => Cloud): void => { cloudFactory = f; };
+/** The Cloud facade other command groups use (frontend release signing with a local signer). */
+export const cloudInstance = (): Cloud => cloudFactory();
 
 const wrap = async (fn: () => Promise<number>): Promise<number> => {
   try { return await fn(); } catch (e) {

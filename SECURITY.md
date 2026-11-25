@@ -14,7 +14,7 @@ The maintainer acknowledges reports and coordinates a fix and a disclosure date 
 
 | Version | Supported |
 |---|---|
-| `0.2.0-rc.3` (current release candidate) | yes |
+| `0.2.0-rc.4` (current release candidate) | yes |
 | earlier `0.2.0` release candidates and `0.1.0` alphas | no: update to the current release |
 
 ## What the project does

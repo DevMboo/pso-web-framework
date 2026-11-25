@@ -1,6 +1,10 @@
 # PSO Web: verifiable release build and Authenticode signing through SignPath.
 #
-# PREPARED, NOT ACTIVE. It needs (see scripts/psd/SIGNPATH.md): the source in a public GitHub repository, an accepted SignPath Foundation
+# PREPARED, NOT ACTIVE. Two locks keep it from running before SignPath has accepted and configured the project:
+#   - only FINAL version tags trigger it (v1.2.3); release-candidate tags such as v0.2.0-rc.4 never do: those releases are published
+#     Authenticode-UNSIGNED by the maintainer and say so in their name, notes and installer;
+#   - the job runs only when the repository variable PSO_SIGNPATH_ENABLED is "true", which is set after acceptance.
+# It needs (see scripts/psd/SIGNPATH.md): the source in a public GitHub repository, an accepted SignPath Foundation
 # project, the secrets and variables below, and a GitHub environment "release-signing" whose required reviewers are the signing approvers.
 #
 # Every artifact SignPath signs is produced in THIS run, on a GitHub-hosted runner, from the tagged commit, and submitted by its GitHub
@@ -14,7 +18,7 @@ name: Release (SignPath)
 
 on:
   push:
-    tags: ["v*.*.*"]
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]   # final versions only: no pre-release suffix
   workflow_dispatch:
 
 permissions:
@@ -32,6 +36,7 @@ env:
 
 jobs:
   release:
+    if: vars.PSO_SIGNPATH_ENABLED == 'true'   # off until SignPath has accepted and configured the project
     runs-on: windows-2025           # GitHub-hosted: required for a verifiable origin
     environment: release-signing    # required reviewers = signing approvers (manual approval before any signing request)
     timeout-minutes: 240
@@ -79,7 +84,7 @@ jobs:
           if ((Get-FileHash "$d\$zip" -Algorithm SHA256).Hash.ToLower() -ne $expected) { throw "node runtime checksum mismatch" }
           Expand-Archive "$d\$zip" -DestinationPath $d
           Copy-Item "$d\node-v$v-win-x64\node.exe" "$d\node.exe"; Copy-Item "$d\node-v$v-win-x64\LICENSE" "$d\LICENSE-node.txt"
-          node scripts/psd/codesign.mjs verify --file "$d\node.exe" --publisher "$env:PUBLISHER"
+          node scripts/psd/codesign.mjs verify --file "$d\node.exe" --publisher "OpenJS Foundation"
           if ($LASTEXITCODE -ne 0) { throw "node.exe is not validly signed by the OpenJS Foundation" }
 
       - name: Package signing key and deny-list (secrets, outside the repository)

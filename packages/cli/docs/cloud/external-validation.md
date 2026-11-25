@@ -7,7 +7,7 @@ keywords: [validation, external, cloud, acceptance, checklist, vps, cleanup]
 related: [cloud/deploy-to-a-vps, cloud/systemd-runtime, cloud/release-signing, cloud/troubleshooting]
 ---
 > [!STATUS]
-> **This validation has not been performed.** Everything marked verified in this section was verified on a disposable container on the development machine. Passing this guide is what would justify calling the SSH deployment workflow validated on a real cloud server; it is not a production-readiness certificate.
+> **Performed once, by the project owner (2026-11-15), on one cloud virtual machine** (Ubuntu 24.04, 2 vCPU, 4 GB, systemd 255, reached over SSH with a pinned host key). Verified there: native systemd and nginx deployment of a distributed PSO application (orchestrator, three Spring Boot services, PostgreSQL, RabbitMQ dispatch with the transactional outbox, Channels, Redis, JWT/JWKS), signed releases, blue-green, rollback, recovery, RBAC and Studio; eight defects it found were fixed. **Not verified:** public HTTPS access (the provider's network filtering blocked port 443 from the owner's network, so HTTPS with a private CA was checked through the SSH tunnel) and deploying the frontend there (the web server could not read the agent's directory). Passing this guide on your own server is still what justifies calling the workflow validated there; it is not a production-readiness certificate.
 
 Use a **new, isolated, disposable** server that you own and can delete. Do not point this at an existing production server, and do not put production credentials in repository files, prompts, logs or documentation. PSO provisions nothing for you: you create and delete the server.
 

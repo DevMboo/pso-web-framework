@@ -7,7 +7,7 @@ keywords: [module federation, manifest, release, publish, rollback, integrity, s
 related: [frontend/security, frontend/overview, cloud/release-signing, cloud/deploy-a-release]
 ---
 > [!STATUS]
-> **Partially implemented.** Verified in real-browser runs on a local site root served like the generated nginx layout (31 of 31 checks): independent update, rollback, tampering, a missing release, an untrusted signer, strict Content-Security-Policy. The same functions run inside the cloud engine (see the page on native deployment, verified against a real nginx). **Not implemented:** signing with the credential-store signers of the signer commands (this uses an Ed25519 PEM key file). **Not done:** a deployment of the frontend to the Azure VM; the Commerce frontend was validated against the Azure backend through the SSH tunnel, served from a local site root.
+> **Partially implemented.** Verified in real-browser runs on a local site root served like the generated nginx layout (31 of 31 checks): independent update, rollback, tampering, a missing release, an untrusted signer, strict Content-Security-Policy. The same functions run inside the cloud engine (see the page on native deployment, verified against a real nginx). Releases are signed either with a **local signer** of `pso signer:generate` (`--signer <name>`: the private key stays in the protected credential store, the key id is the signer's fingerprint, and the shell trusts it with `pso frontend:config --trust-signer <name>`) or with an Ed25519 PEM key file (`--sign-key <pem> --key-id <id>`). **Not done:** a frontend deployment on the external validation server (its web server could not read the agent's directory); the Commerce frontend was validated against that server's backend through the SSH tunnel, served from a local site root.
 
 ## How the shell loads a microfrontend
 
@@ -26,7 +26,7 @@ Locations must be same-origin under `/_mei/`, or an origin the configuration lis
 
 ```bash
 pso frontend:config --site ./site --auth oidc --oidc-issuer https://idp.example --oidc-authorize https://idp.example/authorize --oidc-token https://idp.example/token --oidc-client commerce-web --require-signature --trust-key release.pem --key-id release-1
-pso frontend:build --base-path /commerce/ --sign-key release.pem --key-id release-1
+pso frontend:build --base-path /commerce/ --signer release-bot
 pso frontend:publish fei-commerce --site ./site --base-path /commerce/
 pso frontend:publish customers --site ./site
 pso frontend:releases --site ./site

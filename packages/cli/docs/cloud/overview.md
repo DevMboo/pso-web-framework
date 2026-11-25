@@ -53,10 +53,10 @@ Also implemented since: the **systemd** runtime ([systemd runtime](/cloud/system
 
 - Only **SSH to Linux** is a connection provider. AWS, Azure, Google Cloud and Kubernetes providers do not exist; the provider interface is where they would attach, and PSO provisions no cloud resources and spends no money.
 - No **system-scope** systemd units (only the deploy user's own manager: see [systemd runtime](/cloud/systemd-runtime)), no automatic TLS certificates or DNS or hosts-file changes, and no resource limits on services.
-- The macOS Keychain and Linux Secret Service providers are written but have **not been run** on those systems; only the Windows Credential Manager and the encrypted file were exercised.
-- The Java dependency scan needs OSV-Scanner on the server or build host and network access to the OSV database; it was exercised through its adapter with a stand-in executor, not against a real OSV-Scanner run. Without it the result is `unavailable`, never a pass.
-- Nothing here has been validated on an external cloud server: see the [external validation guide](/cloud/external-validation).
-- Frontend integration is out of scope for this release.
+- The macOS Keychain provider is written but has **not been run** on macOS. The Windows Credential Manager, the Linux Secret Service (a real gnome-keyring in a container) and the encrypted file were exercised.
+- The Java dependency scan needs OSV-Scanner on the server or build host and network access to the OSV database; it was exercised with the real OSV-Scanner 2.2.4 against the live database (a known-vulnerable Log4j is blocked, a patched one passes). Without the tool or the network the result is `unavailable`, never a pass.
+- The external validation was performed once, by the project owner, on one cloud virtual machine; public HTTPS access through the provider's firewall was not verified: see the [external validation guide](/cloud/external-validation).
+- Frontends (FEI and MEI) are deployed as static resources of the same engine: see [native frontend deployment](/frontend/native-deployment).
 - Zero downtime is an objective with stated conditions, not a guarantee: see [Deploy a release](/cloud/deploy-a-release).
 
 ## What can go wrong

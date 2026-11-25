@@ -99,6 +99,11 @@ test("nothing implemented is still listed as unsupported, and what is listed is 
     ["service identity", has("pso-java", "pso-http-spring-boot-starter", "src", "main", "java", "com", "pso", "spring", "http", "ServiceIdentity.java") && /certFile/.test(src("packages", "http", "src", "upstream-security.ts")), /service-to-service identit/i],
     ["the Compose deployment target", /target === "compose"/.test(src("packages", "cli", "src", "commands-devops.ts")), /compose target needs Docker and is unverified/i],
     ["response composition in the orchestrator", has("packages", "http", "src", "client.ts"), /composing responses|no service client/i],
+    ["the systemd service driver", has("packages", "deploy", "src", "agent", "systemd.ts"), /a systemd service driver/i],
+    ["release-signature verification", /verifySigned/.test(src("packages", "deploy", "src", "signing.ts")), /verification of release signatures/i],
+    ["the Java dependency scan", has("packages", "deploy", "src", "agent", "javascan.ts"), /a Java dependency vulnerability scanner/i],
+    ["static frontend deployment", /static/.test(src("packages", "deploy", "src", "agent", "engine.ts")) && has("packages", "deploy", "test", "static-deploy.test.ts"), /and frontend deployment\./i],
+    ["the external validation", has("packages", "cli", "docs", "cloud", "external-validation.md"), /NOT against an external cloud environment/],
   ];
   for (const [what, exists, stale] of implemented) {
     assert.ok(exists, `${what}: expected to be implemented (the check itself is out of date)`);

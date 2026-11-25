@@ -6,7 +6,7 @@
 
 You need Windows 10/11 x64. No Node.js, Java or installer is needed.
 
-1. Download `{{ZIP}}` from the official release page of `DevMboo/pso-web-releases` and compare its SHA-256 with `SHA256SUMS` on that page (`Get-FileHash .\{{ZIP}}`).
+1. Download `{{ZIP}}` from the official release page of `DevMboo/pso-web-framework` and compare its SHA-256 with `SHA256SUMS` on that page (`Get-FileHash .\{{ZIP}}`).
 2. Extract it to a folder you can write to, for example `C:\Tools\pso` or `%LOCALAPPDATA%\PSO`. Do not use `Program Files`. The folder can be moved or renamed afterwards.
 3. Run it, with the full path or from inside the folder:
 

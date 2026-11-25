@@ -14,13 +14,13 @@ Only the current documentation version is published; `docs/versions.json` lists 
 ## An upgrade procedure
 
 1. **Commit** your current state so the upgrade is a reviewable diff.
-2. Update a portable installation with the trusted package of the new release (for rc.3: `pso update install --package <extracted-zip>\.pso-install\packages\0.2.0-rc.3.psopkg`, from the ZIP on [Downloads](/downloads/index)), or update and rebuild a framework checkout. Run `pso java:install` after changing releases if you use Spring services ([installation](/getting-started/installation)); the installed rc.3 CLI uses `com.pso:*:0.2.0-rc.3`, while this source checkout builds its own `0.1.0-SNAPSHOT` artifacts.
+2. Update a portable installation with the trusted package of the new release (for rc.4: `pso update install --package <extracted-zip>\.pso-install\packages\0.2.0-rc.4.psopkg`, from the ZIP on [Downloads](/downloads/index)), or update and rebuild a framework checkout. Run `pso java:install` after changing releases if you use Spring services ([installation](/getting-started/installation)); the installed rc.4 CLI uses `com.pso:*:0.2.0-rc.4`, while this source checkout builds its own `0.1.0-SNAPSHOT` artifacts.
 3. `pso validate` and `pso config:validate`: new rules show up as diagnostics, not as run-time surprises.
 4. Preview changes to generated files with the generators' `--dry-run`, e.g. `pso docker:init --dry-run`. A differing file is reported as a conflict and never overwritten silently.
 5. Apply what you want by hand or with `--force` for files you never edited; review the diff.
 6. Run `pso test` and your own checks, then a short smoke run (`pso dev --smoke`).
 
-An installed distribution keeps its previous verified package for `pso update rollback`. Rolling back the CLI does not automatically undo workspace migrations: back up or commit each workspace before `pso workspace:migrate --apply`, and use [structure:inspect](/architecture/structure-migration) before manually moving application files. The unsigned rc.3 installer is not an upgrade path.
+An installed distribution keeps its previous verified package for `pso update rollback`. Rolling back the CLI does not automatically undo workspace migrations: back up or commit each workspace before `pso workspace:migrate --apply`, and use [structure:inspect](/architecture/structure-migration) before manually moving application files. The unsigned rc.4 installer is not an upgrade path.
 
 ## What changed that generated projects may want to adopt
 

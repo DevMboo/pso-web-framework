@@ -6,7 +6,7 @@
 
 ## Install
 
-1. Download `PSO-Web-{{LABEL}}-win-x64.exe` **only from the official release page** of `DevMboo/pso-web-releases`.
+1. Download `PSO-Web-{{LABEL}}-win-x64.exe` **only from the official release page** of `DevMboo/pso-web-framework`.
 2. Compare its SHA-256 with `SHA256SUMS` on that page: `Get-FileHash .\PSO-Web-{{LABEL}}-win-x64.exe` (PowerShell). If they differ, do not run it.
 3. Double-click the installer. If Windows SmartScreen warns about an unknown publisher, that is expected for this unsigned alpha: choose *More info → Run anyway* only if you downloaded the file from the official page and the checksum matched. PSO never changes or suppresses Windows warnings.
 4. Read the **Unsigned developer alpha** page and click *Next* only if you accept it.

@@ -6,11 +6,11 @@ status: implemented
 keywords: [bom, pso-bom, snapshot, java:install, maven, version, release, dependencyManagement]
 related: [spring/overview, microservices/maven-dependencies, devops/docker]
 ---
-Generated services import one bill of materials and then declare starters without individual versions. The **installed `0.2.0-rc.3` CLI** sets `pso.version` to `0.2.0-rc.3`; the **framework checkout** reads the current `pso-java/pom.xml`, which is `0.1.0-SNAPSHOT` in this checkout. The CLI selects a matching Java version instead of adopting whichever artifacts happen to be on the machine:
+Generated services import one bill of materials and then declare starters without individual versions. The **installed `0.2.0-rc.4` CLI** sets `pso.version` to `0.2.0-rc.4`; the **framework checkout** reads the current `pso-java/pom.xml`, which is `0.1.0-SNAPSHOT` in this checkout. The CLI selects a matching Java version instead of adopting whichever artifacts happen to be on the machine:
 
 ```xml
 <properties>
-  <pso.version>0.2.0-rc.3</pso.version>
+  <pso.version>0.2.0-rc.4</pso.version>
 </properties>
 <dependencyManagement>
   <dependencies>
@@ -30,11 +30,11 @@ The `pso.version` property is the only place a PSO version appears. Spring Boot 
 ## Install the matching artifacts
 
 ```bash
-pso java:install        # installed rc.3: copies its bundled com.pso:*:0.2.0-rc.3 repository into ~/.m2
+pso java:install        # installed rc.4: copies its bundled com.pso:*:0.2.0-rc.4 repository into ~/.m2
 pso create service catalog
 ```
 
-No JAR is copied by hand. The rc.3 portable distribution includes a Maven file repository next to the CLI. If your authorized package ships it separately, run `pso java:install --from <maven-repository-dir>`. `pso create service` reports when matching artifacts are missing. In a **framework checkout**, `pso java:install` builds `pso-java/` and installs `0.1.0-SNAPSHOT`; after changing the starters there, run it again. Do not substitute the checkout's SNAPSHOT for a distributed rc.3 service.
+No JAR is copied by hand. The rc.4 portable distribution includes a Maven file repository next to the CLI. If your authorized package ships it separately, run `pso java:install --from <maven-repository-dir>`. `pso create service` reports when matching artifacts are missing. In a **framework checkout**, `pso java:install` builds `pso-java/` and installs `0.1.0-SNAPSHOT`; after changing the starters there, run it again. Do not substitute the checkout's SNAPSHOT for a distributed rc.4 service.
 
 The group id `com.pso` is **not** an owned Maven Central namespace: the artifacts are never published from this repository. Choose and register a namespace before publishing.
 

@@ -1,0 +1,39 @@
+# Dependabot version updates for the maintained framework only.
+#
+# - The npm workspace at the root covers every @pso/* package in packages/ (one lockfile).
+# - pso-java/ is the Maven multi-module build of the com.pso artifacts.
+# - GitHub Actions used by .github/workflows.
+#
+# fixtures/ (test and validation applications) and the templates under packages/cli/templates are deliberately NOT listed: their
+# dependency versions are pinned on purpose by the tests that use them, and routine bumps there are noise.
+#
+# This file governs VERSION updates only. Dependabot alerts and Dependabot security updates stay enabled in the repository settings and
+# still cover every manifest, fixtures included: a vulnerability in a fixture is still reported.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule: { interval: "weekly", day: "monday" }
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "framework"]
+    groups:
+      npm-minor-and-patch:
+        update-types: ["minor", "patch"]
+    commit-message: { prefix: "deps(npm)" }
+
+  - package-ecosystem: "maven"
+    directory: "/pso-java"
+    schedule: { interval: "weekly", day: "monday" }
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "framework", "java"]
+    groups:
+      maven-minor-and-patch:
+        update-types: ["minor", "patch"]
+    commit-message: { prefix: "deps(maven)" }
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule: { interval: "monthly" }
+    open-pull-requests-limit: 3
+    labels: ["dependencies", "ci"]
+    commit-message: { prefix: "deps(actions)" }

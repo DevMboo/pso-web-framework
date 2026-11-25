@@ -15,6 +15,7 @@ import { CONTRACT_FILE, buildContract, contractVersionOf, diffContracts, renderC
 import { writeFileSync as write } from "node:fs";
 import { paths, plan } from "@pso/infra";
 import { INFRA_HOOKS, engine } from "./commands-infra.ts";
+import { trustedKeyOfSigner } from "./frontend-signing.ts";
 
 /** Frontend releases: publish, roll back, inspect, runtime configuration, nginx layout and typed contracts. */
 const frontends = (c: WorkspaceConfig): FrontendDecl[] => c.frontends ?? [];
@@ -136,7 +137,7 @@ export const FRONTEND_RELEASE_COMMANDS: Record<string, Command> = {
     },
   },
   "frontend:config": {
-    usage: "pso frontend:config --site <dir> [--fei <name>] [--auth dev-token|oidc|none] [--oidc-issuer <url>] [--oidc-authorize <url>] [--oidc-token <url>] [--oidc-client <id>] [--oidc-scope \"openid\"] [--api-base /api] [--channels-path /channels] [--require-signature] [--trust-key <public-or-private-pem>] [--key-id <id>]",
+    usage: "pso frontend:config --site <dir> [--fei <name>] [--auth dev-token|oidc|none] [--oidc-issuer <url>] [--oidc-authorize <url>] [--oidc-token <url>] [--oidc-client <id>] [--oidc-scope \"openid\"] [--api-base /api] [--channels-path /channels] [--require-signature] [--trust-signer <name>] [--trust-key <public-or-private-pem>] [--key-id <id>]",
     summary: "Write the FEI's runtime configuration on a site root: where each approved MEI's release pointer is, who may sign releases, how users sign in and the orchestrator's same-origin path. It holds no secret and is never built into the bundle",
     run(ctx) {
       const { root, config } = requireWorkspace(ctx);
@@ -155,14 +156,16 @@ export const FRONTEND_RELEASE_COMMANDS: Record<string, Command> = {
       } else authCfg = auth === "dev-token" ? { kind: "dev-token" } : { kind: "none" };
       const keyFile = str(ctx.flags["trust-key"]), keyId = str(ctx.flags["key-id"]);
       if ((keyFile && !keyId) || (!keyFile && keyId)) throw new CliError("--trust-key and --key-id go together");
-      if (ctx.flags["require-signature"] === true && !keyFile) throw new CliError("--require-signature needs at least one --trust-key", "Only releases signed with a trusted key could be loaded otherwise: none");
+      const signerName = str(ctx.flags["trust-signer"]);
+      const trustedKeys = [...(keyFile && keyId ? [{ keyId, publicKey: publicKeyRaw(readFileSync(keyFile, "utf8")) }] : []), ...(signerName !== undefined ? [trustedKeyOfSigner(signerName)] : [])];
+      if (ctx.flags["require-signature"] === true && !trustedKeys.length) throw new CliError("--require-signature needs at least one --trust-key or --trust-signer", "Only releases signed with a trusted key could be loaded otherwise: none");
       const api = str(ctx.flags["api-base"]) ?? shell.definition.orchestrator.basePath ?? "/api";
       if (!/^(\/[A-Za-z0-9._~-]+)*$/.test(api)) throw new CliError(`Invalid --api-base "${api}"`, "A same-origin path such as /api; the API client never accepts an absolute URL");
       const cfg = writeRuntimeConfig({
         site: (mkdirSync(site, { recursive: true }), site), fei: shell.definition.name, auth: authCfg, orchestratorBasePath: api,
         ...(str(ctx.flags["channels-path"]) ? { channelsPath: str(ctx.flags["channels-path"])! } : {}),
         ...(ctx.flags["require-signature"] === true ? { requireSignature: true } : {}),
-        ...(keyFile && keyId ? { trustedKeys: [{ keyId, publicKey: publicKeyRaw(readFileSync(keyFile, "utf8")) }] } : {}),
+        ...(trustedKeys.length ? { trustedKeys } : {}),
         meis: shell.definition.microfrontends.map((m) => m.name),
       });
       emit(ctx, cfg, `wrote ${join(site, "pso-runtime-config.json")}\n  auth: ${cfg.auth?.kind}   api: ${cfg.orchestrator.basePath}   remotes: ${Object.keys(cfg.remotes).join(", ")}   signatures: ${cfg.requireSignature ? "required" : cfg.trustedKeys?.length ? "checked when present" : "not checked"}${auth === "dev-token" ? "\nwarning: dev-token sign-in works only in a build made with --allow-dev-token and is not a production configuration" : ""}`);

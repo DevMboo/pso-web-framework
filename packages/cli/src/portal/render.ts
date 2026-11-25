@@ -323,8 +323,8 @@ export function renderMarkdown(source: string, ctx: RenderContext): Rendered {
       else if (dm[1] === "download-button") {
         const url = attrs["url"] ?? "";
         const label = attrs["label"] ?? "";
-        if (!/^https:\/\/github\.com\/DevMboo\/pso-web-releases\/releases\/download\/[\w.-]+\/[\w.-]+$/.test(url) || !label) {
-          throw new Error(`${ctx.pageId}: invalid private release download button`);
+        if (!/^https:\/\/github\.com\/DevMboo\/pso-web-(framework|releases)\/releases\/download\/[\w.-]+\/[\w.-]+$/.test(url) || !label) {
+          throw new Error(`${ctx.pageId}: invalid release download button (only GitHub releases of DevMboo/pso-web-framework)`);
         }
         out.push(pso(`<p><a class="btn btn-primary" href="${esc(url)}" rel="noopener noreferrer">${esc(label)}</a></p>`, t.raw));
       }

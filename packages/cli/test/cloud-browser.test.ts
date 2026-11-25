@@ -32,7 +32,9 @@ const CANNED: Record<string, unknown> = {
   "release.history": [DEP], "release.list": [{ id: DEP.releaseId, active: true, previous: false }, { id: DEP.previousRelease, active: false, previous: true }], "release.get": DEP,
   "logs.read": { source: "deployment dm1abc", text: "2026-11-14T22:36:01Z INFO  state PLANNING\n2026-11-14T22:36:26Z INFO  state COMPLETED: release is active\n" },
   "provision.plan": { steps: [{ id: "nginx-dir", title: "PSO-owned nginx directory", status: "ok", detail: "writable" }, { id: "nginx-sudo", title: "Narrow sudo rule", status: "admin", detail: "script below" }], adminScript: "#!/bin/sh\nset -eu\nmkdir -p /etc/nginx/pso.d\n", note: "PSO only performs the steps marked agent" },
-  "client.list": [{ id: "SHA256:" + "A".repeat(43), name: "ana@pso-studio", role: "superadmin", revoked: false }], "secret.list": ["shop-db-password"], "audit.read": [{ seq: 1, ts: "2026-11-14T22:36:01Z", event: "deploy.requested", outcome: "ok", actor: { name: "ana" }, ids: { deployment: "dm1abc" } }], "audit.verify": { ok: true, entries: 1, head: "abc" }, "policy.get": {},
+  // the Signing tab: one trusted signer, an environment that requires signed releases; revocation answered like the agent does
+  "trust.list": [{ name: "ci-release", keyId: "SHA256:" + "T".repeat(43), apps: ["shop"], addedAt: "2026-11-14T22:00:00Z" }], "trust.revoke": { keyId: "SHA256:" + "T".repeat(43), revoked: true },
+  "client.list": [{ id: "SHA256:" + "A".repeat(43), name: "ana@pso-studio", role: "superadmin", revoked: false }], "secret.list": ["shop-db-password"], "audit.read": [{ seq: 1, ts: "2026-11-14T22:36:01Z", event: "deploy.requested", outcome: "ok", actor: { name: "ana" }, ids: { deployment: "dm1abc" } }], "audit.verify": { ok: true, entries: 1, head: "abc" }, "policy.get": { requireSignedReleases: true },
 };
 class StubCloud extends Cloud {
   override async with<T>(_name: string, fn: (c: never) => Promise<T>): Promise<T> { return fn({ call: async (op: string) => { if (!(op in CANNED)) throw new Error(`unexpected operation ${op}`); return CANNED[op]; } } as never); }
@@ -132,4 +134,43 @@ test("accessibility: no serious or critical axe violations on the Cloud section 
   const { page, errors } = await open(on, "#/cloud/overview", { width: 390 });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), true, "no horizontal page scroll on a phone width");
   assert.deepEqual(errors, []);
+});
+
+test("the Signing tab: a signer created in the browser keeps its private key out of the page, trust changes need the typed environment name", { skip, timeout: 120_000 }, async () => {
+  const { page, errors } = await open(on, "#/cloud/signing");
+  await page.waitForSelector("text=Signing identities on this machine");
+  assert.match(await page.locator("#main").innerText(), /No signers yet/);
+  await page.locator("input[aria-label='Signer name']").fill("release-bot");
+  await page.getByRole("button", { name: "Generate signer" }).click();
+  await page.waitForSelector("td:has-text('release-bot')");
+  const main = await page.locator("#main").innerText();
+  assert.match(main, /release-bot\s+SHA256:/, "the new signer is listed with its key id");
+  assert.doesNotMatch(await page.content(), /PRIVATE KEY|privateRef/, "no private key material anywhere in the page");
+  // the environment's trust store and policy, read from the agent
+  await page.waitForSelector("text=Trusted signers of this environment");
+  const remote = await page.locator("#main").innerText();
+  assert.match(remote, /REQUIRES signed releases/); assert.match(remote, /ci-release/); assert.match(remote, /trusted/);
+  // production: the confirmation is not pre-filled, and a revocation without it is refused by the backend
+  const confirm = page.locator("input[aria-label='Type production to confirm']");
+  assert.equal(await confirm.inputValue(), "");
+  await page.getByRole("button", { name: "Revoke" }).click();
+  await page.waitForSelector(".toast >> text=/type the environment name|CONFIRM/i");
+  await confirm.fill("production");
+  await page.getByRole("button", { name: "Revoke" }).click();
+  await page.waitForSelector(".toast >> text=Revoked");
+  // a signer removed in the browser is removed from this machine only, and says so
+  await page.getByRole("button", { name: "Remove key" }).click();
+  await page.waitForSelector(".toast >> text=/Servers that trust it still do/");
+  assert.deepEqual(errors.filter((e) => !/status of 422|to confirm/.test(e)), [], "no error other than the intended refusal");
+  // accessibility of the tab in both themes
+  for (const theme of ["dark", "light"] as const) {
+    const v = await open(on, "#/cloud/signing", { theme, bypassCSP: true }); await v.page.waitForSelector("text=Trusted signers of this environment");
+    await v.page.addScriptTag({ content: AXE });
+    const bad = await v.page.evaluate(async () => {
+      // @ts-expect-error axe is injected above
+      const r = await window.axe.run(document, { resultTypes: ["violations"] });
+      return r.violations.filter((x: { impact: string }) => x.impact === "serious" || x.impact === "critical").map((x: { id: string; nodes: unknown[] }) => `${x.id} x${x.nodes.length}`);
+    });
+    assert.deepEqual(bad, [], theme);
+  }
 });

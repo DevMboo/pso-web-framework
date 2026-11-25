@@ -7,7 +7,7 @@ keywords: [studio, frontend, fei, mei, graph, route ownership, contract, ports, 
 related: [frontend/overview, frontend/declarations, frontend/releases]
 ---
 > [!STATUS]
-> **Partially implemented, verified in a real browser** (14 of 14 checks including an axe scan with no WCAG 2 A/AA violations). The view is **read-only**: it shows and re-validates; starting, stopping, building and publishing are CLI commands. Deployments of a shell or a microfrontend made by the cloud engine are listed by the release commands (`pso release:status`, `pso release:history`); Studio's Cloud section reads the same engine state, but it was **not exercised** with a static resource, and the Frontend view itself does not show release versions.
+> **Implemented and verified in a real browser**: the read-only view (14 of 14 checks including an axe scan with no WCAG 2 A/AA violations) and the opt-in operations of `pso studio --frontend-ops` (12 of 12: validate, build, development servers, local publish and rollback, the table of active releases on the local site root). **Not exercised:** Studio's Cloud section with a deployed static resource; remote frontend deployments are listed by `pso release:status` and `pso release:history`.
 
 Open Studio from the workspace (`pso studio`) and choose **Frontend**. Studio keeps its existing boundaries: it listens on loopback only, requires its access token, and the local workspace is read-only. The Frontend view uses the same analysis as `pso validate` and `pso frontend:validate`, so it cannot disagree with them, and it does not contain a second implementation of any command.
 
