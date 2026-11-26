@@ -54,7 +54,11 @@ test("the two Commerce fixtures keep distinct responsibilities, stated in their 
 test("the cloud scenarios take host, user, key and paths from the environment, never from literals", () => {
   const dir = join(root, "fixtures", "pso-cloud-validation", "scenarios");
   const scripts = walk(dir, (n) => /\.(mjs|sh)$/.test(n));
-  assert.ok(scripts.length >= 14, `expected the ported scenarios, found ${scripts.length}`);
+  // the generic scenarios are public and must all be there; scenarios written for one private validation server are excluded from the
+  // public repository by .gitignore and, where a working copy has them, are checked below like the others
+  const PUBLIC = ["avail.mjs", "bus.mjs", "concurrency.mjs", "config.mjs", "ecv.mjs", "pids.mjs", "provision-data.mjs", "rbac.mjs", "recovery1.mjs", "recovery2.mjs", "sec.mjs", "workflow.mjs"];
+  for (const s of PUBLIC) assert.ok(existsSync(join(dir, s)), `the public scenario ${s} exists`);
+  assert.ok(scripts.length >= PUBLIC.length, `expected the ported scenarios, found ${scripts.length}`);
   const bad: string[] = [];
   for (const f of scripts) {
     const t = readFileSync(f, "utf8");

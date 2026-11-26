@@ -170,7 +170,11 @@ test("employee documents across both runtimes: HR uploads a PDF, an authorized u
   const stored = (function walk(d: string): string[] { return readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)])); })(storageRoot);
   assert.ok(stored.some((p) => p.replaceAll("\\", "/").endsWith(`employees/42/documents/${id}`)), "stored under a generated key inside the configured root");
   assert.ok(!stored.some((p) => /Relat|\.pdf/i.test(p)), "the client's filename is never part of a path");
-  assert.deepEqual(readdirSync(gwTmp).filter((n) => n.startsWith("pso-upload-")), [], "the orchestrator's temporary upload files are gone");
+  // the runtime removes them when the response closes (runtime.ts: they live exactly as long as the response), asynchronously: the client
+  // can read the response a moment before the removal completes, so wait for it (bounded) instead of racing it
+  const leftovers = () => readdirSync(gwTmp).filter((n) => n.startsWith("pso-upload-"));
+  for (const until = Date.now() + 5000; leftovers().length && Date.now() < until;) await new Promise((r) => setTimeout(r, 25));
+  assert.deepEqual(leftovers(), [], "the orchestrator's temporary upload files are gone");
 
   // 8: an authorized user downloads it through the orchestrator, streamed, with safe headers
   const dl = await fetch(url(`/42/documents/${id}`), { headers: hdr(emp42) });

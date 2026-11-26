@@ -7,7 +7,7 @@ import { formatLine, type LogConfig } from "@pso/http";
 import { CliError } from "./fsx.ts";
 import { npmInvocation } from "./proc.ts";
 import { describeSources, effectiveProjectEnv } from "./project-env.ts";
-import { processEnvironment } from "@pso/infra";
+import { mergeProcessEnvironment, processEnvironment } from "@pso/infra";
 
 /**
  * Colour for the `pso dev` terminal. The services' output is piped (so it can be mirrored into .pso/logs), which makes every child believe it is
@@ -101,6 +101,49 @@ export function devEnvironment(root: string, s: ServiceDecl, base: NodeJS.Proces
   return { env, notes };
 }
 
+export interface EnvOrigin { name: string; source: string; secret: boolean }
+export interface EnvExplanation { service: string; variables: EnvOrigin[]; notApplied: Array<{ names: string[]; from: string; reason: string }>; missingSecrets: string[]; infrastructure?: { env: string; file: string } }
+
+/** Names of the external environment worth listing (configuration of PSO, Spring, databases, Redis); PATH and the like are not. */
+const RELEVANT = /^(PSO_|SPRING_|SERVER_|DB_|REDIS|JAVA_TOOL_OPTIONS$|NODE_OPTIONS$|NODE_EXTRA_CA_CERTS$)/;
+
+/**
+ * Where every variable a service starts with comes from, exactly as `pso dev` would assemble it, without starting anything and without
+ * a single value: the service's files, the environment of `pso dev`, the workspace declaration, the infrastructure environment, and what
+ * the infrastructure did NOT apply and why. Secret values are resolved only to be counted as present; they are never returned.
+ */
+export function explainEnvironment(root: string, s: ServiceDecl, base: NodeJS.ProcessEnv, infraEnv: string | undefined): EnvExplanation {
+  const e = effectiveProjectEnv(root, s, base);
+  const fileOf = new Map<string, string>();
+  for (const src of e.sources) for (const k of src.keys) fileOf.set(k, src.file);
+  const started = devEnvironment(root, s, base, false);
+  const origin = new Map<string, EnvOrigin>();
+  for (const k of Object.keys(started.env)) {
+    const declared = ["PORT", "HOST", "PSO_WORKSPACE", "PSO_SERVICE"].includes(k);
+    const fromBase = base[k] !== undefined;
+    const file = fileOf.get(k);
+    if (declared) origin.set(k, { name: k, source: "pso.workspace.json (set by pso dev)", secret: false });
+    else if (fromBase && RELEVANT.test(k)) origin.set(k, { name: k, source: file ? `the environment of pso dev (over ${file})` : "the environment of pso dev", secret: false });
+    else if (!fromBase && file) origin.set(k, { name: k, source: file, secret: false });
+    else if (!fromBase && !file) origin.set(k, { name: k, source: "pso dev default", secret: false });
+  }
+  const out: EnvExplanation = { service: s.name, variables: [], notApplied: [], missingSecrets: [] };
+  if (infraEnv !== undefined) {
+    const pe = processEnvironment(root, s.name, infraEnv || undefined);
+    if (pe) {
+      out.infrastructure = { env: pe.env, file: pe.file };
+      const merged = mergeProcessEnvironment(started.env, pe.vars);
+      for (const k of merged.added) origin.set(k, { name: k, source: pe.file, secret: pe.secrets.includes(k) });
+      for (const x of merged.skipped) out.notApplied.push({ names: x.names, from: pe.file, reason: x.reason });
+      const shadowed = Object.keys(pe.vars).filter((k) => !merged.added.includes(k) && !merged.skipped.some((x) => x.names.includes(k)));
+      if (shadowed.length) out.notApplied.push({ names: shadowed.sort(), from: pe.file, reason: "the service's files or the environment of pso dev already set them (they take precedence)" });
+      out.missingSecrets = pe.missing;
+    }
+  }
+  out.variables = [...origin.values()].sort((a, b) => (a.name < b.name ? -1 : 1));
+  return out;
+}
+
 export interface DevSession {
   registry(): RegistryEntry[];
   stop(): Promise<void>;
@@ -188,9 +231,11 @@ export async function startDev(opts: DevOptions): Promise<DevSession> {
         if (opts.infraEnv !== undefined) {
           const pe = processEnvironment(opts.root, s.name, opts.infraEnv || undefined);
           if (pe) {
-            const added = Object.keys(pe.vars).filter((k) => started.env[k] === undefined);
-            for (const k of added) started.env[k] = pe.vars[k];
-            if (added.length) log(`[pso] ${s.name}: infrastructure environment "${pe.env}" (${pe.file}): ${added.length} variable(s)${pe.secrets.length ? `, secrets resolved for ${pe.secrets.join(", ")} (values not shown)` : ""}`);
+            // the infrastructure fills what the process does not set, and its identity settings are applied as one group or not at all
+            const merged = mergeProcessEnvironment(started.env, pe.vars);
+            const resolved = pe.secrets.filter((k) => merged.added.includes(k));
+            if (merged.added.length) log(`[pso] ${s.name}: infrastructure environment "${pe.env}" (${pe.file}): ${merged.added.join(", ")}${resolved.length ? ` (secrets resolved for ${resolved.join(", ")}; values not shown)` : ""}`);
+            for (const x of merged.skipped) log(`[pso] ${s.name}: not applied from ${pe.file}: ${x.names.join(", ")}: ${x.reason}`);
             if (pe.missing.length) throw new Error(`secret(s) ${pe.missing.join(", ")} are not provisioned for "${pe.env}": run pso infra:apply --env ${pe.env}`);
           }
         }

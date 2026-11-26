@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { InfraError } from "./contract.ts";
 import { paths } from "./render.ts";
-import type { Topology } from "./topology.ts";
+import { managedIdentity, type Topology } from "./topology.ts";
 
 /**
  * The container engine runs on Docker Engine and Compose; PSO does not reimplement a runtime. What PSO owns is everything around it: the
@@ -59,7 +59,8 @@ export function publishedPorts(t: Topology, mode: "stack" | "dependencies"): Arr
   const loop = t.kind === "development" ? "127.0.0.1" : "0.0.0.0";
   if (mode === "dependencies") {
     t.services.filter((s) => s.db).forEach((s, i) => out.push({ container: `${s.name}-db`, host: "127.0.0.1", port: 5432 + i }));
-    if (t.identity?.provider === "keycloak") out.push({ container: "idp", host: "127.0.0.1", port: t.httpsPort });
+    if (managedIdentity(t)) out.push({ container: "idp", host: "127.0.0.1", port: t.httpsPort });
+    if (t.redis?.provider === "container") out.push({ container: "redis", host: "127.0.0.1", port: t.redis.port });
     return out;
   }
   out.push({ container: "edge", host: loop, port: t.httpsPort });
@@ -82,14 +83,41 @@ export async function portConflicts(c: ComposeTarget, t: Topology, mode: "stack"
   return out;
 }
 
+/**
+ * The dependency graph of the containers, exactly as the generated compose file declares it (depends_on ... service_healthy): every node
+ * starts only after the nodes it lists are healthy. The key server, the databases and Redis need nothing, so the graph has no cycle.
+ */
+export function containerGraph(t: Topology): Record<string, string[]> {
+  const nodes: Record<string, string[]> = {};
+  const redis = t.redis?.provider === "container";
+  for (const s of t.services) nodes[s.name] = [...s.dependsOn, ...(s.db ? [`${s.name}-db`] : []), ...(managedIdentity(t) && s.authentication === "infrastructure" ? ["idp"] : []), ...(redis && s.redisVariables.length ? ["redis"] : []), ...(s.role === "orchestrator" ? t.services.filter((x) => x.role !== "orchestrator").map((x) => x.name) : [])];
+  for (const s of t.services.filter((x) => x.db)) nodes[`${s.name}-db`] = [];
+  if (managedIdentity(t)) nodes["idp"] = [];
+  if (redis) nodes["redis"] = [];
+  for (const f of t.frontends) nodes[f.name] = [];
+  nodes["edge"] = [...t.frontends.map((f) => f.name), ...(t.orchestrator ? [t.orchestrator.name] : []), ...(managedIdentity(t) ? ["idp"] : [])];
+  return nodes;
+}
+
+/** A dependency cycle among the containers (none in a generated topology); the names in order, or undefined. */
+export function dependencyCycle(graph: Record<string, string[]>): string[] | undefined {
+  const state = new Map<string, "visiting" | "done">();
+  const stack: string[] = [];
+  const visit = (n: string): string[] | undefined => {
+    if (state.get(n) === "done") return undefined;
+    if (state.get(n) === "visiting") return [...stack.slice(stack.indexOf(n)), n];
+    state.set(n, "visiting"); stack.push(n);
+    for (const d of graph[n] ?? []) { const c = visit(d); if (c) return c; }
+    stack.pop(); state.set(n, "done");
+    return undefined;
+  };
+  for (const n of Object.keys(graph).sort()) { const c = visit(n); if (c) return c; }
+  return undefined;
+}
+
 /** The services of the stack in dependency order (dependencies first), from the generated compose model. */
 export function startupOrder(t: Topology): string[] {
-  const nodes: Record<string, string[]> = {};
-  for (const s of t.services) nodes[s.name] = [...s.dependsOn, ...(s.db ? [`${s.name}-db`] : []), ...(t.identity?.provider === "keycloak" ? ["idp"] : []), ...(s.role === "orchestrator" ? t.services.filter((x) => x.role !== "orchestrator").map((x) => x.name) : [])];
-  for (const s of t.services.filter((x) => x.db)) nodes[`${s.name}-db`] = [];
-  if (t.identity?.provider === "keycloak") nodes["idp"] = [];
-  for (const f of t.frontends) nodes[f.name] = [];
-  nodes["edge"] = [...t.frontends.map((f) => f.name), ...(t.orchestrator ? [t.orchestrator.name] : []), ...(t.identity?.provider === "keycloak" ? ["idp"] : [])];
+  const nodes = containerGraph(t);
   const out: string[] = [], seen = new Set<string>();
   const visit = (n: string) => { if (seen.has(n)) return; seen.add(n); for (const d of nodes[n] ?? []) visit(d); out.push(n); };
   Object.keys(nodes).sort().forEach(visit);
@@ -99,9 +127,7 @@ export function startupOrder(t: Topology): string[] {
 /** Every container a service needs, transitively (for `--with-dependencies` and selective starts). */
 export function dependenciesOf(t: Topology, names: string[]): string[] {
   const order = startupOrder(t);
-  const graph: Record<string, string[]> = {};
-  for (const s of t.services) graph[s.name] = [...s.dependsOn, ...(s.db ? [`${s.name}-db`] : []), ...(t.identity?.provider === "keycloak" ? ["idp"] : []), ...(s.role === "orchestrator" ? t.services.filter((x) => x.role !== "orchestrator").map((x) => x.name) : [])];
-  graph["edge"] = [...t.frontends.map((f) => f.name), ...(t.orchestrator ? [t.orchestrator.name] : []), ...(t.identity?.provider === "keycloak" ? ["idp"] : [])];
+  const graph = containerGraph(t);
   const need = new Set<string>();
   const walk = (n: string) => { if (need.has(n)) return; need.add(n); for (const d of graph[n] ?? []) walk(d); };
   names.forEach(walk);

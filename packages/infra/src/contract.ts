@@ -48,6 +48,25 @@ export interface EnvironmentDecl {
   deploy?: { target?: "docker" | "bundle" | "ssh"; dockerContext?: string; connection?: string; root?: string };
   /** per-environment frontend settings that win over the workspace-wide `frontends` section (written by `pso frontend:config --env`) */
   frontends?: Record<string, { auth?: "oidc" | "dev-token" | "none" }>;
+  /** per-environment service settings that win over the workspace-wide `services` section */
+  services?: Record<string, EnvironmentServiceDecl>;
+  /**
+   * Redis in this environment, when the workspace declares `redis`: a container PSO runs (default), a Redis the operator runs elsewhere
+   * (`external`: its address is the supplied secret `redis-url`), or none at all in this environment
+   */
+  redis?: { provider?: RedisProvider; /** process mode: the loopback port of the Redis container of `pso dev --with-dependencies` (default 6379) */ port?: number };
+}
+
+/** Where the access tokens a service accepts are configured: by the environment's identity provider (default), or by the application itself. */
+export type AuthenticationSource = "infrastructure" | "application";
+export type RedisProvider = "container" | "external" | "none";
+
+/** What one environment changes for one service. */
+export interface EnvironmentServiceDecl {
+  authentication?: AuthenticationSource;
+  /** variables of this environment only (merged over `services.<name>.environment`) */
+  environment?: Record<string, string>;
+  replicas?: number;
 }
 
 export interface FrontendInfraDecl {
@@ -67,6 +86,37 @@ export interface ServiceInfraDecl {
   resources?: ResourceLimits;
   /** names of declared secrets this service receives as files */
   secrets?: string[];
+  /**
+   * "infrastructure" (default): the service validates tokens of the environment's identity provider, configured by PSO (PSO_JWT_*).
+   * "application": the application configures token validation itself; PSO gives this service no identity settings at all, so a
+   * key source of the application never meets one of the infrastructure (PSO_SEC_KEY_CONFLICT is then always a real conflict).
+   */
+  authentication?: AuthenticationSource;
+  /**
+   * Variables of the application for this service, in every environment: a plain value, or `secret://<declared secret>`. A secret is
+   * mounted as a file in a container (Spring reads it as a property of that name, a Node service as the variable) and resolved by
+   * `pso dev` for a local process; its value is never written in a generated file. Variables PSO itself manages cannot be set here.
+   */
+  environment?: Record<string, string>;
+  /** persistent named volumes of the container: name -> absolute path inside the container (kept by `pso docker:down`) */
+  volumes?: Record<string, string>;
+  /** containers of this service in the docker runtime (default 1); the edge balances the orchestrator's instances */
+  replicas?: number;
+  /** container health check: how long a slow start is tolerated before failures count (default 60s for Spring, 15s for Node) */
+  healthcheck?: { startPeriod?: string };
+}
+
+/**
+ * Redis for the services that need it (PSO Dispatch, the Redis bus of PSO Channels, caches): declared once, provisioned only where it is
+ * declared. The container runs on the private network only, requires a password (secret `redis-password`), keeps its data in a named
+ * volume and is health-checked; each client receives the address with its credentials (secret `redis-url`) in the variables it names.
+ */
+export interface RedisDecl {
+  /** service name -> the variables that receive the address (default ["REDIS_URL"]); a list of names gives each one REDIS_URL */
+  clients: string[] | Record<string, string[]>;
+  /** append-only persistence in a named volume (default true) */
+  persistence?: boolean;
+  resources?: ResourceLimits;
 }
 
 export interface ResourceLimits { memory?: string; cpus?: string }
@@ -98,12 +148,26 @@ export interface InfraContract {
   frontends?: Record<string, FrontendInfraDecl>;
   services?: Record<string, ServiceInfraDecl>;
   secrets?: Record<string, SecretDecl>;
-  docker?: { project?: string; logs?: { maxSize?: string; maxFile?: number }; resources?: ResourceLimits; images?: { nginx?: string; postgres?: string; keycloak?: string } };
+  redis?: RedisDecl;
+  docker?: { project?: string; logs?: { maxSize?: string; maxFile?: number }; resources?: ResourceLimits; images?: { nginx?: string; postgres?: string; keycloak?: string; redis?: string } };
 }
 
 export interface ContractIssue { code: string; severity: "error" | "warning"; message: string; path: string; hint?: string }
 
-export const DEFAULT_IMAGES = { nginx: "nginx:1.27-alpine", postgres: "postgres:17-alpine", keycloak: "quay.io/keycloak/keycloak:26.0" } as const;
+export const DEFAULT_IMAGES = { nginx: "nginx:1.27-alpine", postgres: "postgres:17-alpine", keycloak: "quay.io/keycloak/keycloak:26.0", redis: "redis:7.4-alpine" } as const;
+
+/**
+ * Variables PSO itself sets for a service (identity, upstreams, TLS, database, ports, secrets, Redis): `environment` cannot override them,
+ * so a typo in the contract can never switch off TLS or replace the identity provider. With `authentication: "application"` the identity
+ * variables (PSO_JWT_*, PSO_SECURITY_JWT_*) belong to the application and may be set.
+ */
+export const MANAGED_VARIABLES = /^(PORT|HOST|PSO_ENV|PSO_SERVICE|PSO_WORKSPACE|PSO_UPSTREAM_.*|PSO_HTTP_TLS_.*|PSO_SHUTDOWN_GRACE_MS|SERVER_SSL_.*|SPRING_CONFIG_IMPORT|SPRING_PROFILES_ACTIVE|DB_URL|DB_USER|DB_PASSWORD|PSO_SECRET_FILES|PSO_SECRETS_DIR|NODE_EXTRA_CA_CERTS)$/;
+export const IDENTITY_VARIABLES = /^PSO_(JWT|SECURITY_JWT)_[A-Z0-9_]+$/;
+/** a variable name that announces a credential: its value must be a secret:// reference, never plain text in the contract */
+export const CREDENTIAL_NAME = /(PASSWORD|PASSWD|SECRET|TOKEN|PRIVATE_KEY|API_KEY|CREDENTIAL|SIGNING_KEY|TRUST_KEY)/;
+const VAR_NAME = /^[A-Z_][A-Z0-9_]*$/;
+const DURATION = /^\d+(ms|s|m)$/;
+const VOLUME_TARGET = /^\/[A-Za-z0-9._\/-]+$/;
 export const DEFAULT_LOCAL_DOMAIN = "pso.localhost";
 
 const KEBAB = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
@@ -132,6 +196,7 @@ export function loadContract(root: string): { contract: InfraContract; declared:
 /** Shape and consistency of the contract alone; cross-checks against the workspace (unknown service names, host collisions) are in the graph. */
 export function validateContract(raw: unknown): ContractIssue[] {
   const out: ContractIssue[] = [];
+  currentIssues = out;
   const err = (path: string, code: string, message: string, hint?: string) => out.push({ code, severity: "error", message, path, ...(hint ? { hint } : {}) });
   const warn = (path: string, code: string, message: string, hint?: string) => out.push({ code, severity: "warning", message, path, ...(hint ? { hint } : {}) });
   if (!isObj(raw)) { err("$", "PSO_INFRA_SHAPE", `${INFRA_FILE} must be a JSON object`); return out; }
@@ -178,6 +243,23 @@ export function validateContract(raw: unknown): ContractIssue[] {
     if (dep["target"] === "ssh" && (typeof dep["connection"] !== "string" || !/^[a-z][a-z0-9-]{0,62}$/.test(dep["connection"]))) err(`${p}.deploy.connection`, "PSO_INFRA_DEPLOY_CONNECTION", `an ssh deployment names the host connection ("deploy.connection", registered with pso connection:add)`);
     if (dep["root"] !== undefined && (typeof dep["root"] !== "string" || !/^\/[A-Za-z0-9._\/-]+$/.test(dep["root"]) || dep["root"].split("/").includes(".."))) err(`${p}.deploy.root`, "PSO_INFRA_DEPLOY_ROOT", `"deploy.root" must be an absolute POSIX path on the host`);
     if (dep["target"] === "ssh" && kind === "development") warn(`${p}.deploy.target`, "PSO_INFRA_DEPLOY_SSH_DEV", `a development environment deployed to a remote host still uses development certificates and secrets`);
+    if (e["services"] !== undefined) {
+      if (!isObj(e["services"])) err(`${p}.services`, "PSO_INFRA_SERVICE", "must be an object of service names");
+      else for (const [n, sv] of Object.entries(e["services"])) {
+        if (!isObj(sv)) { err(`${p}.services.${n}`, "PSO_INFRA_SERVICE", "must be an object"); continue; }
+        for (const k of Object.keys(sv)) if (!["authentication", "environment", "replicas"].includes(k)) err(`${p}.services.${n}.${k}`, "PSO_INFRA_SERVICE", `only "authentication", "environment" and "replicas" can be set per environment (the rest is workspace-wide in $.services)`);
+        serviceCommon(`${p}.services.${n}`, sv, raw);
+      }
+    }
+    if (e["redis"] !== undefined) {
+      const r = e["redis"];
+      if (!isObj(r)) err(`${p}.redis`, "PSO_INFRA_REDIS", `"redis" must be an object such as { "provider": "container" }`);
+      else {
+        if (r["provider"] !== undefined && !["container", "external", "none"].includes(String(r["provider"]))) err(`${p}.redis.provider`, "PSO_INFRA_REDIS", `"redis.provider" must be container, external or none`);
+        if (r["port"] !== undefined && (!Number.isInteger(r["port"]) || (r["port"] as number) < 1 || (r["port"] as number) > 65535)) err(`${p}.redis.port`, "PSO_INFRA_PORT", `"redis.port" must be a port number`);
+        if (!isObj(raw["redis"])) err(`${p}.redis`, "PSO_INFRA_REDIS", `this environment configures Redis, but the workspace does not declare it ("redis": { "clients": [...] })`);
+      }
+    }
     const id = isObj(e["identity"]) ? e["identity"] : {};
     for (const k of ["issuer", "jwksUri", "authorizationEndpoint", "tokenEndpoint", "logoutEndpoint"]) if (id[k] !== undefined && (typeof id[k] !== "string" || !/^https:\/\/[^\s]+$/.test(id[k] as string))) err(`${p}.identity.${k}`, "PSO_INFRA_IDENTITY_URL", `"identity.${k}" must be an https:// URL`);
   }
@@ -213,6 +295,33 @@ export function validateContract(raw: unknown): ContractIssue[] {
     if (s["mtls"] !== undefined && typeof s["mtls"] !== "boolean") err(`$.services.${n}.mtls`, "PSO_INFRA_SERVICE", `"mtls" must be true or false`);
     lim(`$.services.${n}.resources`, s["resources"]);
     if (s["secrets"] !== undefined && (!Array.isArray(s["secrets"]) || !(s["secrets"] as unknown[]).every((x) => typeof x === "string"))) err(`$.services.${n}.secrets`, "PSO_INFRA_SERVICE", `"secrets" must be a list of declared secret names`);
+    serviceCommon(`$.services.${n}`, s, raw);
+    if (s["volumes"] !== undefined) {
+      if (!isObj(s["volumes"])) err(`$.services.${n}.volumes`, "PSO_INFRA_VOLUME", `"volumes" maps a volume name to an absolute path in the container`);
+      else for (const [v, target] of Object.entries(s["volumes"])) {
+        if (!KEBAB.test(v)) err(`$.services.${n}.volumes.${v}`, "PSO_INFRA_VOLUME", `volume name "${v}" must be kebab-case`);
+        if (typeof target !== "string" || !VOLUME_TARGET.test(target) || target.split("/").includes("..")) err(`$.services.${n}.volumes.${v}`, "PSO_INFRA_VOLUME", `the mount point must be an absolute path inside the container`);
+        else if (/^\/(run\/pso|run\/secrets|tmp)(\/|$)/.test(target) || target === "/") err(`$.services.${n}.volumes.${v}`, "PSO_INFRA_VOLUME", `${target} is managed by PSO (TLS material, secrets, temporary files): choose another path`);
+      }
+    }
+    if (s["healthcheck"] !== undefined) {
+      const h = s["healthcheck"];
+      if (!isObj(h) || Object.keys(h).some((k) => k !== "startPeriod") || (h["startPeriod"] !== undefined && (typeof h["startPeriod"] !== "string" || !DURATION.test(h["startPeriod"])))) err(`$.services.${n}.healthcheck`, "PSO_INFRA_HEALTHCHECK", `"healthcheck" takes startPeriod, a duration such as "90s"`);
+    }
+  }
+  const redis = raw["redis"];
+  if (redis !== undefined) {
+    if (!isObj(redis)) err("$.redis", "PSO_INFRA_REDIS", `"redis" must be an object: { "clients": ["<service>", ...] }`);
+    else {
+      const cl = redis["clients"];
+      const names = Array.isArray(cl) ? cl : isObj(cl) ? Object.keys(cl) : undefined;
+      if (!names || names.length === 0 || !names.every((x) => typeof x === "string" && KEBAB.test(x))) err("$.redis.clients", "PSO_INFRA_REDIS", `"redis.clients" names the services that use Redis (a list, or service -> variable names)`);
+      if (isObj(cl)) for (const [svc, vars] of Object.entries(cl)) if (!Array.isArray(vars) || vars.length === 0 || !vars.every((v) => typeof v === "string" && VAR_NAME.test(v))) err(`$.redis.clients.${svc}`, "PSO_INFRA_REDIS", `the variables that receive the Redis address must be upper-case names, such as ["REDIS_URL"]`);
+        else for (const v of vars as string[]) if (MANAGED_VARIABLES.test(v) || IDENTITY_VARIABLES.test(v)) err(`$.redis.clients.${svc}`, "PSO_INFRA_ENV_RESERVED", `${v} is managed by PSO and cannot receive the Redis address`);
+      if (redis["persistence"] !== undefined && typeof redis["persistence"] !== "boolean") err("$.redis.persistence", "PSO_INFRA_REDIS", `"persistence" must be true or false`);
+      lim("$.redis.resources", redis["resources"]);
+      for (const k of Object.keys(redis)) if (!["clients", "persistence", "resources"].includes(k)) err(`$.redis.${k}`, "PSO_INFRA_REDIS", `unknown setting "${k}" (clients, persistence, resources)`);
+    }
   }
   if (isObj(raw["secrets"])) for (const [n, s] of Object.entries(raw["secrets"])) {
     if (!KEBAB.test(n)) err(`$.secrets.${n}`, "PSO_INFRA_SECRET_NAME", `secret name "${n}" must be kebab-case`);
@@ -241,6 +350,28 @@ export function pickEnvironment(c: InfraContract, requested?: string): { name: s
   if (!env) throw new InfraError(`unknown environment "${name}" (declared: ${Object.keys(c.environments).join(", ")})`, "PSO_INFRA_ENV_UNKNOWN");
   return { name, env };
 }
+
+/** Checks shared by `services.<name>` and `environments.<env>.services.<name>`: authentication, environment, replicas. */
+function serviceCommon(p: string, s: Record<string, unknown>, raw: Record<string, unknown>): void {
+  const issues = currentIssues!;
+  const err = (path: string, code: string, message: string, hint?: string) => issues.push({ code, severity: "error", message, path, ...(hint ? { hint } : {}) });
+  if (s["authentication"] !== undefined && s["authentication"] !== "infrastructure" && s["authentication"] !== "application") err(`${p}.authentication`, "PSO_INFRA_AUTHENTICATION", `"authentication" must be "infrastructure" (the environment's identity provider) or "application"`);
+  if (s["replicas"] !== undefined && (!Number.isInteger(s["replicas"]) || (s["replicas"] as number) < 1 || (s["replicas"] as number) > 20)) err(`${p}.replicas`, "PSO_INFRA_REPLICAS", `"replicas" must be a whole number from 1 to 20`);
+  const env = s["environment"];
+  if (env === undefined) return;
+  if (!isObj(env)) { err(`${p}.environment`, "PSO_INFRA_ENV_VARS", `"environment" maps variable names to values`); return; }
+  for (const [k, v] of Object.entries(env)) {
+    const at = `${p}.environment.${k}`;
+    if (!VAR_NAME.test(k)) { err(at, "PSO_INFRA_ENV_VARS", `"${k}" is not a variable name (upper-case letters, digits and _)`); continue; }
+    if (typeof v !== "string") { err(at, "PSO_INFRA_ENV_VARS", `the value of ${k} must be a string`); continue; }
+    if (MANAGED_VARIABLES.test(k)) err(at, "PSO_INFRA_ENV_RESERVED", `${k} is set by PSO from the declarations and cannot be overridden here`);
+    const ref = /^secret:\/\/(.+)$/.exec(v);
+    if (ref) { if (!isObj(raw["secrets"]) || !Object.hasOwn(raw["secrets"], ref[1]!)) err(at, "PSO_INFRA_UNKNOWN_SECRET", `${k} references secret "${ref[1]}", which is not declared in "secrets"`); }
+    else if (CREDENTIAL_NAME.test(k) && v !== "") err(at, "PSO_INFRA_SECRET_IN_CONTRACT", `${k} looks like a credential: declare a secret and write "secret://<name>" instead of its value`);
+    else if (/-----BEGIN [A-Z ]*PRIVATE KEY-----|^eyJ[A-Za-z0-9_-]{8,}\./.test(v) || /^[a-z][a-z0-9+.-]*:\/\/[^/@\s]*:[^/@\s]+@/i.test(v)) err(at, "PSO_INFRA_SECRET_IN_CONTRACT", `the value of ${k} contains a credential: declare a secret and reference it`);
+  }
+}
+let currentIssues: ContractIssue[] | undefined;
 
 export class InfraError extends Error {
   readonly code: string;

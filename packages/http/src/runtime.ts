@@ -21,6 +21,7 @@ import { MultipartError, isMultipart, parseMultipart, type ParsedMultipart } fro
 import { formInput, uploadLimitFor } from "./upload.ts";
 import { createRateLimiting, clientAddress, rateHeaders, RateLimitConfigError, type RateDecision } from "./ratelimit.ts";
 import { OwnedResources } from "./resources.ts";
+import { SecretFilesError, loadSecretFiles } from "./secret-files.ts";
 import { Readiness } from "./readiness.ts";
 import { HttpError, StartupError, startupDiagnostics } from "./errors.ts";
 import { contexts, midstream, rawBodies, runWithRequest } from "./context.ts";
@@ -188,6 +189,10 @@ export async function bootstrap(opts: BootstrapOptions): Promise<App> {
 
 async function start(opts: BootstrapOptions, owned: OwnedResources): Promise<App> {
   const env = process.env;
+  // secrets mounted as files by the container topology become variables first, so every setting below reads them like any other variable
+  let secretFiles: ReturnType<typeof loadSecretFiles>;
+  try { secretFiles = loadSecretFiles(env); }
+  catch (e) { const problems = e instanceof SecretFilesError ? e.problems : [(e as Error).message]; throw new StartupError(`${(e as Error).message}\nnothing was started`, startupDiagnostics(problems.map((message) => ({ code: "PSO_SECRET_FILES", message })))); }
   const port = opts.port ?? Number(env["PORT"] ?? 3000);
   const host = opts.host ?? env["HOST"] ?? "127.0.0.1";
   const projectDir = opts.projectDir ?? resolve(opts.appDir, "..");
@@ -202,6 +207,7 @@ async function start(opts: BootstrapOptions, owned: OwnedResources): Promise<App
   // a misspelled key is never silently ignored: strict validation (production) refused it above; elsewhere it is reported on every start
   for (const w of cfgCheck.warnings) log("warn", "unknown configuration key ignored", { component: "config", code: w.code, detail: w.message, source: w.file, ...(/^Did you mean/.test(w.hint ?? "") ? { hint: `${w.hint!.split("?")[0]}?` } : {}) });
   log("info", "starting orchestrator", { component: "startup", service: serviceName(projectDir, env), environment: env["PSO_ENV"] ?? env["NODE_ENV"] ?? "development", logLevel: logCfg.level, logFormat: logCfg.format, node: process.version });
+  if (secretFiles.loaded.length || secretFiles.kept.length) log("info", "secret variables read from files", { component: "startup", loaded: secretFiles.loaded, ...(secretFiles.kept.length ? { keptFromEnvironment: secretFiles.kept } : {}) });
   const maxBody = limits.maxBodyBytes;
   Upstream.services = loadUpstreams(opts.workspaceFile ?? env["PSO_WORKSPACE"], env);
   {

@@ -24,6 +24,7 @@ related: [concepts/configuration, devops/environment-configuration, security/rat
 | `PSO_WORKSPACE` | path of `pso.workspace.json` for a service started outside the workspace |
 | `PSO_SERVICE` | name of the service this process is (set by `pso dev`) |
 | `PSO_HTTP_TLS_CERT_FILE`, `PSO_HTTP_TLS_KEY_FILE` | 0.2.0: the orchestrator terminates TLS itself with these PEM files (set together; the generated container topology uses them behind the edge) ([security model](/infrastructure/security-and-certificates)) |
+| `PSO_SECRET_FILES`, `PSO_SECRETS_DIR` | 0.2.0-rc.7: names of variables to read from secret files at start-up (`<PSO_SECRETS_DIR>/<NAME>`, default `/run/secrets`), before any configuration is read; a variable already set is kept, a missing or empty file stops the start-up. The generated container topology sets it for the secrets of a Node service ([contract](/infrastructure/contract)) |
 | `PSO_HTTP_TLS_CLIENT_CA_FILE` | 0.2.0: with inbound TLS, also require a client certificate issued by this authority (mutual TLS) |
 | `PSO_JWT_JWKS_TRUSTED_HOSTS` | a JWKS host that differs from the issuer's host, bound to it explicitly (the generated topology fetches keys from the identity provider's internal name) |
 | `PSO_INFRA_ENV` | the infrastructure environment the `infra:*`, `docker:*` and `dev` commands use when `--env` is absent ([contract](/infrastructure/contract)) |

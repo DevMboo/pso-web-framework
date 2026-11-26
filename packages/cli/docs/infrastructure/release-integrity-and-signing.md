@@ -22,7 +22,7 @@ A checksum published next to the file proves integrity only as far as that page 
 ## Installing on Windows
 
 - **Portable ZIP** (recommended while the installer is unsigned): extract to a folder you can write to, run `.\pso.cmd --version`. A private Node.js runtime is bundled; nothing on the machine is changed.
-- **Installer** (`PSO-Web-<version>-win-x64.exe`, Inno Setup): published with rc.6 as an **experimental** asset. It is unsigned, its real installation flow has not been validated end to end, and it is not a supported installation method for rc.3.
+- **Installer** (`PSO-Web-<version>-win-x64.exe`, Inno Setup): published with rc.7 as an **experimental** asset. It is unsigned, its real installation flow has not been validated end to end, and it is not a supported installation method for rc.3.
 
 Maintenance of an installation (both forms):
 
@@ -45,7 +45,7 @@ Upgrading from 0.1.x keeps every workspace untouched: workspaces live outside th
 
 ### Windows installer limitations
 
-The installer of `0.2.0-rc.6` is published as an experimental asset; it is not Authenticode-signed and not a supported installation method. A prior rc.1 unsigned build was refused by Smart App Control on the validation machine ("An Application Control policy blocked this file", Code Integrity event 3077), showing that acceptance of one unsigned file does not predict acceptance of another. PSO never asks you to switch Smart App Control, SmartScreen or Defender off. Use the **portable ZIP** ([Downloads](/downloads/index)) until the installer is signed and its installation flow validated. Both rc.6 files, their checksums and the Ed25519 signature of `SHA256SUMS` (release key `7ebced00…`) are on the public release [`v0.2.0-rc.6`](https://github.com/DevMboo/pso-web-framework/releases/tag/v0.2.0-rc.6).
+The installer of `0.2.0-rc.7` is published as an experimental asset; it is not Authenticode-signed and not a supported installation method. A prior rc.1 unsigned build was refused by Smart App Control on the validation machine ("An Application Control policy blocked this file", Code Integrity event 3077), showing that acceptance of one unsigned file does not predict acceptance of another. PSO never asks you to switch Smart App Control, SmartScreen or Defender off. Use the **portable ZIP** ([Downloads](/downloads/index)) until the installer is signed and its installation flow validated. Both rc.7 files, their checksums and the Ed25519 signature of `SHA256SUMS` (release key `7ebced00…`) are on the public release [`v0.2.0-rc.7`](https://github.com/DevMboo/pso-web-framework/releases/tag/v0.2.0-rc.7).
 
 ## The permanent PSO release signing identity
 
@@ -103,7 +103,7 @@ and never stores keys, passwords or tokens in the repository. A **release gate**
 untrusted, untimestamped or signed by another publisher. An unsigned build exists only as an explicitly labelled development build.
 
 **Status:** the signing pipeline and the release gate are implemented and tested without a certificate. No certificate has been
-provisioned yet, so no PSO release is Authenticode-signed: `0.2.0-rc.6` is unsigned, and Smart App Control can block its installer.
+provisioned yet, so no PSO release is Authenticode-signed: `0.2.0-rc.7` is unsigned, and Smart App Control can block its installer.
 Acceptance of a signed release under Smart App Control is validated on an isolated Windows 11 machine before it is published.
 
 ## Before an official release

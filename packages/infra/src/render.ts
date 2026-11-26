@@ -1,7 +1,7 @@
 import { gzipDirectives, renderSiteLocations, securityHeaders } from "@pso/frontend/release";
 import { INFRA_DIR, type InfraContract, type ResourceLimits } from "./contract.ts";
 import { envVarOf, localSecretPath, secretRef } from "./secrets.ts";
-import type { ResolvedService, Topology } from "./topology.ts";
+import { managedIdentity, type ResolvedService, type Topology } from "./topology.ts";
 
 /**
  * Every file the engine generates is rendered here, from the topology alone, deterministically: the same declarations always give the same
@@ -11,7 +11,7 @@ export const MANAGED_MARK = "Managed by PSO (pso infra:*).";
 const header = (comment: string, what: string): string => [`${comment} ${MANAGED_MARK} Do not edit: change pso.workspace.json, pso.infra.json or the FEI/MEI declarations and run \`pso infra:apply\`.`, `${comment} ${what}`].join("\n");
 
 /** Container names that the generated topology reserves. */
-export const RESERVED_NAMES = ["edge", "idp", "idp-db"] as const;
+export const RESERVED_NAMES = ["edge", "idp", "idp-db", "redis"] as const;
 export const CONTAINER_TLS = "/run/pso/tls";
 export const CONTAINER_CLIENT_TLS = "/run/pso/client";
 
@@ -98,13 +98,28 @@ export function renderEdge(t: Topology): string {
   if (t.identity?.provider === "keycloak") {
     out.push(`# identity provider: ${t.identity.issuer}`, "server {", ...tlsServer([t.identity.host]), "    location / {", "        set $pso_idp https://idp:8443;", "        proxy_pass $pso_idp;", ...ind(8, proxyCommon("idp", false, t.httpsPort)), "        proxy_buffer_size 128k;", "        proxy_buffers 4 256k;", "    }", "}", "");
   } else if (t.identity?.provider === "pso-dev") {
-    out.push(`# development identity: public keys only (tokens are signed offline by pso infra:token)`, "server {", ...tlsServer([t.identity.host, "edge"]),
-      "    location = /.well-known/jwks.json {", "        alias /run/pso/identity/jwks.json;", '        default_type application/json;', '        add_header Cache-Control "no-store" always;', "    }",
+    // the public keys live in the "idp" container (see renderIdpServer); the edge only publishes them under the identity's public host
+    out.push(`# development identity: public keys only (tokens are signed offline by pso infra:token)`, "server {", ...tlsServer([t.identity.host]),
+      "    location = /.well-known/jwks.json {", "        set $pso_idp https://idp:8443;", "        proxy_pass $pso_idp;", ...ind(8, proxyCommon("idp", false, t.httpsPort)), "    }",
       "    location / { return 404; }", "}", "");
   }
   out.push("# anything else is refused: a request for an unknown host never reaches an application", "server {", "    listen 8443 ssl default_server;", "    server_name _;", `    ssl_certificate ${CONTAINER_TLS}/tls.crt;`, `    ssl_certificate_key ${CONTAINER_TLS}/tls.key;`, "    return 421;", "}", "",
     "# container health (loopback only, never published)", "server {", "    listen 127.0.0.1:8081;", '    location = /health { access_log off; return 200 "ok"; }', "}", "");
   return out.join("\n");
+}
+
+/**
+ * The key server of the pso-dev identity ("idp"): the public key set over TLS, nothing else. It has no dependency, so it is healthy before
+ * any service starts; services reach it on the private network as https://idp:8443 and the edge publishes it under the identity's host.
+ * The key set is mounted read-only from .infra/identity/<env>/jwks.json; the signing key never leaves the workspace.
+ */
+export function renderIdpServer(t: Topology): string {
+  return [header("#", `Public keys of the pso-dev identity of environment "${t.env}" (${t.identity!.issuer}). Served to the services and the edge only.`), "server_tokens off;", "",
+    "server {", "    listen 8443 ssl default_server;", "    server_name _;", `    ssl_certificate ${CONTAINER_TLS}/tls.crt;`, `    ssl_certificate_key ${CONTAINER_TLS}/tls.key;`, "    ssl_protocols TLSv1.2 TLSv1.3;",
+    "    location = /.well-known/jwks.json {", "        alias /run/pso/identity/jwks.json;", "        default_type application/json;", '        add_header Cache-Control "no-store" always;', "    }",
+    "    location / { return 404; }", "}", "",
+    // healthy only while the key set is actually served (the health check reads it through this loopback server)
+    "server {", "    listen 127.0.0.1:8081;", "    location = /health { access_log off; alias /run/pso/identity/jwks.json; default_type application/json; }", "}", ""].join("\n");
 }
 
 /** The static server of one FEI: its site root (shell releases, MEI releases, runtime configuration) with the framework's file rules. */
@@ -145,16 +160,25 @@ const scalar = (v: Y): string => (typeof v === "string" ? q(v) : v === null ? "n
 // ---------------------------------------------------------------------------------------------------------------------------------
 // compose
 
-const DEFAULT_LIMITS: Record<string, ResourceLimits> = { "spring-boot": { memory: "768m", cpus: "1.0" }, node: { memory: "384m", cpus: "1.0" }, nginx: { memory: "128m", cpus: "0.5" }, postgres: { memory: "512m", cpus: "1.0" }, keycloak: { memory: "1g", cpus: "1.5" } };
+const DEFAULT_LIMITS: Record<string, ResourceLimits> = { "spring-boot": { memory: "768m", cpus: "1.0" }, node: { memory: "384m", cpus: "1.0" }, nginx: { memory: "128m", cpus: "0.5" }, postgres: { memory: "512m", cpus: "1.0" }, keycloak: { memory: "1g", cpus: "1.5" }, redis: { memory: "256m", cpus: "0.5" } };
 const up = (n: string) => n.toUpperCase().replace(/-/g, "_");
 const dbName = (s: string) => s.replace(/-/g, "_");
 const jwksTrusted = (issuer: string, jwks: string): string => { const a = new URL(issuer).hostname, b = new URL(jwks).hostname; return a === b ? "" : b; };
 
 export interface ComposeSecret { name: string; target: string }
-/** The secrets one container receives as files under /run/secrets (never as variables in the compose file, never in an image). */
+/**
+ * The secrets one container receives as files under /run/secrets (never as variables in the compose file, never in an image): its database
+ * password, the declared secrets it uses, the secret:// variables of the application and, for a Redis client, the Redis address.
+ */
 export function secretsOf(t: Topology, c: InfraContract, s: ResolvedService): ComposeSecret[] {
-  return [...(s.db ? [{ name: `db-${s.name}`, target: "DB_PASSWORD" }] : []), ...(c.services?.[s.name]?.secrets ?? []).map((n) => ({ name: n, target: up(n) }))];
+  const out = [...(s.db ? [{ name: `db-${s.name}`, target: "DB_PASSWORD" }] : []), ...(c.services?.[s.name]?.secrets ?? []).map((n) => ({ name: n, target: up(n) }))];
+  for (const [k, v] of Object.entries(s.environment).sort(([a], [b]) => (a < b ? -1 : 1))) { const m = SECRET_VALUE.exec(v); if (m) out.push({ name: m[1]!, target: k }); }
+  if (t.redis) for (const v of s.redisVariables) out.push({ name: "redis-url", target: v });
+  return out;
 }
+const SECRET_VALUE = /^secret:\/\/([a-z][a-z0-9]*(?:-[a-z0-9]+)*)$/;
+/** The address of the Redis container as a client container sees it; the password comes from the secret redis-password. */
+export const redisContainerUrl = (password: string): string => `redis://default:${password}@redis:6379/0`;
 
 export function renderCompose(t: Topology, c: InfraContract, mode: "stack" | "dependencies" = "stack"): string {
   const dev = t.kind === "development";
@@ -170,7 +194,7 @@ export function renderCompose(t: Topology, c: InfraContract, mode: "stack" | "de
   };
   const ca = t.tlsSource === "pso-dev-ca" ? `./${paths.ca(t.env)}/ca.crt` : `${t.decl.tls!.dir!.replace(/\/+$/, "")}/ca.crt`;
   const idp = t.identity;
-  const jwtEnv = (): Record<string, string> => !idp ? {} : {
+  const jwtEnv = (s: ResolvedService): Record<string, string> => !idp || s.authentication === "application" ? {} : {
     PSO_JWT_ISSUER: idp.issuer, PSO_JWT_AUDIENCE: idp.audience, PSO_JWT_JWKS_URI: idp.jwksContainer, PSO_JWT_ALGORITHMS: idp.algorithms,
     // the keys are fetched from the provider's internal name, which differs from the issuer's public host: that binding is declared, never implied
     PSO_JWT_JWKS_TRUSTED_HOSTS: jwksTrusted(idp.issuer, idp.jwksContainer),
@@ -215,10 +239,39 @@ export function renderCompose(t: Topology, c: InfraContract, mode: "stack" | "de
       deploy: lim("keycloak"), logging, security_opt: ["no-new-privileges:true"],
     };
   }
+  if (idp?.provider === "pso-dev") {
+    services["idp"] = {
+      image: t.images.nginx, restart: "unless-stopped", user: runAs("101:101"),
+      volumes: [`./${paths.nginx(t.env, "idp")}:/etc/nginx/conf.d/default.conf:ro`, `${tlsSourceDir(t, "idp")}:${CONTAINER_TLS}:ro`, `./${paths.identity(t.env)}/jwks.json:/run/pso/identity/jwks.json:ro`],
+      tmpfs: ["/var/cache/nginx:mode=1777", "/var/run:mode=1777", "/tmp:mode=1777"],
+      healthcheck: { test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/health | grep -q keys || exit 1"], interval: "5s", timeout: "3s", retries: 12 },
+      networks: { internal: {}, ...(deps ? {} : { edge: {} }) }, ...(deps ? { ports: [`127.0.0.1:${t.httpsPort}:8443`] } : {}),
+      deploy: lim("nginx"), logging, ...hardening,
+    };
+  }
+  if (t.redis?.provider === "container") {
+    addSecret("redis-password");
+    if (t.redis.persistence) volumes["redis-data"] = {};
+    // the password is read from its secret file at start and handed to redis-server on standard input: it is never in this file, in
+    // the container's command line or in its environment
+    const conf = ["bind 0.0.0.0", "port 6379", "protected-mode yes", "requirepass $(cat /run/secrets/REDIS_PASSWORD)", ...(t.redis.persistence ? ["appendonly yes", "dir /data"] : ["appendonly no", "save \"\""])];
+    services["redis"] = {
+      image: t.images.redis, restart: "unless-stopped", user: runAs("999:1000"),
+      // the configuration (with the password) is written to the container's memory-only /tmp, readable by its user only
+      entrypoint: ["/bin/sh", "-c", `set -eu; umask 077; printf '%s\\n' ${conf.map((l) => `"${l.replace(/"/g, '\\"')}"`).join(" ")} > /tmp/redis.conf; exec redis-server /tmp/redis.conf`],
+      secrets: [{ source: "redis-password", target: "REDIS_PASSWORD" }],
+      ...(t.redis.persistence ? { volumes: ["redis-data:/data"] } : {}), tmpfs: ["/tmp"],
+      healthcheck: { test: ["CMD-SHELL", "REDISCLI_AUTH=\"$(cat /run/secrets/REDIS_PASSWORD)\" redis-cli -p 6379 ping | grep -q PONG"], interval: "5s", timeout: "3s", retries: 20 },
+      networks: ["internal"], ...(deps ? { ports: [`127.0.0.1:${t.redis.port}:6379`] } : {}),
+      deploy: lim("redis", t.redis.resources), logging, ...hardening,
+    };
+  }
   if (!deps) {
     for (const s of t.services) {
       const isOrch = s.role === "orchestrator";
-      const env: Record<string, string> = { PSO_ENV: psoEnv, PORT: String(s.port), HOST: "0.0.0.0", ...jwtEnv() };
+      const env: Record<string, string> = { PSO_ENV: psoEnv, PORT: String(s.port), HOST: "0.0.0.0", ...jwtEnv(s) };
+      // the application's own plain variables; secret:// values become mounted files (below)
+      for (const [k, v] of Object.entries(s.environment).sort(([a], [b]) => (a < b ? -1 : 1))) if (!SECRET_VALUE.test(v)) env[k] = v;
       const vols = [`${tlsSourceDir(t, s.name)}:${CONTAINER_TLS}:ro`];
       if (isOrch) {
         Object.assign(env, { PSO_HTTP_TLS_CERT_FILE: `${CONTAINER_TLS}/tls.crt`, PSO_HTTP_TLS_KEY_FILE: `${CONTAINER_TLS}/tls.key`, PSO_SHUTDOWN_GRACE_MS: "5000" });
@@ -238,26 +291,34 @@ export function renderCompose(t: Topology, c: InfraContract, mode: "stack" | "de
       }
       const sec = secretsOf(t, c, s);
       for (const x of sec) addSecret(x.name);
-      // Spring reads the mounted secret files as configuration properties (configtree): the value never becomes an environment variable
+      // Spring reads the mounted secret files as configuration properties (configtree): the value never becomes an environment variable.
+      // A Node service reads the files it is told about into its own variables when it starts (PSO_SECRET_FILES, @pso/http).
       if (sec.length && s.runtime === "spring-boot") env["SPRING_CONFIG_IMPORT"] = "optional:configtree:/run/secrets/";
-      const health = isOrch
-        ? ["CMD", "node", "-e", `require('https').get({host:'127.0.0.1',port:${s.port},path:'/health/ready',ca:require('fs').readFileSync('${CONTAINER_TLS}/ca.crt'),servername:'${s.name}'},r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))`]
-        : ["CMD-SHELL", `curl -fsS --cacert ${CONTAINER_TLS}/ca.crt ${s.mtls ? `--cert ${CONTAINER_TLS}/tls.crt --key ${CONTAINER_TLS}/tls.key ` : ""}--resolve ${s.name}:${s.port}:127.0.0.1 https://${s.name}:${s.port}/actuator/health >/dev/null || exit 1`];
+      if (sec.length && s.runtime === "node") env["PSO_SECRET_FILES"] = [...new Set(sec.map((x) => x.target))].sort().join(",");
+      const healthPath = s.decl.health ?? (isOrch ? "/health/ready" : "/actuator/health");
+      const health = isOrch || s.runtime === "node"
+        ? ["CMD", "node", "-e", `require('https').get({host:'127.0.0.1',port:${s.port},path:'${healthPath}',ca:require('fs').readFileSync('${CONTAINER_TLS}/ca.crt'),servername:'${s.name}'},r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))`]
+        : ["CMD-SHELL", `curl -fsS --cacert ${CONTAINER_TLS}/ca.crt ${s.mtls ? `--cert ${CONTAINER_TLS}/tls.crt --key ${CONTAINER_TLS}/tls.key ` : ""}--resolve ${s.name}:${s.port}:127.0.0.1 https://${s.name}:${s.port}${healthPath} >/dev/null || exit 1`];
       const dependsOn: Record<string, Y> = {};
       for (const d of s.dependsOn) dependsOn[d] = { condition: "service_healthy" };
       if (s.db) dependsOn[`${s.name}-db`] = { condition: "service_healthy" };
       if (isOrch) for (const u of t.services.filter((x) => x.role !== "orchestrator")) dependsOn[u.name] = { condition: "service_healthy" };
-      if (idp?.provider === "keycloak") dependsOn["idp"] = { condition: "service_healthy" };
+      // the key server needs nothing to start; a service that validates tokens itself (authentication "application") does not wait for it
+      if (managedIdentity(t) && s.authentication === "infrastructure") dependsOn["idp"] = { condition: "service_healthy" };
+      if (t.redis?.provider === "container" && s.redisVariables.length) dependsOn["redis"] = { condition: "service_healthy" };
+      const named = Object.entries(s.volumes).sort(([a], [b]) => (a < b ? -1 : 1));
+      for (const [v] of named) volumes[`${s.name}-${v}`] = {};
+      vols.push(...named.map(([v, target]) => `${s.name}-${v}:${target}`));
       services[s.name] = {
         build: { context: `./${s.decl.path}` }, image: `${t.project}-${s.name}:${t.env}`, restart: "unless-stopped",
         user: runAs(isOrch || s.runtime === "node" ? "1000:1000" : "10001:10001"),
         environment: env,
         ...(sec.length ? { secrets: sec.map((x) => ({ source: x.name, target: x.target })) } : {}),
-        volumes: vols, tmpfs: ["/tmp"], healthcheck: { test: health, interval: "10s", timeout: "5s", retries: 12, start_period: s.runtime === "spring-boot" ? "60s" : "15s" },
+        volumes: vols, tmpfs: ["/tmp"], healthcheck: { test: health, interval: "10s", timeout: "5s", retries: 12, start_period: s.startPeriod ?? (s.runtime === "spring-boot" ? "60s" : "15s") },
         ...(Object.keys(dependsOn).length ? { depends_on: dependsOn } : {}),
         networks: isOrch ? ["internal", "edge"] : ["internal"],
         ...(dev && t.decl.publishServices === true ? { ports: [`127.0.0.1:${s.port}:${s.port}`] } : {}),
-        stop_grace_period: "40s", deploy: lim(s.runtime, c.services?.[s.name]?.resources), logging, ...hardening,
+        stop_grace_period: "40s", deploy: { ...(s.replicas > 1 ? { replicas: s.replicas } : {}), ...lim(s.runtime, c.services?.[s.name]?.resources) }, logging, ...hardening,
       };
     }
     for (const f of t.frontends) {
@@ -276,10 +337,10 @@ export function renderCompose(t: Topology, c: InfraContract, mode: "stack" | "de
     const edgeDeps: Record<string, Y> = {};
     for (const f of t.frontends) edgeDeps[f.name] = { condition: "service_healthy" };
     if (t.orchestrator) edgeDeps[t.orchestrator.name] = { condition: "service_healthy" };
-    if (idp?.provider === "keycloak") edgeDeps["idp"] = { condition: "service_healthy" };
+    if (managedIdentity(t)) edgeDeps["idp"] = { condition: "service_healthy" };
     services["edge"] = {
       image: t.images.nginx, restart: "unless-stopped", user: runAs("101:101"),
-      volumes: [`./${paths.nginx(t.env, "edge")}:/etc/nginx/conf.d/default.conf:ro`, `${tlsSourceDir(t, "edge")}:${CONTAINER_TLS}:ro`, ...(idp?.provider === "pso-dev" ? [`./${paths.identity(t.env)}/jwks.json:/run/pso/identity/jwks.json:ro`] : [])],
+      volumes: [`./${paths.nginx(t.env, "edge")}:/etc/nginx/conf.d/default.conf:ro`, `${tlsSourceDir(t, "edge")}:${CONTAINER_TLS}:ro`],
       tmpfs: ["/var/cache/nginx:mode=1777", "/var/run:mode=1777", "/tmp:mode=1777"],
       ports: [dev ? `127.0.0.1:${t.httpsPort}:8443` : `${t.httpsPort}:8443`],
       healthcheck: { test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/health >/dev/null || exit 1"], interval: "5s", timeout: "3s", retries: 12 },
@@ -353,12 +414,15 @@ export function renderHosts(t: Topology, ws: string): string {
 /** Environment of a service started as a local process (`pso dev`) against this environment's dependencies. Secrets stay references. */
 export function renderProcessEnv(t: Topology, c: InfraContract, s: ResolvedService): string {
   const idp = t.identity;
-  const lines: string[] = [header("#", `Environment of ${s.name} as a local process in "${t.env}". Values secret://<name> are resolved by \`pso dev\` when it starts the process.`)];
-  if (idp) lines.push(`PSO_JWT_ISSUER=${idp.issuer}`, `PSO_JWT_AUDIENCE=${idp.audience}`, `PSO_JWT_JWKS_URI=${idp.jwksHost}`, `PSO_JWT_ALGORITHMS=${idp.algorithms}`,
+  const lines: string[] = [header("#", `Environment of ${s.name} as a local process in "${t.env}". Values secret://<name> (and \${secret://<name>} inside a value) are resolved by \`pso dev\` when it starts the process.`)];
+  if (idp && s.authentication === "application") lines.push(`# authentication: configured by the application (pso.infra.json services.${s.name}.authentication); no identity setting is given here`);
+  if (idp && s.authentication === "infrastructure") lines.push(`PSO_JWT_ISSUER=${idp.issuer}`, `PSO_JWT_AUDIENCE=${idp.audience}`, `PSO_JWT_JWKS_URI=${idp.jwksHost}`, `PSO_JWT_ALGORITHMS=${idp.algorithms}`,
     ...(jwksTrusted(idp.issuer, idp.jwksHost) ? [`PSO_JWT_JWKS_TRUSTED_HOSTS=${jwksTrusted(idp.issuer, idp.jwksHost)}`] : []),
     ...(idp.privateHostsHost.length ? [`PSO_JWT_JWKS_PRIVATE_HOSTS=${idp.privateHostsHost.join(",")}`, `PSO_SECURITY_JWT_PRIVATE_HOSTS=${idp.privateHostsHost.join(",")}`] : []),
     ...(idp.provider !== "external" && t.tlsSource === "pso-dev-ca" ? [`PSO_JWT_JWKS_CA_FILE=${paths.ca(t.env)}/ca.crt`, `PSO_SECURITY_JWT_CA_FILE=${paths.ca(t.env)}/ca.crt`] : []));
   if (s.db) lines.push(`DB_URL=jdbc:postgresql://127.0.0.1:${dbPort(t, s.name)}/${dbName(s.name)}`, `DB_USER=${dbName(s.name)}`, `DB_PASSWORD=${secretRef(`db-${s.name}`)}`);
   for (const n of c.services?.[s.name]?.secrets ?? []) lines.push(`${up(n)}=${secretRef(n)}`);
+  if (t.redis) for (const v of s.redisVariables) lines.push(`${v}=${t.redis.provider === "container" ? `redis://default:\${${secretRef("redis-password")}}@127.0.0.1:${t.redis.port}/0` : secretRef("redis-url")}`);
+  for (const [k, v] of Object.entries(s.environment).sort(([a], [b]) => (a < b ? -1 : 1))) lines.push(`${k}=${v}`);
   return lines.join("\n") + "\n";
 }

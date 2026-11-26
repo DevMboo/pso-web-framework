@@ -156,7 +156,7 @@ A foreign file placed in the root is left alone (observed in an earlier installe
 ## 3. The Windows installer
 
 > [!NOTE]
-> The current release, PSO Web V2 `0.2.0-rc.6`, publishes its installer as an **experimental, Authenticode-unsigned** asset ([Downloads](/downloads/index)): an unencrypted developer distribution that bundles its private Node.js, needs no signer fingerprint, and installs silently only with the explicit acknowledgement `/VERYSILENT /SUPPRESSMSGBOXES /ACCEPTUNSIGNEDALPHA=1 /DIR=<folder>` (its `INSTALL.md`). Its Windows installation flow is not validated end to end; the portable ZIP is recommended. The encrypted, recipient-pinned flow below (`/SIGNER=`, Node.js on PATH) is the one of the historical `0.1.0-alpha.1` installer, kept as the reference for private encrypted releases.
+> The current release, PSO Web V2 `0.2.0-rc.7`, publishes its installer as an **experimental, Authenticode-unsigned** asset ([Downloads](/downloads/index)): an unencrypted developer distribution that bundles its private Node.js, needs no signer fingerprint, and installs silently only with the explicit acknowledgement `/VERYSILENT /SUPPRESSMSGBOXES /ACCEPTUNSIGNEDALPHA=1 /DIR=<folder>` (its `INSTALL.md`). Its Windows installation flow is not validated end to end; the portable ZIP is recommended. The encrypted, recipient-pinned flow below (`/SIGNER=`, Node.js on PATH) is the one of the historical `0.1.0-alpha.1` installer, kept as the reference for private encrypted releases.
 
 ```bash
 pso dist installer --platform windows --package pso.psopkg --bootstrap pso-bootstrap.mjs --trust keys/release.public.pem --name PSO-Web-<version>-win-x64 --out inst

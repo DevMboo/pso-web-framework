@@ -14,13 +14,13 @@ Only the current documentation version is published; `docs/versions.json` lists 
 ## An upgrade procedure
 
 1. **Commit** your current state so the upgrade is a reviewable diff.
-2. Update a portable installation with the trusted package of the new release (for rc.6: `pso update install --package <extracted-zip>\.pso-install\packages\0.2.0-rc.6.psopkg`, from the ZIP on [Downloads](/downloads/index)), or update and rebuild a framework checkout. Run `pso java:install` after changing releases if you use Spring services ([installation](/getting-started/installation)); the installed rc.6 CLI uses `com.pso:*:0.2.0-rc.6`, while this source checkout builds its own `0.1.0-SNAPSHOT` artifacts.
+2. Update a portable installation with the trusted package of the new release (for rc.7: `pso update install --package <extracted-zip>\.pso-install\packages\0.2.0-rc.7.psopkg`, from the ZIP on [Downloads](/downloads/index)), or update and rebuild a framework checkout. Run `pso java:install` after changing releases if you use Spring services ([installation](/getting-started/installation)); the installed rc.7 CLI uses `com.pso:*:0.2.0-rc.7`, while this source checkout builds its own `0.1.0-SNAPSHOT` artifacts.
 3. `pso validate` and `pso config:validate`: new rules show up as diagnostics, not as run-time surprises.
 4. Preview changes to generated files with the generators' `--dry-run`, e.g. `pso docker:init --dry-run`. A differing file is reported as a conflict and never overwritten silently.
 5. Apply what you want by hand or with `--force` for files you never edited; review the diff.
 6. Run `pso test` and your own checks, then a short smoke run (`pso dev --smoke`).
 
-An installed distribution keeps its previous verified package for `pso update rollback`. Rolling back the CLI does not automatically undo workspace migrations: back up or commit each workspace before `pso workspace:migrate --apply`, and use [structure:inspect](/architecture/structure-migration) before manually moving application files. The unsigned rc.6 installer is not an upgrade path.
+An installed distribution keeps its previous verified package for `pso update rollback`. Rolling back the CLI does not automatically undo workspace migrations: back up or commit each workspace before `pso workspace:migrate --apply`, and use [structure:inspect](/architecture/structure-migration) before manually moving application files. The unsigned rc.7 installer is not an upgrade path.
 
 ## What changed that generated projects may want to adopt
 
@@ -38,6 +38,16 @@ Nothing below changes the behavior of existing code without you opting in, excep
 | Ports | `pso create service --port <n>` | optional |
 | Configuration | `logging.level` is a schema key; `PSO_LOG_FORMAT`/`PSO_LOG_COLOR` are variables | none |
 | Telemetry | OTLP export defaults to protobuf; exporter packages were updated | see [observability](/devops/observability) |
+
+## Native infrastructure (0.2.0-rc.7)
+
+From rc.5 or rc.7, after updating the CLI and running `pso java:install`:
+
+1. Set `<pso.version>` of each Spring service to the new release.
+2. `pso infra:plan --env <env>` shows what the new release adds: the certificate and configuration of the pso-dev key server (`idp`), and updated compose, edge and process-environment files. `pso infra:apply --env <env>` applies it (a development `pso docker:up` does it first by itself).
+3. `pso docker:up --env <env> --vendor` (or `pso docker:build --vendor`): an outdated `vendor/maven` or `vendor/pso` is refreshed in place. Do not delete it by hand.
+4. Remove the workarounds rc.5 and rc.7 needed: starting the edge first (`docker:up --service edge --no-deps`), attaching a service to the edge network (`docker network connect`), Redis and broker containers in a compose file of your own, and scripts that removed `PSO_JWT_JWKS_URI` before `pso dev`. Declare what the application needs in `pso.infra.json` instead: `redis.clients`, `services.<name>.environment`, `replicas`, and `authentication: "application"` for a service that validates tokens with its own keys ([contract](/infrastructure/contract)).
+5. `pso dev:env --service <name>` shows where every variable of a local process comes from.
 
 ## Workspace layout (0.2.0-rc.5)
 

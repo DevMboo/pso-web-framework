@@ -92,7 +92,7 @@ DOWN           gw (redis): cannot connect to Redis (Error)  (exit 1)
 
 $ pso dispatch:doctor --service gw        # no broker URL in the environment
 static validation: no findings
-NOT-CONFIGURED gw (redis): invalid dispatch configuration:  (exit 0)
+NOT-CONFIGURED gw (redis): no URL resolves from the environment (REDIS_URL is not set)  (exit 0)
 ```
 
 `UP` proves the connection and the adapter's own probe; it does not prove events flow. `NOT-CONFIGURED` exits 0 on purpose (nothing is wrong yet); `DOWN` exits 1, so it can gate a deployment.

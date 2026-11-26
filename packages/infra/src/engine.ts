@@ -5,10 +5,10 @@ import { loadWorkspace, type WorkspaceConfig } from "@pso/core";
 import { INFRA_DIR, INFRA_FILE, InfraError, loadContract, pickEnvironment, type ContractIssue, type InfraContract } from "./contract.ts";
 import { abs, atomicWrite, cleanTemporaries, clearJournal, exposure, journalBegin, pendingJournal, protectFile, readText, sha256, withLock } from "./fsutil.ts";
 import { checkAuthority, checkLeaf, issueAuthority, issueLeaf } from "./pki.ts";
-import { MANAGED_MARK, RESERVED_NAMES, paths, renderCompose, renderEdge, renderFeiServer, renderHosts, renderProcessEnv, renderRealm } from "./render.ts";
+import { MANAGED_MARK, RESERVED_NAMES, paths, redisContainerUrl, renderCompose, renderEdge, renderFeiServer, renderHosts, renderIdpServer, renderProcessEnv, renderRealm } from "./render.ts";
 import { generateSecretValue, localSecretPath, lookupSecret, redact, rememberSecret } from "./secrets.ts";
 import { envState, readState, writeState, type InfraState } from "./state.ts";
-import { resolveTopology, type FrontendInfo, type Topology } from "./topology.ts";
+import { managedIdentity, resolveTopology, type FrontendInfo, type Topology } from "./topology.ts";
 
 /**
  * The PSO infrastructure engine.
@@ -42,7 +42,8 @@ export interface Resource {
   affects: string[];
   render?: () => string;
   cert?: { name: string; names: string[]; client?: boolean; ca: { cert: string; key?: string } };
-  secret?: { name: string; generate: boolean };
+  /** `derive`: the value is computed from other secrets (for example the Redis address from its password) and kept in step with them */
+  secret?: { name: string; generate: boolean; derive?: () => string | undefined };
 }
 export interface Inspection { status: Status; action: Action; reasons: string[]; warnings: string[]; facts: Record<string, string | number | boolean> }
 export interface PlannedResource extends Omit<Resource, "render" | "cert" | "secret">, Inspection {}
@@ -82,12 +83,12 @@ export function buildResources(m: InfraModel, t: Topology): Resource[] {
   cert("edge", ["edge", "localhost", ...t.publicHosts], `edge gateway: ${t.publicHosts.join(", ")}`, ["edge"]);
   for (const s of t.services) cert(s.name, [s.name, "localhost"], s.role === "orchestrator" ? `${s.name}: inbound TLS from the edge` : `${s.name}: TLS${s.mtls ? " (mutual: clients must present a certificate)" : ""}`, [s.name], s.mtls);
   if (t.orchestrator && t.services.some((s) => s.mtls)) cert(`${t.orchestrator.name}-client`, [t.orchestrator.name], `${t.orchestrator.name}: client identity for mutual TLS to ${t.services.filter((s) => s.mtls).map((s) => s.name).join(", ")}`, [t.orchestrator.name], true);
-  if (t.identity?.provider === "keycloak") cert("idp", ["idp", "localhost", "127.0.0.1", t.identity.host], `identity provider (${t.identity.host})`, ["idp"]);
+  if (managedIdentity(t)) cert("idp", ["idp", "localhost", "127.0.0.1", t.identity!.host], t.identity!.provider === "keycloak" ? `identity provider (${t.identity!.host})` : `key server of the pso-dev identity (${t.identity!.host})`, ["idp"]);
 
   // secrets: generated only in development and only for what PSO itself needs or the contract allows to generate
-  const secret = (name: string, description: string, generate: boolean, affects: string[]) => {
+  const secret = (name: string, description: string, generate: boolean, affects: string[], o: { derive?: () => string | undefined; dependsOn?: string[] } = {}) => {
     const local = t.secretProvider === "local";
-    out.push({ id: `secret:${name}`, kind: "secret", module: "secrets", owner: local ? "pso" : "external", description, dependsOn: [], files: local ? [{ path: localSecretPath(e, name), sensitive: true }] : [], affects, secret: { name, generate: local && dev && generate } });
+    out.push({ id: `secret:${name}`, kind: "secret", module: "secrets", owner: local ? "pso" : "external", description, dependsOn: o.dependsOn ?? [], files: local ? [{ path: localSecretPath(e, name), sensitive: true }] : [], affects, secret: { name, generate: local && dev && generate, ...(o.derive && local && dev ? { derive: o.derive } : {}) } });
   };
   for (const s of t.services.filter((x) => x.db)) secret(`db-${s.name}`, `password of ${s.name}'s database`, true, [s.name, `${s.name}-db`]);
   if (t.identity?.provider === "keycloak") {
@@ -95,13 +96,23 @@ export function buildResources(m: InfraModel, t: Topology): Resource[] {
     for (const u of t.identity.users) secret(`user-${u.username}`, `password of the development user "${u.username}"`, true, ["idp"]);
     if (dev) secret("idp-api-client", "client secret of the development API client (Studio)", true, ["idp"]);
   }
-  for (const [n, s] of Object.entries(m.contract.secrets ?? {})) secret(n, s.description ?? `declared secret "${n}"`, s.generate === "random", Object.entries(m.contract.services ?? {}).filter(([, x]) => x.secrets?.includes(n)).map(([k]) => k));
+  const usesSecret = (svc: Topology["services"][number], n: string) => (m.contract.services?.[svc.name]?.secrets ?? []).includes(n) || Object.values(svc.environment).includes(`secret://${n}`);
+  for (const [n, s] of Object.entries(m.contract.secrets ?? {})) secret(n, s.description ?? `declared secret "${n}"`, s.generate === "random", t.services.filter((x) => usesSecret(x, n)).map((x) => x.name));
+  if (t.redis) {
+    const clients = t.services.filter((s) => s.redisVariables.length).map((s) => s.name);
+    if (t.redis.provider === "container") secret("redis-password", "password of the environment's Redis (required by every client)", true, ["redis", ...clients]);
+    // what the client containers receive: the address with its credentials. Derived from redis-password for the Redis PSO runs; for an
+    // external Redis it is the operator's address, supplied like any other secret
+    secret("redis-url", t.redis.provider === "container" ? "address of the environment's Redis as the client containers use it (derived from redis-password)" : "address of the external Redis, with its credentials (supplied)", t.redis.provider === "container", clients,
+      t.redis.provider === "container" ? { dependsOn: ["secret:redis-password"], derive: () => { const pw = lookupSecret(m.root, e, t.secretProvider, "redis-password", t.decl.secrets?.dir).value; return pw ? redisContainerUrl(pw) : undefined; } } : {});
+  }
 
   if (t.identity?.provider === "keycloak") out.push({ id: "identity:realm", kind: "config", module: "identity", owner: "pso", description: `realm "${t.identity.realm}": roles (scopes), one OIDC client per FEI with its redirect URIs${dev ? ", development users" : ""}`, dependsOn: [], files: [{ path: `${paths.identity(e)}/realm.json`, sensitive: false }], affects: ["idp"], render: () => renderRealm(t) });
   if (t.identity?.provider === "pso-dev") {
     const keyFile = `${paths.identity(e)}/signing-key.pem`;
     out.push({ id: "identity:signing-key", kind: "signing-key", module: "identity", owner: "pso", description: "development token signing key (ES256)", dependsOn: [], files: [{ path: keyFile, sensitive: true }], affects: [] });
-    out.push({ id: "identity:jwks", kind: "config", module: "identity", owner: "pso", description: "public key set served by the edge", dependsOn: ["identity:signing-key"], files: [{ path: `${paths.identity(e)}/jwks.json`, sensitive: false }], affects: ["edge"], render: () => renderJwks(readText(abs(m.root, keyFile)) ?? "") });
+    out.push({ id: "identity:jwks", kind: "config", module: "identity", owner: "pso", description: "public key set served by the key server (idp)", dependsOn: ["identity:signing-key"], files: [{ path: `${paths.identity(e)}/jwks.json`, sensitive: false }], affects: ["idp"], render: () => renderJwks(readText(abs(m.root, keyFile)) ?? "") });
+    out.push({ id: "nginx:idp", kind: "config", module: "nginx", owner: "pso", description: "key server of the pso-dev identity: the public key set over TLS on the private network", dependsOn: [], files: [{ path: paths.nginx(e, "idp"), sensitive: false }], affects: ["idp"], render: () => renderIdpServer(t) });
   }
   out.push({ id: "nginx:edge", kind: "config", module: "nginx", owner: "pso", description: `edge routing: ${t.publicHosts.length} host(s)`, dependsOn: [], files: [{ path: paths.nginx(e, "edge"), sensitive: false }], affects: ["edge"], render: () => renderEdge(t) });
   for (const f of t.frontends) {
@@ -111,7 +122,7 @@ export function buildResources(m: InfraModel, t: Topology): Resource[] {
   }
   out.push({ id: "docker:compose", kind: "config", module: "docker", owner: "pso", description: "container topology (services, networks, volumes, secrets, health checks, limits)", dependsOn: [], files: [{ path: paths.compose(e), sensitive: false }], affects: [], render: () => renderCompose(t, m.contract, "stack") });
   if (dev) {
-    if (t.services.some((s) => s.db) || t.identity?.provider === "keycloak") out.push({ id: "docker:compose-deps", kind: "config", module: "docker", owner: "pso", description: "dependencies for local processes (databases, identity provider) on loopback", dependsOn: [], files: [{ path: paths.composeDeps(e), sensitive: false }], affects: [], render: () => renderCompose(t, m.contract, "dependencies") });
+    if (t.services.some((s) => s.db) || managedIdentity(t)) out.push({ id: "docker:compose-deps", kind: "config", module: "docker", owner: "pso", description: "dependencies for local processes (databases, identity provider) on loopback", dependsOn: [], files: [{ path: paths.composeDeps(e), sensitive: false }], affects: [], render: () => renderCompose(t, m.contract, "dependencies") });
     out.push({ id: "hosts", kind: "config", module: "hosts", owner: "pso", description: `proposed hosts entries: ${t.publicHosts.join(" ")}`, dependsOn: [], files: [{ path: paths.hosts(e), sensitive: false }], affects: [], render: () => renderHosts(t, m.ws.name) });
     for (const s of t.services) out.push({ id: `env:${s.name}`, kind: "config", module: "environment", owner: "pso", description: `environment of ${s.name} as a local process`, dependsOn: [], files: [{ path: paths.env(e, s.name), sensitive: false }], affects: [], render: () => renderProcessEnv(t, m.contract, s) });
   }
@@ -195,6 +206,8 @@ export function inspect(m: InfraModel, t: Topology, r: Resource, st: InfraState,
       }
       if (!l.present) { reasons.push("not set"); return res("missing", s.generate ? "create" : "supply"); }
       facts["length"] = l.value!.length;
+      if (s.derive && !authoritiesChanging) { const want = s.derive(); if (want !== undefined && want !== l.value) { reasons.push("the secret it is derived from changed"); return res("outdated", "update"); } }
+      if (s.derive && authoritiesChanging) { reasons.push("the secret it is derived from is created or replaced in this run"); return res("outdated", "update"); }
       const ex = exposure(fileAbs(m.root, r.files[0]!.path)); if (ex) { reasons.push(`file ${ex}`); return res("exposed", "protect"); }
       return res("ok", "none");
     }
@@ -322,8 +335,11 @@ export function apply(root: string, o: ApplyOptions = {}): ApplyResult {
           }
           case "secret": {
             if (i.action === "protect") { protectFile(fileAbs(root, r.files[0]!.path)); break; }
-            const v = generateSecretValue(); rememberSecret(v);
+            const v = r.secret!.derive ? r.secret!.derive() : generateSecretValue();
+            if (v === undefined) throw new InfraError(`${r.id}: the secret it is derived from is not available`, "PSO_INFRA_APPLY_FAILED", "Run the command again: the secrets are created in dependency order");
+            rememberSecret(v);
             write(r.files[0]!.path, v, true);
+            changing.add(r.id);
             break;
           }
           case "signing-key": {

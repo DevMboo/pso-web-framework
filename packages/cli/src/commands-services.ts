@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { discover, hasErrors, formatDiagnostic, validateWorkspaceShape, type ServiceDecl, type WorkspaceConfig } from "@pso/core";
 import { CliError } from "./fsx.ts";
 import { str } from "./args.ts";
-import { startDev, type DevOptions } from "./dev.ts";
+import { explainEnvironment, startDev, type DevOptions } from "./dev.ts";
 import { emit, requireWorkspace, saveWorkspace, kebabName, validateAll, type Command } from "./commands.ts";
 import { hasInfraContract } from "./commands-infra.ts";
 
@@ -69,7 +69,7 @@ export const SERVICE_COMMANDS: Record<string, Command> = {
         const p = preparedPlan(ctx, root);
         const t = p.topology;
         const wanted = new Set(only ?? config.services.map((s) => s.name));
-        const deps = [...t.services.filter((s) => s.db && wanted.has(s.name)).map((s) => `${s.name}-db`), ...(t.identity?.provider === "keycloak" ? ["idp"] : [])];
+        const deps = [...t.services.filter((s) => s.db && wanted.has(s.name)).map((s) => `${s.name}-db`), ...(infraMod.managedIdentity(t) ? ["idp"] : []), ...(t.redis?.provider === "container" && t.services.some((s) => wanted.has(s.name) && s.redisVariables.length) ? ["redis"] : [])];
         if (deps.length) {
           const d = infraMod.dockerReady(); if (!d.ok) throw new CliError(`--with-dependencies needs Docker: ${d.reason}`);
           const c = infraMod.composeTarget(root, t, "dependencies");
@@ -114,6 +114,28 @@ export const SERVICE_COMMANDS: Record<string, Command> = {
       });
       ctx.print("all services stopped");
       return 0;
+    },
+  },
+
+  "dev:env": {
+    usage: "pso dev:env [--service <name>] [--env <name>] [--json]",
+    summary: "Show where every variable of a service comes from when `pso dev` starts it (its files, the environment of pso dev, the workspace, the infrastructure environment) and which infrastructure settings are not applied and why. Names and sources only: no value is ever shown, secrets are only reported as resolved",
+    run(ctx) {
+      const { root, config } = requireWorkspace(ctx);
+      const svcFlag = str(ctx.flags["service"]);
+      if (svcFlag !== undefined && !config.services.some((s) => s.name === svcFlag)) throw new CliError(`Unknown service "${svcFlag}"`, `Known: ${config.services.map((s) => s.name).join(", ")}`);
+      const infra = hasInfraContract(root);
+      if (str(ctx.flags["env"]) !== undefined && !infra) throw new CliError("--env uses the infrastructure contract (pso.infra.json)");
+      const rows = config.services.filter((s) => !svcFlag || s.name === svcFlag).map((s) => explainEnvironment(root, s, process.env, infra ? str(ctx.flags["env"]) ?? "" : undefined));
+      const text = rows.flatMap((r) => [
+        `${r.service}${r.infrastructure ? `   (infrastructure environment "${r.infrastructure.env}": ${r.infrastructure.file})` : ""}`,
+        ...r.variables.map((v) => `  ${v.name.padEnd(34)} ${v.source}${v.secret ? "   [secret, resolved at start; value not shown]" : ""}`),
+        ...r.notApplied.map((x) => `  not applied from ${x.from}: ${x.names.join(", ")}\n    because ${x.reason}`),
+        ...(r.missingSecrets.length ? [`  MISSING secret(s): ${r.missingSecrets.join(", ")} (pso infra:apply)`] : []),
+        "",
+      ]);
+      emit(ctx, { services: rows }, text.join("\n").trimEnd());
+      return rows.some((r) => r.missingSecrets.length) ? 1 : 0;
     },
   },
 

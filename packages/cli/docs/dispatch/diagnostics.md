@@ -109,7 +109,7 @@ pso dispatch:doctor
 ```text evidence="verified"
 static validation: no findings
 
-NOT-CONFIGURED gw (redis): invalid dispatch configuration:
+NOT-CONFIGURED gw (redis): no URL resolves from the environment (REDIS_URL is not set)
 ```
 
 Turn dispatch on and give the address through the environment, then ask again. One run per provider, against its real broker:

@@ -4,7 +4,8 @@ import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, lstatSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { frameworkSpecs } from "../src/specs.ts";
-import { isMachineBound, machineBoundDeps, vendorFramework } from "../src/vendor.ts";
+import { isMachineBound, machineBoundDeps, vendorFramework, inspectNodeVendor } from "../src/vendor.ts";
+import { PSO_JAVA_VERSION } from "../src/specs.ts";
 import { pso, tmp, startNode, unusedPort } from "./helpers.ts";
 
 /**
@@ -77,7 +78,13 @@ test("docker:init --vendor: the project carries its framework packages, nothing 
   assert.deepEqual(json(join(gw, "package.json")).dependencies, {
     "@pso/core": `file:vendor/pso/pso-core-${version}.tgz`, "@pso/http": `file:vendor/pso/pso-http-${version}.tgz`, "@pso/security": `file:vendor/pso/pso-security-${version}.tgz`, "reflect-metadata": "^0.2.2",
   }, "framework packages are relative tarballs with the framework's own version; third-party specs are untouched");
-  assert.deepEqual(readdirSync(join(gw, "vendor", "pso")).sort(), [`pso-core-${version}.tgz`, `pso-http-${version}.tgz`, `pso-security-${version}.tgz`]);
+  assert.deepEqual(readdirSync(join(gw, "vendor", "pso")).sort(), [`pso-core-${version}.tgz`, `pso-http-${version}.tgz`, `pso-security-${version}.tgz`, "pso-vendor.json"]);
+  // the manifest names the framework release and the SHA-256 of every tarball (0.2.0 release candidates share the npm version 0.2.0)
+  const manifest = json(join(gw, "vendor", "pso", "pso-vendor.json")) as unknown as { kind: string; version: string; files: Record<string, string> };
+  assert.equal(manifest.kind, "npm");
+  assert.equal(manifest.version, PSO_JAVA_VERSION);
+  assert.deepEqual(Object.keys(manifest.files).sort(), [`pso-core-${version}.tgz`, `pso-http-${version}.tgz`, `pso-security-${version}.tgz`]);
+  assert.equal(inspectNodeVendor(gw).state, "current");
   assert.deepEqual(machineBoundDeps(gw), []);
   assert.ok(!/[A-Za-z]:[\\/]|\/home\/|\/Users\//.test(readFileSync(join(gw, "package.json"), "utf8")), "no absolute path is left in package.json");
   assert.match(readFileSync(join(gw, "Dockerfile"), "utf8"), /COPY package\*\.json \.\/\nCOPY vendor \.\/vendor\nRUN npm install/, "the image build copies the vendored packages before installing");

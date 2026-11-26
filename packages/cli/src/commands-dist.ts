@@ -245,7 +245,7 @@ function installer(ctx: Ctx): number {
   const signedUninstallerAbs = signedUninstallerDir ? resolve(ctx.cwd, signedUninstallerDir) : undefined;
   if (signedUninstallerAbs) mkdirSync(signedUninstallerAbs, { recursive: true });
   // version metadata of the installer, its uninstaller and self-copies: the same product name and version in every file (code-signing services
-  // enforce it). The numeric file version is major.minor.patch.0; the text versions carry the full label (0.2.0-rc.6).
+  // enforce it). The numeric file version is major.minor.patch.0; the text versions carry the full label (0.2.0-rc.7).
   const appPublisher = str(ctx.flags["app-publisher"]) ?? "DevMboo";
   if (!/^[A-Za-z0-9 .,&()_-]{2,80}$/.test(appPublisher)) throw new CliError("--app-publisher may contain letters, digits, space and . , & ( ) _ -");
   const numericVersion = `${(/^(\d+)\.(\d+)\.(\d+)/.exec(version) ?? ["", "0", "0", "0"]).slice(1).join(".")}.0`;

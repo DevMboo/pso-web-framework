@@ -32,8 +32,11 @@ try {
   ext = join(base, readdirSync(base)[0]);
   check("no Node.js on the test PATH", spawnSync(process.env.ComSpec, ["/d", "/c", "where", "node"], { env: { ...process.env, PATH: sysDirs().join(";") } }).status !== 0);
   let r = term(work, "--version"); const fromVersion = r.stdout.trim();
-  check("0.1.x is installed and runs", r.status === 0 && /0\.1\./.test(fromVersion), r.out);
+  // the starting release is the one the ZIP names (PSO-Web-<label>-win-x64-portable.zip): 0.1.x or an earlier 0.2.0 candidate. Its CLI
+  // reports the version without the release label (0.2.0-rc.6 reports 0.2.0)
+  const zipLabel = /PSO-Web-(.+?)-win-x64-portable\.zip$/i.exec(fromZip)?.[1];
   const fromLabel = state().current;
+  check(`the starting release ${zipLabel ?? "(unknown: the ZIP name does not carry it)"} is installed and runs`, r.status === 0 && !!zipLabel && fromLabel === zipLabel && fromVersion === zipLabel.replace(/-.*$/, ""), `${r.out} | installed ${fromLabel}`);
 
   // a user workspace created by 0.1.x, outside the installation
   const projects = join(work, "My Projects"); mkdirSync(projects, { recursive: true });

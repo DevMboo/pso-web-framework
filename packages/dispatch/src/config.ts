@@ -57,6 +57,7 @@ export function loadDispatchConfig(opts: { projectDir: string; source: string; e
   const env = opts.env ?? process.env;
   const environment = opts.environment ?? env["PSO_ENV"] ?? "development";
   const issues: ConfigIssue[] = [];
+  const envMissing: ConfigIssue[] = [];
   const layers: Layers = {};
   const base = readJson(join(opts.projectDir, "pso.config.json"), issues);
   if (base) layers.service = { source: "pso.config.json", values: base };
@@ -75,7 +76,8 @@ export function loadDispatchConfig(opts: { projectDir: string; source: string; e
       const m = /^\$\{env:([A-Za-z0-9_./-]+)\}$/.exec(x);
       if (!m) { if (/^\$\{/.test(x)) issues.push({ code: "PSO_DISPATCH_REF_UNSUPPORTED", key, message: "only ${env:NAME} references are supported here" }); return x; }
       const val = env[m[1]!];
-      if (val === undefined || val === "") { issues.push({ code: "PSO_DISPATCH_ENV_MISSING", key, message: `environment variable ${m[1]} (referenced here) is not set` }); return undefined; }
+      // reported only when Dispatch is enabled (below): a disabled Dispatch connects to nothing, so an address it would use cannot be missing
+      if (val === undefined || val === "") { if (!envMissing.some((i) => i.key === key)) envMissing.push({ code: "PSO_DISPATCH_ENV_MISSING", key, message: `environment variable ${m[1]} (referenced here) is not set` }); return undefined; }
       return val;
     };
     return Array.isArray(v) ? v.map(deref) : deref(v);
@@ -132,6 +134,7 @@ export function loadDispatchConfig(opts: { projectDir: string; source: string; e
   const user = get("dispatch.kafka.sasl.username"), pass = get("dispatch.kafka.sasl.password");
   if (mech && (!user || !pass)) issues.push({ code: "PSO_DISPATCH_MISSING", key: "dispatch.kafka.sasl", message: "SASL needs username and password (use ${env:...} references)" });
   if (mech && get("dispatch.kafka.ssl") !== true) issues.push({ code: "PSO_DISPATCH_INSECURE", key: "dispatch.kafka.ssl", message: "SASL credentials must travel over TLS: set dispatch.kafka.ssl to true" });
+  if (enabled) issues.push(...envMissing);
   if (issues.length) throw new DispatchConfigError(issues);
 
   return {

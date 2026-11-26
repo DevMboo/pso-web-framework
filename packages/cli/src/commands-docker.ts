@@ -10,7 +10,8 @@ import { emit, requireWorkspace, type Command, type Ctx } from "./commands.ts";
 import { DEVOPS_COMMANDS } from "./commands-devops.ts";
 import { INFRA_HOOKS, engine, hasInfraContract } from "./commands-infra.ts";
 import { dockerignore, nodeDockerfile, springDockerfile } from "./docker-templates.ts";
-import { MAVEN_VENDOR_DIR, VENDOR_DIR, machineBoundDeps, psoVersionOfPom, vendorFramework, vendorMaven } from "./vendor.ts";
+import { MAVEN_VENDOR_DIR, VENDOR_DIR, inspectMavenVendor, inspectNodeVendor, machineBoundDeps, psoVersionOfPom, vendorFramework, vendorMaven, type VendorInspection } from "./vendor.ts";
+import { PSO_JAVA_VERSION } from "./specs.ts";
 
 /**
  * The PSO container engine (0.2.0): Docker Engine and Compose run the containers; PSO generates the topology from the declarations
@@ -54,16 +55,33 @@ function prepareBuildContexts(ctx: Ctx, root: string, t: Topology, only: string[
     const dir = join(root, ...s.decl.path.split("/"));
     if (!existsSync(dir)) throw new CliError(`${s.name}: ${s.decl.path} does not exist`);
     const df = join(dir, "Dockerfile");
+    // a vendor directory is checked against the release the service needs (manifest: release and SHA-256 of every file) before any build:
+    // with --vendor an outdated, corrupt or unverified copy is refreshed in place (atomically, idempotently); without it the build stops with
+    // the reason instead of failing later inside Maven or npm with an unrelated message
+    const stale = (label: string, i: VendorInspection): never => {
+      throw new CliError(`${s.name}: ${label} is ${i.state} (${i.state === "corrupt" ? "PSO_VENDOR_CORRUPT" : "PSO_VENDOR_OUTDATED"}): ${i.reasons.join("; ")}`, `Re-run with --vendor: PSO replaces it with the ${i.wanted} artifacts (the current copy stays until the new one is complete and verified). Deleting the directory by hand is not needed`);
+    };
     if (s.runtime === "node") {
-      const vendored = existsSync(join(dir, ...VENDOR_DIR.split("/")));
+      const insp = inspectNodeVendor(dir);
+      const vendored = insp.state !== "absent";
       const bound = machineBoundDeps(dir);
       if (bound.length && !vendored && !vendor) throw new CliError(`${s.name}: ${bound.map(([n]) => n).join(", ")} resolve to a path on this machine and cannot be installed inside the image build`, "Re-run with --vendor (the packages are copied into the service as tarballs) or install them from your registry");
-      if (vendor && !vendored) { const v = vendorFramework(dir); notes.push(`vendored ${v.packages.length} framework package(s) into ${s.decl.path}/${VENDOR_DIR}`); }
+      if (vendor && (vendored || bound.length)) {
+        const v = vendorFramework(dir);
+        notes.push(v.refreshed === false ? `${s.decl.path}/${VENDOR_DIR}: framework packages ${PSO_JAVA_VERSION} are current (SHA-256 verified)` : insp.state === "absent" ? `vendored ${v.packages.length} framework package(s) ${PSO_JAVA_VERSION} into ${s.decl.path}/${VENDOR_DIR}` : `refreshed ${s.decl.path}/${VENDOR_DIR} (${insp.state}${insp.vendored.length ? `: ${insp.vendored.join(", ")}` : ""}) to the framework packages ${PSO_JAVA_VERSION}`);
+      } else if (vendor && !vendored) { /* nothing machine-bound: the packages come from a registry */ }
+      else if (insp.state === "outdated" || insp.state === "corrupt") stale(VENDOR_DIR, insp);
+      else if (insp.state === "unverified") notes.push(`warning: ${s.name}: ${insp.reasons.join("; ")}. Run with --vendor once to record it`);
       if (!existsSync(df)) { writeFileSync(df, nodeDockerfile(vendor || vendored).replace("\n", `\n${DOCKERFILE_MARK}\n`)); notes.push(`created ${s.decl.path}/Dockerfile`); }
     } else {
-      const vendored = existsSync(join(dir, ...MAVEN_VENDOR_DIR.split("/")));
+      const insp = inspectMavenVendor(dir);
+      const vendored = insp.state !== "absent";
       if (!vendored && psoVersionOfPom(dir) && !vendor) throw new CliError(`${s.name}: the com.pso artifacts exist only in this machine's Maven repository; the image build cannot resolve them`, "Re-run with --vendor (they are copied into the service), or publish them to a Maven repository the build can reach");
-      if (vendor && !vendored) { const v = vendorMaven(dir); notes.push(`vendored com.pso ${v.version} into ${s.decl.path}/${MAVEN_VENDOR_DIR}`); }
+      if (vendor && psoVersionOfPom(dir)) {
+        const v = vendorMaven(dir);
+        notes.push(v.refreshed === false ? `${s.decl.path}/${MAVEN_VENDOR_DIR}: com.pso ${v.version} is current (SHA-256 verified)` : insp.state === "absent" ? `vendored com.pso ${v.version} into ${s.decl.path}/${MAVEN_VENDOR_DIR}` : `refreshed ${s.decl.path}/${MAVEN_VENDOR_DIR} (${insp.state}${insp.vendored.length ? `: ${insp.vendored.join(", ")}` : ""}) to com.pso ${v.version}`);
+      } else if (insp.state === "outdated" || insp.state === "corrupt") stale(MAVEN_VENDOR_DIR, insp);
+      else if (insp.state === "unverified") notes.push(`warning: ${s.name}: ${insp.reasons.join("; ")}. Run with --vendor once to record it`);
       if (!existsSync(df)) { writeFileSync(df, springDockerfile(vendor || vendored).replace("\n", `\n${DOCKERFILE_MARK}\n`)); notes.push(`created ${s.decl.path}/Dockerfile`); }
     }
     if (!existsSync(join(dir, ".dockerignore"))) { writeFileSync(join(dir, ".dockerignore"), dockerignore()); notes.push(`created ${s.decl.path}/.dockerignore`); }
@@ -158,11 +176,12 @@ export const DOCKER_COMMANDS: Record<string, Command> = {
       const dev = t.kind === "development";
       const rows = startupOrder(t).map((n) => {
         const s = t.services.find((x) => x.name === n);
-        const kind = s ? (s.role === "orchestrator" ? "orchestrator" : "service") : n === "edge" ? "edge gateway" : n === "idp" ? "identity provider" : n.endsWith("-db") ? "database" : "frontend";
-        const image = s ? `${t.project}-${s.name}:${t.env} (built from ./${s.decl.path})` : n === "idp" ? t.images.keycloak : n.endsWith("-db") ? t.images.postgres : t.images.nginx;
-        const ports = n === "edge" ? [`${dev ? "127.0.0.1:" : ""}${t.httpsPort} -> 8443`] : s && dev ? [`127.0.0.1:${s.port}`] : [];
-        const secrets = s ? secretsOf(t, c, s).map((x) => x.name) : n.endsWith("-db") ? [`db-${n.slice(0, -3)}`] : n === "idp" ? ["idp-admin", ...t.identity!.users.map((u) => `user-${u.username}`)] : [];
-        return { name: n, kind, image, ports, secrets, volumes: n.endsWith("-db") ? [`${n}-data (persistent)`] : [], networks: s ? (s.role === "orchestrator" ? ["internal", "edge"] : ["internal"]) : n.endsWith("-db") ? ["internal"] : n === "idp" ? ["internal", "edge"] : ["edge"] };
+        const kind = s ? (s.role === "orchestrator" ? "orchestrator" : "service") : n === "edge" ? "edge gateway" : n === "idp" ? "identity provider" : n === "redis" ? "redis" : n.endsWith("-db") ? "database" : "frontend";
+        const image = s ? `${t.project}-${s.name}:${t.env} (built from ./${s.decl.path})${s.replicas > 1 ? ` x${s.replicas}` : ""}` : n === "idp" ? (t.identity?.provider === "keycloak" ? t.images.keycloak : `${t.images.nginx} (public keys of the pso-dev identity)`) : n === "redis" ? t.images.redis : n.endsWith("-db") ? t.images.postgres : t.images.nginx;
+        const ports = n === "edge" ? [`${dev ? "127.0.0.1:" : ""}${t.httpsPort} -> 8443`] : s && dev && t.decl.publishServices === true ? [`127.0.0.1:${s.port}`] : [];
+        const secrets = s ? [...new Set(secretsOf(t, c, s).map((x) => x.name))] : n.endsWith("-db") ? [`db-${n.slice(0, -3)}`] : n === "idp" && t.identity?.provider === "keycloak" ? ["idp-admin", ...t.identity.users.map((u) => `user-${u.username}`)] : n === "redis" ? ["redis-password"] : [];
+        const volumes = n.endsWith("-db") ? [`${n}-data (persistent)`] : n === "redis" && t.redis?.persistence ? ["redis-data (persistent)"] : s ? Object.keys(s.volumes).sort().map((v) => `${s.name}-${v} (persistent)`) : [];
+        return { name: n, kind, image, ports, secrets, volumes, networks: s ? (s.role === "orchestrator" ? ["internal", "edge"] : ["internal"]) : n.endsWith("-db") || n === "redis" ? ["internal"] : n === "idp" ? ["internal", "edge"] : ["edge"] };
       });
       const pending = p.resources.filter((r) => r.action !== "none");
       emit(ctx, { environment: t.env, project: t.project, compose: paths.compose(t.env), containers: rows, pendingInfrastructure: pending.map((r) => ({ id: r.id, action: r.action })) }, [

@@ -5,7 +5,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, write
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { psoJavaDir } from "../src/specs.ts";
-import { MAVEN_VENDOR_DIR, psoVersionOfPom, vendorMaven } from "../src/vendor.ts";
+import { MAVEN_VENDOR_DIR, inspectMavenVendor, psoVersionOfPom, vendorMaven } from "../src/vendor.ts";
 import { pso, tmp } from "./helpers.ts";
 
 /**
@@ -61,11 +61,17 @@ test("docker:init --vendor carries the com.pso artifacts in the service: only th
   assert.match(r.out, new RegExp(`vendored\\s+catalog: com\\.pso ${version.replace(/\./g, "\\.")} \\(\\d+ artifacts, \\d+ files\\) -> vendor/maven`));
   if (/-SNAPSHOT$/.test(version)) assert.match(r.out, /is a SNAPSHOT: right for development images\. For a release, build fixed-version artifacts/);
   const vendor = join(svc, ...MAVEN_VENDOR_DIR.split("/"), "com", "pso");
-  const artifacts = readdirSync(vendor).sort();
+  const artifacts = readdirSync(vendor).filter((a) => a !== "pso-vendor.json").sort();
+  // the manifest lives with the artifacts: the release they are and the SHA-256 of every file, so a later build can tell current from stale
+  const manifest = JSON.parse(readFileSync(join(vendor, "pso-vendor.json"), "utf8")) as { kind: string; version: string; files: Record<string, string> };
+  assert.equal(manifest.kind, "maven");
+  assert.equal(manifest.version, version);
+  assert.ok(Object.keys(manifest.files).some((f) => f.endsWith(`pso-spring-boot-starter-${version}.jar`)));
+  assert.equal(inspectMavenVendor(svc).state, "current");
   for (const needed of ["pso-bom", "pso-parent", "pso-spring-boot-starter", "pso-spring-boot-autoconfigure", "pso-dispatch-api"]) assert.ok(artifacts.includes(needed), needed);
   assert.ok(!artifacts.includes("pso-integration-tests"), "the framework's own integration tests are not a dependency of a service");
   for (const a of artifacts) assert.deepEqual(readdirSync(join(vendor, a)), [version], `${a}: exactly the version the pom builds against`);
-  const files = walk(vendor);
+  const files = walk(vendor).filter((f) => !f.endsWith("pso-vendor.json"));
   assert.ok(files.some((f) => f.endsWith(`pso-spring-boot-starter-${version}.jar`)));
   assert.deepEqual(files.filter((f) => /_remote\.repositories$|\.lastUpdated$|resolver-status\.properties$/.test(f)), [], "bookkeeping of this machine's repository is not copied");
   for (const f of files.filter((x) => x.endsWith(".pom"))) assert.ok(!/(^|[^A-Za-z])[A-Za-z]:[\\/](?!\/)|\/home\/|\/Users\//.test(readFileSync(f, "utf8")), `${f} contains no path of this machine`);
@@ -76,7 +82,7 @@ test("docker:init --vendor carries the com.pso artifacts in the service: only th
   const before = files.length;
   const again = await pso(root, "docker:init", "--vendor", "--force");
   assert.equal(again.code, 0);
-  assert.equal(walk(vendor).length, before);
+  assert.equal(walk(vendor).filter((f) => !f.endsWith("pso-vendor.json")).length, before);
   assert.equal((await pso(root, "docker:init", "--force")).code, 0);
   assert.match(readFileSync(join(svc, "Dockerfile"), "utf8"), /COPY vendor\/maven/);
 

@@ -3,7 +3,7 @@ title: The infrastructure contract and the .infra directory
 description: Every member of pso.infra.json, the defaults PSO derives, the validation rules, and the layout and ownership of the managed .infra directory.
 order: 2
 status: implemented
-keywords: [pso.infra.json, contract, environments, hosts, tls, secrets, identity, keycloak, mtls, .infra, state.json]
+keywords: [pso.infra.json, contract, environments, hosts, tls, secrets, identity, keycloak, mtls, redis, environment variables, authentication, volumes, replicas, .infra, state.json]
 related: [infrastructure/overview, infrastructure/resource-lifecycle, infrastructure/hosts-and-environments, infrastructure/security-and-certificates]
 ---
 `pso.infra.json` sits next to `pso.workspace.json`. It is optional: without it PSO uses one local development environment (`local`, domain `pso.localhost`, runtime `process`, development TLS and local secrets). `pso infra:init` writes a starting contract derived from the workspace.
@@ -54,8 +54,37 @@ This is the contract of the reference workspace (`fixtures/pso-reference`), vali
 | `api.host` | host label of the API (the orchestrator through the edge) | `api` |
 | `frontends.<fei>` | `host` label, `basePath` (`/admin/`), runtime sign-in `auth` (`oidc`, `dev-token`, `none`), OIDC `clientId` | `<fei without fei->`, `/`, `oidc` when an identity provider exists, the FEI name |
 | `services.<name>` | `mtls: true` (the orchestrator must present a client certificate), `resources` (`memory`, `cpus`), `secrets` (declared secret names mounted as files) | - |
+| `services.<name>.environment` | the application's own variables for that service: a plain value, or `secret://<declared secret>` (mounted as a file in a container, resolved by `pso dev` for a process; never written in a generated file) | - |
+| `services.<name>.authentication` | `infrastructure` (the service validates tokens of the environment's identity provider, configured by PSO) or `application` (the application configures token validation itself; PSO gives this service no `PSO_JWT_*` setting) | `infrastructure` |
+| `services.<name>.volumes` | persistent named volumes: `{ "uploads": "/var/lib/app/uploads" }` becomes the volume `<service>-uploads`, kept by `pso docker:down` | - |
+| `services.<name>.replicas` | containers of the service in the docker runtime; the edge balances the orchestrator's instances | `1` |
+| `services.<name>.healthcheck.startPeriod` | how long a slow start is tolerated before failed health checks count (`"90s"`) | `60s` Spring, `15s` Node |
+| `environments.<name>.services.<service>` | what one environment changes for one service: `authentication`, `environment` (merged over the workspace-wide variables), `replicas` | - |
+| `redis.clients` | the services that use Redis, as a list (each gets `REDIS_URL`) or `{ "<service>": ["REDIS_URL", "PSO_CHANNELS_REDIS_URL"] }` | no Redis |
+| `redis.persistence`, `redis.resources` | append-only persistence in the volume `redis-data`; container limits | `true`; `256m`, `0.5` |
+| `environments.<name>.redis` | `provider`: `container` (PSO runs it), `external` (the address is the supplied secret `redis-url`) or `none`; `port`: loopback port of the dependencies stack for `pso dev` | `container`, `6379` |
 | `secrets.<name>` | declared application secrets: `description`, `generate: "random"` (development only) | - |
-| `docker` | Compose `project` name, `logs` (`maxSize`, `maxFile`), default `resources`, `images` (`nginx`, `postgres`, `keycloak`) | `<workspace>-<env>`, `10m`/3 |
+| `docker` | Compose `project` name, `logs` (`maxSize`, `maxFile`), default `resources`, `images` (`nginx`, `postgres`, `keycloak`, `redis`) | `<workspace>-<env>`, `10m`/3 |
+
+### Redis, application settings and authentication
+
+Redis is provisioned only where the workspace declares it. A minimal declaration for an orchestrator that uses PSO Dispatch and the Redis bus of PSO Channels, and a Spring service that publishes through the transactional outbox:
+
+```json
+{
+  "redis": { "clients": { "gateway": ["REDIS_URL", "PSO_CHANNELS_REDIS_URL"], "catalog": ["REDIS_URL"] } },
+  "secrets": { "channels-bus-secret": { "generate": "random" } },
+  "services": {
+    "gateway": { "environment": { "PSO_DISPATCH_ENABLED": "true", "PSO_CHANNELS_BUS": "redis", "PSO_CHANNELS_BUS_SECRET": "secret://channels-bus-secret" } },
+    "catalog": { "environment": { "PSO_DISPATCH_ENABLED": "true" } }
+  },
+  "environments": { "local": { "kind": "development", "domain": "pso.localhost", "runtime": "docker", "services": { "gateway": { "replicas": 2 } } } }
+}
+```
+
+The Redis container runs on the private network only, requires the password `redis-password` (generated in development, supplied elsewhere), keeps its data in the volume `redis-data` and is health-checked; every client waits for it. Each client receives the address with its credentials, the secret `redis-url`, in the variables it names. In a container that is a mounted file (`/run/secrets/<VARIABLE>`): a Spring service reads it as the property of that name (`${REDIS_URL}`), a Node service reads the files listed in `PSO_SECRET_FILES` into its variables when it starts. For a local process, `pso dev` resolves the address against the Redis of `pso dev --with-dependencies`.
+
+`authentication: "application"` is for a service that validates tokens with keys of its own (for example a product that issues its own tokens): PSO then gives that service no identity setting, in containers and in processes, so the infrastructure's key source can never meet the application's. The application sets its own `PSO_JWT_*` variables, in `environment` or in the environment of `pso dev`.
 
 ## Rules the contract enforces
 
@@ -66,7 +95,10 @@ They are errors, not warnings, because each one would produce an environment tha
 - `PSO_INFRA_IDENTITY_DEV`: the `pso-dev` identity cannot serve a production environment. `PSO_INFRA_DEV_TOKEN_PRODUCTION`: `dev-token` sign-in is refused in production.
 - `PSO_INFRA_HOST_CONFLICT`: two shells on one host with overlapping base paths (a shell at `/` would swallow `/admin/`), or a shell on the API's or the identity provider's host.
 - `PSO_INFRA_UNKNOWN_SERVICE`, `PSO_INFRA_UNKNOWN_FRONTEND`, `PSO_INFRA_UNKNOWN_SECRET`: the contract names something the workspace does not declare.
-- `PSO_INFRA_RESERVED_NAME`: a service named `edge`, `idp`, `*-db` or `*-client` would collide with the generated topology.
+- `PSO_INFRA_RESERVED_NAME`: a service named `edge`, `idp`, `redis`, `*-db` or `*-client` would collide with the generated topology.
+- `PSO_INFRA_ENV_RESERVED`: `environment` (or `redis.clients`) names a variable PSO manages (`PORT`, `HOST`, `PSO_UPSTREAM_*`, `PSO_HTTP_TLS_*`, `SERVER_SSL_*`, `DB_URL`, `SPRING_CONFIG_IMPORT`, `PSO_SECRET_FILES`, ...), or an identity setting (`PSO_JWT_*`) of a service whose authentication is the infrastructure's. A typo in the contract can never switch TLS off or replace the identity provider.
+- `PSO_INFRA_SECRET_IN_CONTRACT` also covers `environment`: a variable named like a credential (`*_PASSWORD`, `*_SECRET`, `*_TOKEN`, `*_API_KEY`, ...) with a plain value, a private key, a JWT or a URL with credentials. Declare a secret and write `secret://<name>`.
+- `PSO_INFRA_REPLICAS`: several replicas in an environment that publishes every service on its own host port.
 
 ## The `.infra` directory
 

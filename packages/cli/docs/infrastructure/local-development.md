@@ -23,6 +23,10 @@ Ready:
   catalog            http://127.0.0.1:8091      READY/UP
 ```
 
+With the pso-dev identity the dependencies stack also runs its key server on the environment's HTTPS port, and Redis (when declared) on `127.0.0.1:6379` (`environments.<env>.redis.port`): the address with its password is resolved into the process when it starts.
+
+**Which settings a process gets, and from where.** A service's own files and the environment of `pso dev` always win; the infrastructure environment fills only what they leave unset. The identity settings (`PSO_JWT_*`, `PSO_SECURITY_JWT_*`) are one group: when the process already selects its own key source (`PSO_JWT_JWKS_URI` or `PSO_JWT_PUBLIC_KEY_FILE`), none of the infrastructure's identity settings are added, so a public key file of the application never meets the JWKS address of the environment (before 0.2.0-rc.7 they were mixed and the security runtime refused to start with `PSO_SEC_KEY_CONFLICT`). A conflict the application creates itself is still refused. To decide it in the contract instead, declare `services.<name>.authentication: "application"` (in one environment: `environments.<env>.services.<name>.authentication`). `pso dev:env --service <name>` prints every variable with its source and the settings that were not applied and why; no value is ever printed.
+
 `pso dev --docker` is `pso docker:up` followed by waiting for Ctrl+C, which stops the containers and keeps the data volumes. `--service` and `--with-dependencies` without a contract are refused with the hint to run `pso infra:init`: a 0.1 workspace keeps behaving as before.
 
 The development servers of shells (`pso frontend:dev`, or `--fei` above) use `dev-token` sign-in by default; the container stack uses real OpenID Connect through the environment's identity provider. `pso frontend:dev --fei <name>` starts one shell and the microfrontends it mounts.

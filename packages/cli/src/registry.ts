@@ -36,7 +36,7 @@ import { HOST_COMMANDS } from "./commands-host.ts";
  */
 export const MAX_ARGS: Readonly<Record<string, number>> = {
   "ai:context": 0, "ai:init": 0, "build": 0, "channels:contracts": 0, "channels:enable": 0, "channels:validate": 0, "config:list": 0, "config:show": 0,
-  "config:validate": 0, "create": 2, "database:enable": 1, "deploy": 0, "deploy:init": 0, "deploy:plan": 0, "deploy:validate": 0, "dev": 0,
+  "config:validate": 0, "create": 2, "database:enable": 1, "deploy": 0, "deploy:init": 0, "deploy:plan": 0, "deploy:validate": 0, "dev": 0, "dev:env": 0,
   "dispatch:consumers": 0, "dispatch:doctor": 0, "dispatch:events": 0, "dispatch:graph": 0, "dispatch:inspect": 0, "dispatch:install": 1, "dispatch:lock": 0,
   "dispatch:outbox": 0, "dispatch:providers": 0, "dispatch:remove": 0, "dispatch:validate": 0, "dist": 2, "docker:build": 0, "docker:init": 0, "docs": 0,
   "doctor": 0, "graph": 0, "init": 0, "inspect": 0, "install:react": 1, "integrity": 1, "java:install": 0, "lint": 0,

@@ -61,8 +61,8 @@ test("dispatch diagnostics page: declarations, lock, and each error are what the
 
   // the doctor: not configured is never reported as up
   const nc = await pso(ws, "dispatch:doctor");
-  assert.match(nc.out, /NOT-CONFIGURED gw \(redis\): invalid dispatch configuration:/);
-  assert.ok(page.includes("NOT-CONFIGURED gw (redis): invalid dispatch configuration:"));
+  assert.match(nc.out, /NOT-CONFIGURED gw \(redis\): no URL resolves from the environment \(REDIS_URL is not set\)/);
+  assert.ok(page.includes("NOT-CONFIGURED gw (redis): no URL resolves from the environment (REDIS_URL is not set)"));
   const prev = { ...process.env };
   try {
     process.env["PSO_DISPATCH_ENABLED"] = "true"; process.env["REDIS_URL"] = "redis://127.0.0.1:1";

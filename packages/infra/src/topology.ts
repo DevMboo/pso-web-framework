@@ -1,5 +1,5 @@
 import { servicePrefix, type ServiceDecl, type WorkspaceConfig } from "@pso/core";
-import { DEFAULT_IMAGES, InfraError, runtimeOf, secretProviderOf, tlsSourceOf, type EnvironmentDecl, type InfraContract, type RuntimeMode } from "./contract.ts";
+import { DEFAULT_IMAGES, InfraError, runtimeOf, secretProviderOf, tlsSourceOf, type AuthenticationSource, type EnvironmentDecl, type InfraContract, type RedisProvider, type ResourceLimits, type RuntimeMode } from "./contract.ts";
 
 /** What the infrastructure needs to know about one FEI (read statically from its FEI.pso.ts by the caller). */
 export interface FrontendInfo {
@@ -46,6 +46,25 @@ export interface ResolvedService {
   /** how processes on this machine reach it */
   hostUrl: string;
   decl: ServiceDecl;
+  /** who configures the validation of access tokens: the environment's identity provider (PSO) or the application */
+  authentication: AuthenticationSource;
+  /** the application's own variables in this environment (workspace-wide, then this environment's); values may be secret:// references */
+  environment: Record<string, string>;
+  /** persistent named volumes: name -> mount point */
+  volumes: Record<string, string>;
+  replicas: number;
+  startPeriod?: string;
+  /** the variables that receive the Redis address (empty: this service is not a Redis client) */
+  redisVariables: string[];
+}
+
+export interface ResolvedRedis {
+  provider: Exclude<RedisProvider, "none">;
+  persistence: boolean;
+  /** loopback port of the dependencies stack (process mode) */
+  port: number;
+  clients: string[];
+  resources?: ResourceLimits;
 }
 
 export interface ResolvedIdentity {
@@ -86,7 +105,9 @@ export interface Topology {
   identity?: ResolvedIdentity;
   /** every public host name the edge gateway answers for */
   publicHosts: string[];
-  images: { nginx: string; postgres: string; keycloak: string };
+  images: { nginx: string; postgres: string; keycloak: string; redis: string };
+  /** Redis of this environment, when the workspace declares it and the environment does not switch it off */
+  redis?: ResolvedRedis;
   logs: { maxSize: string; maxFile: number };
 }
 
@@ -103,9 +124,13 @@ export function resolveTopology(ws: WorkspaceConfig, c: InfraContract, envName: 
   api.origin = origin(api.host);
 
   const orch = ws.services.find((s) => s.role === "orchestrator");
+  // Redis is provisioned where it is declared and the environment does not switch it off; an environment can point at its own Redis
+  const redisProvider = c.redis ? decl.redis?.provider ?? "container" : "none";
+  const redisClients: Record<string, string[]> = !c.redis ? {} : Array.isArray(c.redis.clients) ? Object.fromEntries(c.redis.clients.map((n) => [n, ["REDIS_URL"]])) : { ...c.redis.clients };
   const services: ResolvedService[] = ws.services.map((s) => {
     const role = s.role === "orchestrator" ? "orchestrator" as const : "service" as const;
-    const mtls = role === "service" && c.services?.[s.name]?.mtls === true;
+    const own = c.services?.[s.name] ?? {}, here = decl.services?.[s.name] ?? {};
+    const mtls = role === "service" && own.mtls === true;
     return {
       name: s.name, runtime: s.runtime, role, port: s.port, prefix: servicePrefix(s), mtls, db: s.db === "postgres",
       dependsOn: s.dependsOn ?? [],
@@ -113,6 +138,12 @@ export function resolveTopology(ws: WorkspaceConfig, c: InfraContract, envName: 
       containerUrl: `https://${s.name}:${s.port}`,
       hostUrl: `http://127.0.0.1:${s.port}`,
       decl: s,
+      authentication: here.authentication ?? own.authentication ?? "infrastructure",
+      environment: { ...(own.environment ?? {}), ...(here.environment ?? {}) },
+      volumes: { ...(own.volumes ?? {}) },
+      replicas: here.replicas ?? own.replicas ?? 1,
+      ...(own.healthcheck?.startPeriod ? { startPeriod: own.healthcheck.startPeriod } : {}),
+      redisVariables: redisProvider === "none" ? [] : [...new Set(redisClients[s.name] ?? [])],
     };
   });
 
@@ -140,8 +171,10 @@ export function resolveTopology(ws: WorkspaceConfig, c: InfraContract, envName: 
       const iss = origin(host);
       identity = {
         provider: "pso-dev", realm, audience, host, issuer: iss,
-        jwksContainer: `https://edge:8443/.well-known/jwks.json`, jwksHost: `https://127.0.0.1:${httpsPort}/.well-known/jwks.json`,
-        authorizationEndpoint: "", tokenEndpoint: "", privateHostsContainer: ["edge:8443"], privateHostsHost: [`127.0.0.1:${httpsPort}`], algorithms: "ES256",
+        // the public keys are served by their own container ("idp", a static TLS server on the private network): every service reaches it,
+        // and it needs nothing to start, so no service waits for the edge and the edge does not wait for a service that waits for it
+        jwksContainer: `https://idp:8443/.well-known/jwks.json`, jwksHost: `https://127.0.0.1:${httpsPort}/.well-known/jwks.json`,
+        authorizationEndpoint: "", tokenEndpoint: "", privateHostsContainer: ["idp:8443"], privateHostsHost: [`127.0.0.1:${httpsPort}`], algorithms: "ES256",
         users: usersOf(id.users ?? []), scopes: allScopes,
       };
     } else {
@@ -186,6 +219,14 @@ export function resolveTopology(ws: WorkspaceConfig, c: InfraContract, envName: 
   for (const n of Object.keys(c.services ?? {})) if (!services.some((s) => s.name === n)) throw new InfraError(`${"pso.infra.json"} configures service "${n}", which pso.workspace.json does not declare`, "PSO_INFRA_UNKNOWN_SERVICE");
   for (const n of Object.keys(c.frontends ?? {})) if (!frontends.some((f) => f.name === n)) throw new InfraError(`pso.infra.json configures frontend "${n}", which is not a FEI of this workspace`, "PSO_INFRA_UNKNOWN_FRONTEND");
   for (const s of Object.values(c.services ?? {})) for (const sec of s.secrets ?? []) if (!c.secrets?.[sec]) throw new InfraError(`secret "${sec}" is used by a service but not declared in "secrets"`, "PSO_INFRA_UNKNOWN_SECRET");
+  for (const n of Object.keys(decl.services ?? {})) if (!services.some((s) => s.name === n)) throw new InfraError(`environment "${envName}" configures service "${n}", which pso.workspace.json does not declare`, "PSO_INFRA_UNKNOWN_SERVICE");
+  for (const n of Object.keys(redisClients)) if (!services.some((s) => s.name === n)) throw new InfraError(`redis.clients names "${n}", which pso.workspace.json does not declare`, "PSO_INFRA_UNKNOWN_SERVICE");
+  for (const s of services) {
+    // the identity settings belong to whoever authenticates: with the application in charge they may be set as application variables
+    for (const k of Object.keys(s.environment)) if (/^PSO_(JWT|SECURITY_JWT)_/.test(k) && s.authentication !== "application") throw new InfraError(`service "${s.name}" sets ${k}, an identity setting PSO manages in environment "${envName}"`, "PSO_INFRA_ENV_RESERVED", `Declare services.${s.name}.authentication = "application" when the application configures token validation itself`);
+    for (const k of Object.keys(s.environment)) if (s.redisVariables.includes(k)) throw new InfraError(`service "${s.name}" sets ${k}, which receives the Redis address (redis.clients)`, "PSO_INFRA_ENV_RESERVED");
+    if (s.replicas > 1 && runtimeOf(decl) === "docker" && decl.kind === "development" && decl.publishServices === true) throw new InfraError(`service "${s.name}" has ${s.replicas} replicas and environment "${envName}" publishes every service on a host port: one port cannot reach several containers`, "PSO_INFRA_REPLICAS", `Set environments.${envName}.publishServices to false, or keep one replica`);
+  }
 
   const publicHosts = [...new Set([...resolved.map((f) => f.host), api.host, ...(identity && identity.provider !== "external" ? [identity.host] : [])])].sort();
   return {
@@ -193,8 +234,12 @@ export function resolveTopology(ws: WorkspaceConfig, c: InfraContract, envName: 
     project: c.docker?.project ?? `${ws.name}-${envName}`.replace(/[^a-z0-9_-]/g, "-"),
     api, frontends: resolved, services, ...(orch ? { orchestrator: services.find((s) => s.name === orch.name)! } : {}), ...(identity ? { identity } : {}), publicHosts,
     images: { ...DEFAULT_IMAGES, ...(c.docker?.images ?? {}) }, logs: { maxSize: c.docker?.logs?.maxSize ?? "10m", maxFile: c.docker?.logs?.maxFile ?? 3 },
+    ...(c.redis && redisProvider !== "none" ? { redis: { provider: redisProvider, persistence: c.redis.persistence !== false, port: decl.redis?.port ?? 6379, clients: Object.keys(redisClients).sort(), ...(c.redis.resources ? { resources: c.redis.resources } : {}) } } : {}),
   };
 }
+
+/** The environment runs its identity provider itself, as the container "idp" (Keycloak, or the static key server of pso-dev). */
+export const managedIdentity = (t: Pick<Topology, "identity">): boolean => t.identity !== undefined && t.identity.provider !== "external";
 
 /** The address one component uses to reach a service, for the place it runs in. */
 export function addressOf(t: Topology, service: string, from: "container" | "host"): string {

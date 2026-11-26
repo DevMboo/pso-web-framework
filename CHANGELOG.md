@@ -1,5 +1,49 @@
 # Changelog
 
+## 0.2.0-rc.7 — The native infrastructure runs on its own (2026-11-26)
+
+Seventh release candidate of 0.2.0 (npm packages stay `0.2.0`; PSO Java is `0.2.0-rc.7`; rc.1 to rc.6 are kept for rollback).
+**The Windows installer is not Authenticode-signed.** Five defects found while moving a real consumer application to 0.2 are fixed in
+the framework, so an application no longer needs scripts or hand-made configuration to work around them.
+
+### Fixed
+- **D1** `pso docker:build --vendor` and `pso docker:up --vendor` never refreshed an existing `vendor/maven` or `vendor/pso`: a workspace
+  moved to a new release kept building against the artifacts of the old one (the Maven build failed with `dependencies.dependency.version
+  ... is missing`, or an npm image silently kept old framework code). Vendor directories now carry a manifest (`pso-vendor.json`: the
+  release and the SHA-256 of every file); every build checks it. `--vendor` replaces an outdated, corrupt or unverified copy atomically and
+  leaves a current one alone; without `--vendor` the build stops with `PSO_VENDOR_OUTDATED` / `PSO_VENDOR_CORRUPT` and the reason. Other
+  groups kept in `vendor/maven` are preserved. Deleting a vendor directory by hand is never needed.
+- **D2** With the `pso-dev` identity the edge served the public keys but waited for the orchestrator, which needed those keys to start:
+  neither came up (`PSO_SEC_INIT ... jwks_dns`). The keys are now served by their own container, `idp` (a static TLS key server with no
+  dependency), that the services, the orchestrator and the edge wait for. The container graph has no cycle (checked by the tests).
+- **D3** The topology had no Redis and no way to give a service the application's own settings. New in `pso.infra.json`: `redis`
+  (provisioned only where declared: private network, password, persistent volume, health check; each client receives the address in the
+  variables it names), `services.<name>.environment` (plain values and `secret://` references), `volumes`, `replicas`,
+  `healthcheck.startPeriod`, and per environment `environments.<env>.services` and `environments.<env>.redis`. A Node service reads its
+  mounted secrets through `PSO_SECRET_FILES`. A disabled Dispatch no longer refuses to start because a `${env:...}` reference it would use
+  (`REDIS_URL`) is unset.
+- **D4** Spring services were told to fetch the keys from `https://edge:8443` but were placed only on the internal network, where `edge`
+  does not exist: every authenticated request answered 500. They now fetch them from `https://idp:8443` on that network (TLS verified, the
+  key host bound explicitly through `PSO_JWT_JWKS_TRUSTED_HOSTS`).
+- **D5** With `pso.infra.json`, `pso dev` filled every variable a process left unset from `.infra/env/<env>/<service>.env`, so an
+  application that selects its own key source (`PSO_JWT_PUBLIC_KEY_FILE`) also received the infrastructure's `PSO_JWT_JWKS_URI` and could
+  not start (`PSO_SEC_KEY_CONFLICT`). The identity settings are now applied as one group or not at all; `services.<name>.authentication:
+  "application"` states it in the contract; `pso dev:env` shows the source of every variable and what was not applied and why (no value
+  is shown). A conflict the application creates itself is still refused.
+
+### Added
+- `pso dev:env [--service] [--env]`.
+- `pso dev --with-dependencies` also starts the pso-dev key server and Redis on loopback, so process mode works with the pso-dev identity.
+- The container health check of a service probes the health path the workspace declares.
+
+### Compatibility
+- Existing workspaces keep their contracts: every new member is optional. `pso infra:apply` (or the first `pso docker:up` of a development
+  environment) adds the key server's certificate and configuration and updates the compose file, the edge configuration and the process
+  environments; running containers that changed are re-created by `pso docker:up`.
+- A vendor directory written by an earlier PSO is reported as unverified and gets a manifest at the next `--vendor` build.
+- The names `redis` (container) and `redis-password`, `redis-url` (secrets) are reserved.
+- Not changed: Redis is reached over the private network with a password, not TLS.
+
 ## 0.2.0-rc.6 — Sign-in mode of a FEI per environment (2026-11-25)
 
 Sixth release candidate of 0.2.0 (npm packages stay `0.2.0`; PSO Java is `0.2.0-rc.6`; rc.1 to rc.5 are kept for rollback).
