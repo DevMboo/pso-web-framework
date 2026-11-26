@@ -7,7 +7,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, relative, resolve } from "node:path";
+import { basename, join, relative, resolve } from "node:path";
 
 const a = process.argv.slice(2);
 const flag = (n) => { const i = a.indexOf(`--${n}`); return i < 0 ? undefined : a[i + 1]; };
@@ -34,7 +34,7 @@ try {
   let r = term(work, "--version"); const fromVersion = r.stdout.trim();
   // the starting release is the one the ZIP names (PSO-Web-<label>-win-x64-portable.zip): 0.1.x or an earlier 0.2.0 candidate. Its CLI
   // reports the version without the release label (0.2.0-rc.6 reports 0.2.0)
-  const zipLabel = /PSO-Web-(.+?)-win-x64-portable\.zip$/i.exec(fromZip)?.[1];
+  const zipLabel = /^PSO-Web-(.+)-win-x64-portable\.zip$/.exec(basename(fromZip))?.[1];
   const fromLabel = state().current;
   check(`the starting release ${zipLabel ?? "(unknown: the ZIP name does not carry it)"} is installed and runs`, r.status === 0 && !!zipLabel && fromLabel === zipLabel && fromVersion === zipLabel.replace(/-.*$/, ""), `${r.out} | installed ${fromLabel}`);
 
