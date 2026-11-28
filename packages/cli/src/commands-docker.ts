@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  apply, compose, composeSync, composeTarget, dependenciesOf, dockerReady, paths, plan, portConflicts, ps, redact, secretsOf, startupOrder, loadContract, type ComposeTarget, type Plan, type Topology,
+  apply, compose, composeSync, composeTarget, dependenciesOf, dockerReady, edgeImage, paths, plan, portConflicts, ps, redact, secretsOf, startupOrder, loadContract, type ComposeTarget, type Plan, type Topology,
 } from "@pso/infra";
 import { CliError } from "./fsx.ts";
 import { str } from "./args.ts";
@@ -177,7 +177,7 @@ export const DOCKER_COMMANDS: Record<string, Command> = {
       const rows = startupOrder(t).map((n) => {
         const s = t.services.find((x) => x.name === n);
         const kind = s ? (s.role === "orchestrator" ? "orchestrator" : "service") : n === "edge" ? "edge gateway" : n === "idp" ? "identity provider" : n === "redis" ? "redis" : n.endsWith("-db") ? "database" : "frontend";
-        const image = s ? `${t.project}-${s.name}:${t.env} (built from ./${s.decl.path})${s.replicas > 1 ? ` x${s.replicas}` : ""}` : n === "idp" ? (t.identity?.provider === "keycloak" ? t.images.keycloak : `${t.images.nginx} (public keys of the pso-dev identity)`) : n === "redis" ? t.images.redis : n.endsWith("-db") ? t.images.postgres : t.images.nginx;
+        const image = s ? `${t.project}-${s.name}:${t.env} (built from ./${s.decl.path})${s.replicas > 1 ? ` x${s.replicas}` : ""}` : n === "idp" ? (t.identity?.provider === "keycloak" ? t.images.keycloak : `${t.images.nginx} (public keys of the pso-dev identity)`) : n === "redis" ? t.images.redis : n.endsWith("-db") ? t.images.postgres : n === "edge" ? `${edgeImage().tag} (the framework's edge image: built locally from the installed PSO, never pulled)` : t.images.nginx;
         const ports = n === "edge" ? [`${dev ? "127.0.0.1:" : ""}${t.httpsPort} -> 8443`] : s && dev && t.decl.publishServices === true ? [`127.0.0.1:${s.port}`] : [];
         const secrets = s ? [...new Set(secretsOf(t, c, s).map((x) => x.name))] : n.endsWith("-db") ? [`db-${n.slice(0, -3)}`] : n === "idp" && t.identity?.provider === "keycloak" ? ["idp-admin", ...t.identity.users.map((u) => `user-${u.username}`)] : n === "redis" ? ["redis-password"] : [];
         const volumes = n.endsWith("-db") ? [`${n}-data (persistent)`] : n === "redis" && t.redis?.persistence ? ["redis-data (persistent)"] : s ? Object.keys(s.volumes).sort().map((v) => `${s.name}-${v} (persistent)`) : [];

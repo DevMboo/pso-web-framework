@@ -44,6 +44,7 @@ export const RULES = [
   rule("A", "A-cli-studio", new RegExp(`^${P}cli/studio/`), "Studio frontend assets (browser-delivered: observable by design)"),
   rule("A", "A-deploy", new RegExp(`^${P}deploy/(dist|agent)/|^${P}deploy/package\\.json$`), "deployment engine and agent"),
   rule("A", "A-infra", new RegExp(`^${P}infra/dist/|^${P}infra/package\.json$`), "infrastructure engine (contract, plan/apply, certificates, identity, compose)"),
+  rule("A", "A-infra-edge", new RegExp(`^${P}infra/edge/(Dockerfile|nginx\\.conf|page\\.html)$`), "edge gateway image definition and native error page template (built into the local edge image)"),
   rule("A", "A-frontend-engine", new RegExp(`^${P}frontend/(dist|bin)/|^${P}frontend/package\\.json$`), "FEI/MEI engine, release and nginx tooling"),
 
   // ---- C: developer-owned source (templates become the developer's code)

@@ -9,7 +9,7 @@ related: [downloads/index, getting-started/requirements, spring/maven-bom, infra
 ---
 
 > [!NOTE]
-> The current release is **PSO Web V2, `0.2.0-rc.7`**; its CLI reports version `0.2.0`. Download it from [Downloads](/downloads/index) (the public release [`v0.2.0-rc.7`](https://github.com/DevMboo/pso-web-framework/releases/tag/v0.2.0-rc.7); its Windows files are **not Authenticode-signed**). The 0.1 alpha releases listed there are historical: do not substitute their files for rc.7.
+> The current release is **PSO Web V2, `0.2.0-rc.8`**; its CLI reports version `0.2.0`. Download it from [Downloads](/downloads/index) (the public release [`v0.2.0-rc.8`](https://github.com/DevMboo/pso-web-framework/releases/tag/v0.2.0-rc.8); its Windows files are **not Authenticode-signed**). The 0.1 alpha releases listed there are historical: do not substitute their files for rc.8.
 
 ## Option 1: the portable Windows distribution (recommended)
 
@@ -30,7 +30,7 @@ The ZIP writes no registry entries and does not alter a system Node.js installat
 
 ### Matching Java artifacts
 
-For generated Spring services, use JDK 21 or newer and run `pso java:install`. The installed rc.7 distribution contains its matching Maven file repository and generates services that request `com.pso:*:0.2.0-rc.7`; `java:install` copies those artifacts into your local Maven repository. It does not publish them to Maven Central. Then build a generated service with its Maven Wrapper:
+For generated Spring services, use JDK 21 or newer and run `pso java:install`. The installed rc.8 distribution contains its matching Maven file repository and generates services that request `com.pso:*:0.2.0-rc.8`; `java:install` copies those artifacts into your local Maven repository. It does not publish them to Maven Central. Then build a generated service with its Maven Wrapper:
 
 ```powershell
 pso java:install
@@ -87,5 +87,5 @@ New projects use the [layered Java service](/architecture/java-microservice) and
 | Windows blocks the extracted `pso.cmd` or a file of the ZIP (application control, Smart App Control) | the files are not publisher-signed | use only an authorized copy with a matching `SHA256SUMS`; never disable or bypass the protection |
 | `Get-Command pso -All` lists a development link first | an `npm link` of a checkout shadows the installed command | remove it (`npm unlink -g @pso/cli`) or call the installed `pso.cmd` by its full path |
 | `Non-resolvable import POM: com.pso:pso-bom` in a generated service | the matching Java artifacts are not in the local Maven repository | `pso java:install` with the installed distribution |
-| `does not carry com.pso:*:0.2.0-rc.7` from `pso java:install --from` | the repository is from another release | use the Maven repository of the same distribution |
+| `does not carry com.pso:*:0.2.0-rc.8` from `pso java:install --from` | the repository is from another release | use the Maven repository of the same distribution |
 | `integrity check` reports changed files | a file of the installation was modified or damaged | `pso repair --full`, or `pso update rollback` after a failed update |

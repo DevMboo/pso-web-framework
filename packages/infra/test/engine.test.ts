@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   apply, plan, validate, validateContract, resolveTopology, loadContract, renderCompose, exposure, applyHostsBlock, hostsMarker, renderHosts,
-  processEnvironment, withLock, InfraError, dependenciesOf, startupOrder, type FrontendInfo, type EngineHooks,
+  processEnvironment, withLock, InfraError, dependenciesOf, startupOrder, edgeImage, ensureEdgeImage, type FrontendInfo, type EngineHooks,
 } from "../src/index.ts";
 
 const fei = (name: string, port: number, extra: Partial<FrontendInfo> = {}): FrontendInfo => ({ name, port, authentication: "jwt", microfrontends: [], scopes: [], orchestratorBasePath: "/api", routes: [], ...extra });
@@ -217,12 +217,15 @@ test("hosts entries are only proposed; applying them changes PSO's own block and
   assert.equal(readFileSync(file, "utf8"), "127.0.0.1 localhost\r\n10.0.0.5 nas\r\n");
 });
 
-test("the generated edge and FEI nginx configurations are accepted by the real nginx", { skip: spawnSync("docker", ["image", "inspect", "nginx:1.27-alpine"], { encoding: "utf8" }).status !== 0 ? "image nginx:1.27-alpine is not available" : false }, () => {
+test("the generated edge and FEI nginx configurations are accepted by the real nginx", { skip: spawnSync("docker", ["image", "inspect", "nginx:1.27-alpine"], { encoding: "utf8" }).status !== 0 ? "image nginx:1.27-alpine is not available" : false }, async () => {
   const { root, hooks } = workspace({ infra: LOCAL });
   apply(root, { hooks });
+  // the edge runs the framework's own image (it carries the error pages its configuration includes); the shells run the stock nginx image
+  const edge = edgeImage().tag;
+  await ensureEdgeImage(edge);
   const m = (rel: string, to: string) => ["-v", `${join(root, ...rel.split("/"))}:${to}:ro`];
-  for (const [conf, extra] of [["edge", m(".infra/certs/local/edge", "/run/pso/tls")], ["fei-shop", m(".infra/sites/local/fei-shop", "/srv/site")]] as const) {
-    const r = spawnSync("docker", ["run", "--rm", ...m(`.infra/nginx/local/${conf}.conf`, "/etc/nginx/conf.d/default.conf"), ...extra, "nginx:1.27-alpine", "nginx", "-t"], { encoding: "utf8", timeout: 120_000 });
+  for (const [conf, extra, image, cmd] of [["edge", m(".infra/certs/local/edge", "/run/pso/tls"), edge, ["nginx", "-e", "stderr", "-t"]], ["fei-shop", m(".infra/sites/local/fei-shop", "/srv/site"), "nginx:1.27-alpine", ["nginx", "-t"]]] as const) {
+    const r = spawnSync("docker", ["run", "--rm", ...m(`.infra/nginx/local/${conf}.conf`, "/etc/nginx/conf.d/default.conf"), ...extra, image, ...cmd], { encoding: "utf8", timeout: 120_000 });
     assert.equal(r.status, 0, `${conf}: ${r.stderr}`);
     assert.match(r.stderr, /syntax is ok/);
   }

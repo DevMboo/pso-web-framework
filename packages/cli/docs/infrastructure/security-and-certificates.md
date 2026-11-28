@@ -49,6 +49,10 @@ Generated configuration contains **references**, never values. A service receive
 
 For local processes, `.infra/env/<env>/<service>.env` holds `DB_PASSWORD=secret://db-catalog`; `pso dev` resolves the reference into the child's environment at start.
 
+## What the edge reveals
+
+Nothing about its software: no `Server` or `X-Powered-By` header, no nginx error page, no internal status (plain HTTP on the TLS port is a sanitized `400`). Errors the edge produces itself are an HTML page for a browser and an RFC 9457 document for an API; the orchestrator's and the identity provider's responses pass unchanged. See [Edge protection and native error responses](/infrastructure/edge-protection).
+
 ## What PSO never does
 
 - install an authority or change a system trust store, edit the system hosts file without `--apply --yes`, or create DNS records;

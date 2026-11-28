@@ -5,6 +5,7 @@ import { plan, type EngineHooks, type Plan } from "./engine.ts";
 import { abs, readText } from "./fsutil.ts";
 import { environmentCa, localResolution } from "./identity.ts";
 import { netRequest } from "./net.ts";
+import { DISCLOSURE } from "./edge.ts";
 import { paths } from "./render.ts";
 import { lookupSecret, redact } from "./secrets.ts";
 
@@ -83,9 +84,24 @@ export async function probe(root: string, p: Plan, override: { ca?: string; reso
   {
     const unknown = `pso-unknown-host.${t.domain}`;
     const url = `https://${unknown}:${t.httpsPort}/`;
-    try { const r = await netRequest({ url, ...(ca ? { ca } : {}), resolve: { ...resolve, [unknown]: "127.0.0.1" }, timeoutMs: 10_000 }); out.push({ name: "edge: unknown host is refused", url, ok: r.status === 421, status: r.status, timeMs: r.timeMs, detail: r.status === 421 ? "HTTP 421 from the default server" : `HTTP ${r.status}: a request for an unknown host must be refused` }); }
+    try { const r = await netRequest({ url, ...(ca ? { ca } : {}), resolve: { ...resolve, [unknown]: "127.0.0.1" }, timeoutMs: 10_000 }); const leak = disclosed(r); out.push({ name: "edge: unknown host is refused", url, ok: r.status === 421 && !leak, status: r.status, timeMs: r.timeMs, detail: r.status !== 421 ? `HTTP ${r.status}: a request for an unknown host must be refused` : leak ? `HTTP 421, but ${leak}` : "HTTP 421 from the default server, sanitized" }); }
     catch (e) { const m = (e as Error).message; const refused = /altnames|does not match|certificate/i.test(m); out.push({ name: "edge: unknown host is refused", url, ok: refused, detail: refused ? "refused during the TLS handshake (no certificate names it)" : m }); }
+  }
+  // plain HTTP sent to the TLS port is answered by the edge itself: a sanitized 400, without its software or nginx's own message
+  {
+    const host = t.frontends[0]?.host ?? t.api.host;
+    const url = `http://${host}:${t.httpsPort}/`;
+    try { const r = await netRequest({ url, resolve, timeoutMs: 10_000 }); const leak = disclosed(r); out.push({ name: "edge: plain HTTP on the TLS port", url, ok: r.status === 400 && !leak, status: r.status, timeMs: r.timeMs, detail: r.status !== 400 ? `HTTP ${r.status}, expected 400` : leak ? `HTTP 400, but ${leak}` : "HTTP 400, sanitized (no server identification, no native message)" }); }
+    catch (e) { out.push({ name: "edge: plain HTTP on the TLS port", url, ok: false, detail: (e as Error).message }); }
   }
   return out;
 }
 void paths;
+
+/** What an edge-generated response gives away, if anything (an rc.7 edge, or an edge running an image other than the framework's). */
+function disclosed(r: Awaited<ReturnType<typeof netRequest>>): string | undefined {
+  if (r.headers["server"]) return `it sends Server: ${String(r.headers["server"])}`;
+  if (r.headers["x-powered-by"]) return "it sends X-Powered-By";
+  if (DISCLOSURE.test(r.body.toString("utf8").replace(/<style>[\s\S]*?<\/style>/g, ""))) return "its body names the technology or the internal error (the edge does not run the framework's edge image: pso infra:apply, then pso docker:up)";
+  return undefined;
+}

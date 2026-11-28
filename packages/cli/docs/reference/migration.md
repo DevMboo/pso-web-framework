@@ -14,7 +14,7 @@ Only the current documentation version is published; `docs/versions.json` lists 
 ## An upgrade procedure
 
 1. **Commit** your current state so the upgrade is a reviewable diff.
-2. Update a portable installation with the trusted package of the new release (for rc.7: `pso update install --package <extracted-zip>\.pso-install\packages\0.2.0-rc.7.psopkg`, from the ZIP on [Downloads](/downloads/index)), or update and rebuild a framework checkout. Run `pso java:install` after changing releases if you use Spring services ([installation](/getting-started/installation)); the installed rc.7 CLI uses `com.pso:*:0.2.0-rc.7`, while this source checkout builds its own `0.1.0-SNAPSHOT` artifacts.
+2. Update a portable installation with the trusted package of the new release (for rc.8: `pso update install --package <extracted-zip>\.pso-install\packages\0.2.0-rc.8.psopkg`, from the ZIP on [Downloads](/downloads/index)), or update and rebuild a framework checkout. Run `pso java:install` after changing releases if you use Spring services ([installation](/getting-started/installation)); the installed rc.8 CLI uses `com.pso:*:0.2.0-rc.8`, while this source checkout builds its own `0.1.0-SNAPSHOT` artifacts.
 3. `pso validate` and `pso config:validate`: new rules show up as diagnostics, not as run-time surprises.
 4. Preview changes to generated files with the generators' `--dry-run`, e.g. `pso docker:init --dry-run`. A differing file is reported as a conflict and never overwritten silently.
 5. Apply what you want by hand or with `--force` for files you never edited; review the diff.
@@ -38,6 +38,17 @@ Nothing below changes the behavior of existing code without you opting in, excep
 | Ports | `pso create service --port <n>` | optional |
 | Configuration | `logging.level` is a schema key; `PSO_LOG_FORMAT`/`PSO_LOG_COLOR` are variables | none |
 | Telemetry | OTLP export defaults to protobuf; exporter packages were updated | see [observability](/devops/observability) |
+
+## Edge protection and Channels origins (0.2.0-rc.8)
+
+From rc.7, after updating the CLI and running `pso java:install`:
+
+1. Set `<pso.version>` of each Spring service to the new release.
+2. `pso infra:plan --env <env>` shows two updates: the edge configuration (`nginx:edge`) and the compose file. `pso infra:apply --env <env>` applies them (a development `pso docker:up` does it itself).
+3. `pso docker:up --env <env>`: the first start builds the framework's edge image once (it needs Docker Hub and Alpine's package repository), has nginx test the new configuration, then re-creates the edge and the orchestrator. FEIs and MEIs are not regenerated.
+4. Remove workarounds you may have added: error pages, `server_tokens` or header rules in an application, a FEI or `.infra/`, and a hand-set `PSO_CHANNELS_ALLOWED_ORIGINS` that only repeated the shells' origins (the engine sets it now; a value you set yourself is kept).
+5. `pso channels:enable --service <orchestrator>` now refuses to run until the orchestrator has a Dispatch provider (`pso dispatch:install <provider> --service <orchestrator>`); an orchestrator already connected to Channels is not affected.
+6. `pso infra:validate --env <env> --probe` checks that plain HTTP and unknown hosts are answered without naming the software. To go back to rc.7, run rc.7's `pso infra:apply` and `pso docker:up`: its own edge configuration and image return.
 
 ## Native infrastructure (0.2.0-rc.7)
 

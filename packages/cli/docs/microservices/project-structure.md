@@ -11,7 +11,7 @@ reference Product CRUD, PostgreSQL and Flyway; `--template empty` creates the sa
 
 ```tree title="A new service (pso create service catalog)"
 catalog/
-  pom.xml  # generated: Spring Boot 3.5, the PSO BOM 0.2.0-rc.7 and starters
+  pom.xml  # generated: Spring Boot 3.5, the PSO BOM 0.2.0-rc.8 and starters
   mvnw  # generated: Maven Wrapper, with mvnw.cmd and .mvn/wrapper/maven-wrapper.properties
   src/
     main/

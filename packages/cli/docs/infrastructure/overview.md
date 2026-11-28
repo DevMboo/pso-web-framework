@@ -21,7 +21,7 @@ In 0.1 a developer described the application declaratively (services, routes, co
 
 Nothing in `pso.infra.json` repeats the workspace: it only says what the application code cannot know. Without it, PSO derives a single local development environment. `pso infra:init` writes a starting contract.
 
-From these three sources the engine derives every resource of an environment: a development certificate authority and one certificate per container (with exactly the names its clients verify), the mutual-TLS client identity of the orchestrator, generated development secrets, the Keycloak realm (one OIDC client per shell, its redirect URIs and web origins computed from the hosts), the edge gateway's nginx configuration (one server per host), the static server of each shell, each shell's runtime configuration, the container topology, the proposed hosts entries and the environment of each service when it runs as a local process.
+From these three sources the engine derives every resource of an environment: a development certificate authority and one certificate per container (with exactly the names its clients verify), the mutual-TLS client identity of the orchestrator, generated development secrets, the Keycloak realm (one OIDC client per shell, its redirect URIs and web origins computed from the hosts), the edge gateway's nginx configuration (one server per host; the edge itself runs the framework's own image, which carries its native error responses and sends no server identification), the static server of each shell, each shell's runtime configuration, the container topology, the proposed hosts entries and the environment of each service when it runs as a local process.
 
 ## The pipeline
 

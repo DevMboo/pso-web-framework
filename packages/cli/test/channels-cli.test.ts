@@ -24,6 +24,44 @@ async function workspace() {
   return { root, gw: join(root, "gw"), svc: join(root, "recruitment-service"), run };
 }
 
+test("channels:enable on the orchestrator: refused without Dispatch (nothing written, dry run too); with Dispatch it compiles, starts and is idempotent", { timeout: 400_000 }, async () => {
+  const { root, gw, run } = await workspace();
+  const { readdirSync, statSync } = await import("node:fs");
+  const snap = (d: string): string => readdirSync(d).sort().map((n) => { const p = join(d, n); return statSync(p).isDirectory() ? (n === "node_modules" ? "" : `${n}/[${snap(p)}]`) : `${n}:${readFileSync(p).length}:${readFileSync(p, "utf8").length}`; }).join(",");
+  const before = snap(gw);
+  for (const extra of [[], ["--dry-run"]]) {
+    const r = await pso(root, "channels:enable", "--service", "gw", ...extra);
+    assert.equal(r.code, 1, `refused ${extra.join(" ")}`);
+    assert.match(r.out + r.err, /no Dispatch provider[\s\S]*Nothing was changed[\s\S]*pso dispatch:install <redis\|rabbitmq\|kafka> --service gw/);
+  }
+  assert.equal(snap(gw), before, "no file of the orchestrator was touched");
+  assert.ok(!existsSync(join(gw, "src/dispatch/channels")));
+  await run("dispatch:install", "redis", "--service", "gw");
+  const o = await run("channels:enable", "--service", "gw");
+  assert.match(o.out, /package\.json: \+ @pso\/channels/);
+  const pkg = JSON.parse(read(gw, "package.json")).dependencies;
+  assert.ok(pkg["@pso/dispatch"] && pkg["@pso/channels"], "both packages the generated code imports are declared");
+  const again = await run("channels:enable", "--service", "gw");
+  assert.match(again.out, /already connected/, "a repeated run changes nothing");
+  const afterSecond = snap(gw);
+  await run("channels:enable", "--service", "gw");
+  assert.equal(snap(gw), afterSecond, "idempotent");
+  await run("make:module", "live", "--service", "gw");
+  await run("make:channel", "live", "news", "--service", "gw", "--pattern", "news");
+  assert.equal((await pso(root, "validate")).code, 0);
+  prepare(gw); // real tsc: the consumer, its event declaration and the channel compile
+  const keys = await generateKeyPair("ES256", { extractable: true });
+  const pub = join(root, "p.pem"); writeFileSync(pub, await exportSPKI(keys.publicKey));
+  const port = randomPort();
+  const { child } = await startNode(gw, { PORT: String(port), PSO_JWT_ISSUER: "https://idp.test", PSO_JWT_AUDIENCE: "pso-api", PSO_JWT_PUBLIC_KEY_FILE: pub, PSO_JWT_ALGORITHMS: "ES256" });
+  try {
+    const ws = new WebSocket(`ws://127.0.0.1:${port}/channels`, "pso.channels.v1");
+    const first = await new Promise<string>((res) => { ws.on("message", (m) => res(String(m))); ws.on("error", (e) => res(`error ${e.message}`)); setTimeout(() => res("timeout"), 10_000); });
+    assert.match(first, /"t":"ready"/, "the orchestrator starts with Dispatch installed (still disabled) and serves Channels");
+    ws.close();
+  } finally { child.kill(); }
+});
+
 test("make:channel: class, deny-by-default access provider, event contract and registration; the result compiles and the orchestrator starts with it", { timeout: 400_000 }, async () => {
   const { root, gw, run } = await workspace();
   await run("make:module", "recruitment", "--service", "gw");
@@ -112,6 +150,7 @@ test("layered service: make:notifier writes the record to application/event/ and
 
 test("channels:enable connects the orchestrator and a Spring service to Channels; make:notifier writes a typed publisher that compiles and passes the service tests", { skip: skipJava, timeout: 900_000 }, async () => {
   const { root, gw, svc, run } = await workspace();
+  await run("dispatch:install", "redis", "--service", "gw");
   const o = await run("channels:enable", "--service", "gw");
   assert.match(o.out, /@pso\/channels[\s\S]*src\/dispatch\/channels/);
   assert.match(read(gw, "src/dispatch/channels/channels.consumer.ts"), /@DispatchConsumer\("channels\.publish", \{ group: "orchestrator-channels" \}\)\nexport class ChannelEvents extends ChannelDispatchConsumer/);

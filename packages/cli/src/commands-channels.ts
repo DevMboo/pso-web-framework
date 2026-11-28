@@ -12,6 +12,7 @@ import { runPlan } from "./commands-http.ts";
 import { addNamedImport, addToArrayProperty } from "./ts-edit.ts";
 import { addPomDependency } from "./commands-java.ts";
 import { frameworkSpecs } from "./specs.ts";
+import { discoverDispatch } from "./dispatch-static.ts";
 
 /**
  * PSO Channels on the CLI side. `make:channel` writes a channel class (and, for a resource channel, a deny-by-default access provider and the
@@ -162,6 +163,10 @@ export const CHANNEL_COMMANDS: Record<string, Command> = {
         if (!existsSync(ev)) { writes.push([ev, JSON.stringify({ events: [{ name: "channels.publish", version: 1, channel: "channels-events", key: "channel", compatibility: "full", schema: PUBLISH_SCHEMA }] }, null, 2) + "\n"]); changes.push("src/main/resources/dispatch/channels.events.json: the channels.publish event (the contract between this service and the orchestrator)"); }
         notes.push("note: Dispatch must be enabled with a provider (`pso dispatch:install <redis|rabbitmq|kafka>`); durable events also need `pso dispatch:outbox`");
       } else if (svc.runtime === "node") {
+        // the orchestrator's side of Channels IS a Dispatch consumer (services' events reach browsers through it): without a Dispatch
+        // provider the generated consumer could not even compile. The provider is the developer's choice, so nothing is written before it
+        const installed = discoverDispatch(root, config).find((d) => d.service === svc.name)?.installed;
+        if (!installed) throw new CliError(`${svc.name} has no Dispatch provider: PSO Channels delivers the services' events to browsers through Dispatch, so the orchestrator needs one first. Nothing was changed`, `Run: pso dispatch:install <redis|rabbitmq|kafka> --service ${svc.name}, then pso channels:enable --service ${svc.name} again`);
         const pkgFile = join(dir, "package.json");
         const pkg = JSON.parse(readFileSync(pkgFile, "utf8")) as { dependencies?: Record<string, string> };
         if (!pkg.dependencies?.["@pso/channels"]) { pkg.dependencies = { ...pkg.dependencies, "@pso/channels": frameworkSpecs().channelsSpec }; writes.push([pkgFile, JSON.stringify(pkg, null, 2) + "\n"]); changes.push("package.json: + @pso/channels"); }

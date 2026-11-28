@@ -1,5 +1,53 @@
 # Changelog
 
+## 0.2.0-rc.8 — The edge answers for itself (2026-11-28)
+
+Eighth release candidate of 0.2.0 (npm packages stay `0.2.0`; PSO Java is `0.2.0-rc.8`; rc.1 to rc.7 are kept for rollback).
+**The Windows installer and the portable ZIP are not Authenticode-signed.**
+
+### Fixed
+- **The edge identified its software.** A plain HTTP request sent to the HTTPS port was answered with nginx's own page ("400 Bad
+  Request — The plain HTTP request was sent to HTTPS port — nginx"), and every response carried `Server: nginx` (`server_tokens off`
+  only hides the version). The edge now runs the framework's own image, built locally from the installed PSO (`pso-edge:<hash>`, never
+  pulled: Alpine 3.24 pinned by digest, Alpine's nginx 1.30 and headers-more packages): no `Server`, `X-Powered-By`, `X-AspNet-Version`
+  or `X-AspNetMvc-Version` header on any response, and none of nginx's built-in error pages.
+- **Native error responses.** Every error the edge produces itself (400, 401, 403, 404, 405, 408, 411, 413, 414, 416, 421, 429, 431, 500,
+  501, 502, 503, 504, 505; nginx's 494 to 497 mapped to 431 and 400) is answered from pages and RFC 9457 documents inside the image: an
+  HTML page on a shell's host, `application/problem+json` on the API host, the same-origin `/api` path, `/channels` and the identity
+  provider's protocol endpoints. The status is always kept. The orchestrator's and the identity provider's responses are never intercepted
+  (Problem Details, `WWW-Authenticate`, `Retry-After`, `Allow`, `X-Correlation-ID` unchanged); only the shells' static servers are. The pages
+  work with every application container stopped, carry no script, font, image or technology name, and are served under
+  `default-src 'none'`. Unknown hosts get a sanitized 421, malformed requests a sanitized 400.
+- **PSO Channels refused browsers behind the edge on any port but 443.** The edge forwarded `Host` without the external port, so the
+  orchestrator's same-origin check failed for `https://<shell>:8443`; in `production` Channels had no allowed origins at all and refused to
+  start. The edge now forwards the external authority (the matched host name and the environment's public port; never a value the client
+  wrote) and the engine gives the orchestrator `PSO_CHANNELS_ALLOWED_ORIGINS` = the declared shells' exact origins (unless the application
+  sets its own). Other origins, including forged `X-Forwarded-Host`/`Forwarded` headers, are still refused.
+- **`pso channels:enable` on the orchestrator generated code that did not compile** when Dispatch was not installed (its Dispatch consumer
+  imports `@pso/dispatch`). The orchestrator's side of Channels is that consumer, so the command now refuses, before writing anything
+  (also with `--dry-run`), until the orchestrator has a Dispatch provider, and names the command to run. Spring services are unchanged.
+- The edge's access log no longer records query strings (an OIDC callback's `code` and `state`), and records the id returned to the
+  client as `X-Correlation-ID`.
+
+### Added
+- Every `docker compose up` that starts the edge (docker:up, docker:restart --recreate, deploy --env, Studio) first ensures the edge image
+  and has nginx test the configuration with the real mounts: a rejected configuration is never started. Remote deployments transfer the
+  edge image and run `nginx -t` on the host before the release starts. Deployment bundles name the image as a prerequisite.
+- `pso infra:validate --probe` checks that plain HTTP on the TLS port and unknown hosts are answered without disclosure.
+- Distribution guards: the edge resources are in `@pso/infra`'s `files`, the installer allowlist (`dist.config.json`) and the distribution
+  policy (`A-infra-edge`); a test fails when any of them is missing.
+
+- The edge image checks itself at build time (nginx branch, `nginx -t`) and records its exact package builds.
+
+### Compatibility
+- Existing workspaces adopt it through the normal lifecycle: `pso infra:apply` (or the next `pso docker:up` in development) updates
+  `edge.conf` and the compose file, `pso docker:up` re-creates the edge. FEIs and MEIs are not regenerated; nothing is written into a
+  workspace except the regenerated configuration. A hand-edited `edge.conf` stays drift and is never overwritten silently.
+- `docker.images.nginx` no longer applies to the edge (the shells and the pso-dev key server still use it). The first start after an update
+  builds the edge image once (network access to Docker Hub and Alpine's repository).
+- Not covered: TLS handshake failures, HTTP/2 protocol errors and slow request headers end without an HTTP response; an existing nginx
+  managed by the PSO agent keeps its own `Server` header and error pages; anything in front of the edge.
+
 ## 0.2.0-rc.7 — The native infrastructure runs on its own (2026-11-26)
 
 Seventh release candidate of 0.2.0 (npm packages stay `0.2.0`; PSO Java is `0.2.0-rc.7`; rc.1 to rc.6 are kept for rollback).

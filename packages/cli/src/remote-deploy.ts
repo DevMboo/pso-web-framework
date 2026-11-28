@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, sep } from "node:path";
-import { INFRA_DIR, compose, composeTarget, probe, redact, withLockAsync, type Plan, type ProbeResult, type Topology } from "@pso/infra";
+import { INFRA_DIR, compose, composeTarget, edgeImage, ensureEdgeImage, probe, redact, withLockAsync, type Plan, type ProbeResult, type Topology } from "@pso/infra";
 import { CliError } from "./fsx.ts";
 import { RemoteHost, assertRemotePath, checkHost, inspectHost, q, type HostFacts, type HostFinding } from "./remote-host.ts";
 
@@ -93,7 +93,9 @@ export async function deployRemote(root: string, p: Plan, rc: RemoteContext, log
       log(`building ${t.services.length} image(s) here ...`);
       const b = await compose(c, ["build", ...t.services.map((s) => s.name)], { onLine: (l) => log(`  ${redact(l)}`) });
       if (b !== 0) throw new CliError(`the image build failed (exit ${b})`, "Nothing was changed on the host");
-      const images = [...t.services.map((s) => `${t.project}-${s.name}:${t.env}`), t.images.nginx, ...(t.services.some((s) => s.db) ? [t.images.postgres] : []), ...(t.identity?.provider === "keycloak" ? [t.images.keycloak] : [])];
+      // the edge runs the framework's own image, built here from the installed release and transferred like the services' images
+      await ensureEdgeImage(edgeImage().tag, (l) => log(redact(l)));
+      const images = [...t.services.map((s) => `${t.project}-${s.name}:${t.env}`), edgeImage().tag, t.images.nginx, ...(t.services.some((s) => s.db) ? [t.images.postgres] : []), ...(t.identity?.provider === "keycloak" ? [t.images.keycloak] : [])];
       const ids: Record<string, string> = {};
       for (const i of images) { const id = imageId(i); if (!id) throw new CliError(`image ${i} is not available here`, `docker pull ${i}`); ids[i] = id; }
       const id = `${new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14)}-${createHash("sha256").update(JSON.stringify(ids)).digest("hex").slice(0, 8)}`;
@@ -123,6 +125,11 @@ export async function deployRemote(root: string, p: Plan, rc: RemoteContext, log
       sh(rc, `printf 'PSO_CONTAINER_USER=%s\\n' ${q(runAs)} > ${q(`${relDir}/.env`)}`);
       log(`containers run as ${runAs} (the owner of the operator's certificates and secret files)`);
       const previous = sh(rc, `basename "$(readlink ${q(`${rc.dir}/current`)})" 2>/dev/null`).stdout.trim() || null;
+      // the edge configuration is tested by nginx on the host, with the release's own mounts (the operator's certificates), before anything
+      // is started: a configuration nginx rejects never replaces the running release
+      const nt = sh(rc, composeCmd(t, relDir, "run --rm --no-deps -T edge nginx -e stderr -t"), undefined, 300_000);
+      if (nt.status !== 0) throw new CliError(`the edge configuration of release ${id} was rejected by nginx -t on ${rc.host.name}: ${redact((nt.stdout + nt.stderr).split(/\r?\n/).filter((l) => /emerg|alert|crit|error/i.test(l)).slice(-3).join(" | "))}`, previous ? `Release ${previous} keeps running unchanged` : "Nothing was started");
+      log("edge configuration accepted by nginx -t on the host");
       log(`starting release ${id} on ${rc.host.name} ...`);
       const up = sh(rc, composeCmd(t, relDir, `up -d --wait --wait-timeout ${timeoutSec} --no-build --remove-orphans`), undefined, (timeoutSec + 120) * 1000);
       for (const l of (up.stdout + up.stderr).split(/\r?\n/).filter(Boolean).slice(-12)) log(`  ${redact(l)}`);

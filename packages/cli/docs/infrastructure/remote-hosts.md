@@ -56,13 +56,14 @@ PSO never installs packages, changes the firewall or creates users. Every check 
 1. resolves the environment and applies pending configuration (never generating keys or secrets outside development);
 2. validates the host prerequisites (above); nothing changes on the host when one fails;
 3. takes the environment's lock on the host (`<root>/<project>/.deploy-lock`, an atomic directory) and locally: concurrent deployments of the same environment are refused;
-4. builds the service images here and assembles the release: generated configuration and published sites with a `MANIFEST.sha256` (no key, no secret);
+4. builds the service images here (and the framework's edge image when this machine does not have it yet) and assembles the release: generated configuration and published sites with a `MANIFEST.sha256` (no key, no secret);
 5. transfers the release over SSH and verifies **every checksum on the host** before going on;
 6. transfers only the images the host does not already have (compared by layer identity; `docker save | docker load`, no registry needed);
-7. starts the release in dependency order and waits until every container is healthy. Containers run as the owner of the operator's certificates and secret files (written to the release's `.env` as `PSO_CONTAINER_USER`); root is refused;
-8. verifies through an SSH tunnel to the host's edge, with the operator's authority: shells, runtime configurations, API readiness, the identity provider's discovery (issuer and endpoints), refusal of unknown hosts;
-9. activates the release (`current` symlink, `history.json`), or
-10. if starting or verification fails and a previous release exists, starts the previous release again.
+7. has nginx on the host test the release's edge configuration with its own mounts (`nginx -t`): a rejected configuration stops here and the running release is untouched;
+8. starts the release in dependency order and waits until every container is healthy. Containers run as the owner of the operator's certificates and secret files (written to the release's `.env` as `PSO_CONTAINER_USER`); root is refused;
+9. verifies through an SSH tunnel to the host's edge, with the operator's authority: shells, runtime configurations, API readiness, the identity provider's discovery (issuer and endpoints), refusal of unknown hosts, and that plain HTTP and unknown hosts are answered without identifying the software;
+10. activates the release (`current` symlink, `history.json`), or
+11. if starting or verification fails and a previous release exists, starts the previous release again.
 
 ## Status, logs, rollback
 

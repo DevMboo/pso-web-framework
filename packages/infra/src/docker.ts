@@ -1,7 +1,8 @@
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { InfraError } from "./contract.ts";
+import { EDGE_REPOSITORY, ensureEdgeImage } from "./edge.ts";
 import { paths } from "./render.ts";
 import { managedIdentity, type Topology } from "./topology.ts";
 
@@ -28,8 +29,44 @@ export function composeTarget(root: string, t: Topology, mode: "stack" | "depend
 }
 const base = (c: ComposeTarget): string[] => ["compose", "-f", c.file, "--project-directory", c.root, "-p", c.project];
 
-/** Runs `docker compose ...`; output streamed to `onLine` (or inherited). Resolves with the exit code. */
-export function compose(c: ComposeTarget, args: string[], o: { onLine?: (l: string) => void; inherit?: boolean; env?: NodeJS.ProcessEnv } = {}): Promise<number> {
+type ComposeOptions = { onLine?: (l: string) => void; inherit?: boolean; env?: NodeJS.ProcessEnv };
+/**
+ * Runs `docker compose ...`; output streamed to `onLine` (or inherited). Resolves with the exit code. Every `up` that starts the edge first
+ * makes sure the framework's edge image exists (built from this installation when missing) and has nginx test the edge configuration
+ * exactly as the container will see it: a configuration nginx rejects is never started, and a running edge keeps serving.
+ */
+export async function compose(c: ComposeTarget, args: string[], o: ComposeOptions = {}): Promise<number> {
+  if (args[0] === "up") { const pre = await prepareEdge(c, args, o); if (pre !== 0) return pre; }
+  return run(c, args, o);
+}
+
+const EDGE_IMAGE_LINE = new RegExp(String.raw`^\s*image: "(${EDGE_REPOSITORY}:[0-9a-f]+)"\s*$`, "m");
+// options of `compose up` that take a value: anything else that is not an option names a service
+const UP_VALUE_OPTIONS = new Set(["--wait-timeout", "--timeout", "-t", "--scale", "--pull", "--exit-code-from", "--attach", "--no-attach"]);
+function upTargets(args: string[]): string[] {
+  const out: string[] = [];
+  for (let i = 1; i < args.length; i++) { const a = args[i]!; if (UP_VALUE_OPTIONS.has(a)) i++; else if (!a.startsWith("-")) out.push(a); }
+  return out;
+}
+async function prepareEdge(c: ComposeTarget, args: string[], o: ComposeOptions): Promise<number> {
+  if (!existsSync(c.file)) return 0;
+  const m = EDGE_IMAGE_LINE.exec(readFileSync(c.file, "utf8"));
+  const targets = upTargets(args);
+  if (!m || (targets.length && !targets.includes("edge"))) return 0;
+  const log = o.onLine ?? ((l: string) => { if (o.inherit) console.log(l); });
+  try { await ensureEdgeImage(m[1]!, log); } catch (e) { log(`${(e as Error).message}${(e as InfraError).hint ? `. ${(e as InfraError).hint}` : ""}`); return 1; }
+  const lines: string[] = [];
+  const code = await run(c, ["run", "--rm", "--no-deps", "-T", "edge", "nginx", "-e", "stderr", "-t"], { onLine: (l) => lines.push(l), ...(o.env ? { env: o.env } : {}) });
+  if (code !== 0) {
+    for (const l of lines.filter((x) => /emerg|alert|crit|error|failed/i.test(x))) log(`  ${l}`);
+    log(`the edge configuration was rejected by nginx -t (exit ${code}): nothing was started, a running edge keeps its configuration`);
+    return code;
+  }
+  log("edge configuration accepted by nginx -t");
+  return 0;
+}
+
+function run(c: ComposeTarget, args: string[], o: ComposeOptions): Promise<number> {
   return new Promise((resolve) => {
     const p = spawn("docker", [...base(c), ...args], { cwd: c.root, stdio: o.inherit ? "inherit" : ["ignore", "pipe", "pipe"], env: { ...process.env, ...(o.env ?? {}) }, windowsHide: true });
     const pipe = (s: NodeJS.ReadableStream | null) => { if (!s || !o.onLine) return; let buf = ""; s.on("data", (d: Buffer) => { buf += d.toString(); const ls = buf.split(/\r?\n/); buf = ls.pop() ?? ""; for (const l of ls) if (l.trim()) o.onLine!(l); }); s.on("end", () => { if (buf.trim()) o.onLine!(buf); }); };

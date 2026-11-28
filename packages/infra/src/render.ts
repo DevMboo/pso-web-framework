@@ -2,6 +2,7 @@ import { gzipDirectives, renderSiteLocations, securityHeaders } from "@pso/front
 import { INFRA_DIR, type InfraContract, type ResourceLimits } from "./contract.ts";
 import { envVarOf, localSecretPath, secretRef } from "./secrets.ts";
 import { managedIdentity, type ResolvedService, type Topology } from "./topology.ts";
+import { EDGE_INCLUDES, edgeImage } from "./edge.ts";
 
 /**
  * Every file the engine generates is rendered here, from the topology alone, deterministically: the same declarations always give the same
@@ -43,7 +44,9 @@ const upgradeMap = "map $http_upgrade $pso_connection_upgrade { default upgrade;
 // builds absolute URLs from forwarded headers (Keycloak) must see the public one
 const proxyCommon = (verifyName: string, ws: boolean, publicPort: number): string[] => [
   "proxy_http_version 1.1;",
-  "proxy_set_header Host $host;", "proxy_set_header X-Real-IP $remote_addr;", "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;", "proxy_set_header X-Forwarded-Proto https;", `proxy_set_header X-Forwarded-Host $host${publicPort === 443 ? "" : `:${publicPort}`};`, `proxy_set_header X-Forwarded-Port ${publicPort};`,
+  // Host is the EXTERNAL authority the browser used: the name nginx matched (server_name, never an arbitrary value) and the environment's
+  // public port, never the port a client wrote. An upstream comparing a browser's Origin with its Host (PSO Channels) then agrees with it
+  `proxy_set_header Host $host${publicPort === 443 ? "" : `:${publicPort}`};`, "proxy_set_header X-Real-IP $remote_addr;", "proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;", "proxy_set_header X-Forwarded-Proto https;", `proxy_set_header X-Forwarded-Host $host${publicPort === 443 ? "" : `:${publicPort}`};`, `proxy_set_header X-Forwarded-Port ${publicPort};`,
   ...(ws ? ["proxy_set_header Upgrade $http_upgrade;", "proxy_set_header Connection $pso_connection_upgrade;"] : ['proxy_set_header Connection "";']),
   // every hop behind the edge is TLS, verified against the environment's authority and the container's own name
   `proxy_ssl_trusted_certificate ${CONTAINER_TLS}/ca.crt;`, "proxy_ssl_verify on;", "proxy_ssl_verify_depth 2;", `proxy_ssl_name ${verifyName};`, "proxy_ssl_server_name on;",
@@ -55,6 +58,13 @@ const tlsServer = (names: string[]): string[] => [
   "    ssl_protocols TLSv1.2 TLSv1.3;", "    ssl_prefer_server_ciphers off;", "    ssl_session_cache shared:pso_tls:5m;",
 ];
 const ind = (n: number, lines: string[]): string[] => lines.map((l) => `${" ".repeat(n)}${l}`);
+/**
+ * Native error handling of a server block: the edge's own errors (and a FEI's) are answered from the edge image's pages, as an HTML page for
+ * a person or an RFC 9457 document for a program; never nginx's built-in pages. Responses of the orchestrator and the identity provider are
+ * NOT intercepted: their Problem Details, statuses and headers (WWW-Authenticate, Retry-After, Allow, X-Correlation-ID) reach the client.
+ */
+const edgeErrors = (kind: "browser" | "api"): string[] => [`    include ${EDGE_INCLUDES.locations};`, `    include ${EDGE_INCLUDES[kind]};`];
+const apiErrors = `        include ${EDGE_INCLUDES.api};`;
 
 /** The edge gateway: TLS termination and host routing for every FEI, the API and the identity provider. */
 export function renderEdge(t: Topology): string {
@@ -68,23 +78,25 @@ export function renderEdge(t: Topology): string {
     ...(prefix ? [`        rewrite ^${prefix}/(.*)$ /$1 break;`] : []),
     "        proxy_pass $pso_orchestrator;",
     ...ind(8, proxyCommon(orch.name, false, t.httpsPort)),
+    apiErrors,
     "    }",
     ...(prefix ? [
       "    location = /channels {",
       `        set $pso_orchestrator https://${orch.name}:${orch.port};`,
       "        proxy_pass $pso_orchestrator;",
       ...ind(8, proxyCommon(orch.name, true, t.httpsPort)),
+      apiErrors,
       "    }",
     ] : []),
   ];
   // the shell container is on the private edge network and serves public, immutable files only: no credential is sent to it
-  const toFei = (loc: string, fei: string): string[] => [`    location ${loc} {`, `        set $pso_fei http://${fei}:8080;`, "        proxy_pass $pso_fei;", "        proxy_http_version 1.1;", "        proxy_set_header Host $host;", "        proxy_set_header X-Forwarded-Proto https;", '        proxy_set_header Connection "";', "    }"];
+  const toFei = (loc: string, fei: string): string[] => [`    location ${loc} {`, `        set $pso_fei http://${fei}:8080;`, "        proxy_pass $pso_fei;", "        proxy_http_version 1.1;", "        proxy_set_header Host $host;", "        proxy_set_header X-Forwarded-Proto https;", '        proxy_set_header Connection "";', "        proxy_intercept_errors on;", "    }"];
   // one server block per host: several shells may share a host under distinct base paths
   const hosts = [...new Set(t.frontends.map((f) => f.host))].sort();
   for (const host of hosts) {
     const fs = t.frontends.filter((f) => f.host === host).sort((a, b) => b.basePath.length - a.basePath.length);
     const apis = [...new Set(fs.map((f) => f.info.orchestratorBasePath.replace(/\/+$/, "") || "/api"))];
-    out.push(`# ${fs.map((f) => `${f.name}: ${f.url}`).join("; ")}`, "server {", ...tlsServer([host]), ...securityHeaders(true, "    ").filter((l) => /Strict-Transport/.test(l)));
+    out.push(`# ${fs.map((f) => `${f.name}: ${f.url}`).join("; ")}`, "server {", ...tlsServer([host]), ...securityHeaders(true, "    ").filter((l) => /Strict-Transport/.test(l)), ...edgeErrors("browser"));
     apis.forEach((a, i) => out.push(...(i === 0 ? apiLocations(a) : apiLocations(a).slice(0, apiLocations(a).findIndex((l) => l.includes("location = /channels"))))));
     if (fs.length === 1) out.push(...toFei("/", fs[0]!.name));
     else {
@@ -94,16 +106,22 @@ export function renderEdge(t: Topology): string {
     }
     out.push("}", "");
   }
-  out.push(`# API: ${t.api.origin}`, "server {", ...tlsServer([t.api.host]), ...securityHeaders(true, "    ").filter((l) => /Strict-Transport|nosniff/.test(l)), ...apiLocations(null), "}", "");
+  out.push(`# API: ${t.api.origin}`, "server {", ...tlsServer([t.api.host]), ...securityHeaders(true, "    ").filter((l) => /Strict-Transport|nosniff/.test(l)), ...edgeErrors("api"), ...apiLocations(null), "}", "");
   if (t.identity?.provider === "keycloak") {
-    out.push(`# identity provider: ${t.identity.issuer}`, "server {", ...tlsServer([t.identity.host]), "    location / {", "        set $pso_idp https://idp:8443;", "        proxy_pass $pso_idp;", ...ind(8, proxyCommon("idp", false, t.httpsPort)), "        proxy_buffer_size 128k;", "        proxy_buffers 4 256k;", "    }", "}", "");
+    const toIdp = ["        set $pso_idp https://idp:8443;", "        proxy_pass $pso_idp;", ...ind(8, proxyCommon("idp", false, t.httpsPort)), "        proxy_buffer_size 128k;", "        proxy_buffers 4 256k;"];
+    out.push(`# identity provider: ${t.identity.issuer}`, "server {", ...tlsServer([t.identity.host]), ...edgeErrors("browser"),
+      // token, keys, user info, discovery and the administration API answer programs: an edge-generated failure there is a problem document
+      "    location ~ ^/(realms/[^/]+/(protocol/openid-connect/(token|certs|userinfo|revoke|token/introspect)|\\.well-known/)|admin/realms/) {", ...toIdp, apiErrors, "    }",
+      "    location / {", ...toIdp, "    }", "}", "");
   } else if (t.identity?.provider === "pso-dev") {
     // the public keys live in the "idp" container (see renderIdpServer); the edge only publishes them under the identity's public host
-    out.push(`# development identity: public keys only (tokens are signed offline by pso infra:token)`, "server {", ...tlsServer([t.identity.host]),
+    out.push(`# development identity: public keys only (tokens are signed offline by pso infra:token)`, "server {", ...tlsServer([t.identity.host]), ...edgeErrors("api"),
       "    location = /.well-known/jwks.json {", "        set $pso_idp https://idp:8443;", "        proxy_pass $pso_idp;", ...ind(8, proxyCommon("idp", false, t.httpsPort)), "    }",
       "    location / { return 404; }", "}", "");
   }
-  out.push("# anything else is refused: a request for an unknown host never reaches an application", "server {", "    listen 8443 ssl default_server;", "    server_name _;", `    ssl_certificate ${CONTAINER_TLS}/tls.crt;`, `    ssl_certificate_key ${CONTAINER_TLS}/tls.key;`, "    return 421;", "}", "",
+  out.push("# anything else is refused: a request for an unknown host never reaches an application", "server {", "    listen 8443 ssl default_server;", "    server_name _;", `    ssl_certificate ${CONTAINER_TLS}/tls.crt;`, `    ssl_certificate_key ${CONTAINER_TLS}/tls.key;`, ...edgeErrors("browser"),
+    // in a location, not at server level: a server-level return would run again on the internal redirect to the error page
+    "    location / { return 421; }", "}", "",
     "# container health (loopback only, never published)", "server {", "    listen 127.0.0.1:8081;", '    location = /health { access_log off; return 200 "ok"; }', "}", "");
   return out.join("\n");
 }
@@ -275,6 +293,9 @@ export function renderCompose(t: Topology, c: InfraContract, mode: "stack" | "de
       const vols = [`${tlsSourceDir(t, s.name)}:${CONTAINER_TLS}:ro`];
       if (isOrch) {
         Object.assign(env, { PSO_HTTP_TLS_CERT_FILE: `${CONTAINER_TLS}/tls.crt`, PSO_HTTP_TLS_KEY_FILE: `${CONTAINER_TLS}/tls.key`, PSO_SHUTDOWN_GRACE_MS: "5000" });
+        // the browser origins allowed to open PSO Channels: exactly the declared shells' origins (no wildcard); production refuses to start
+        // Channels without such a list. An application that states its own list keeps it
+        if (t.frontends.length && !("PSO_CHANNELS_ALLOWED_ORIGINS" in s.environment)) env["PSO_CHANNELS_ALLOWED_ORIGINS"] = [...new Set(t.frontends.map((f) => f.origin))].sort().join(",");
         for (const u of t.services.filter((x) => x.role !== "orchestrator")) {
           env[`PSO_UPSTREAM_${up(u.name)}`] = `${u.name}:${u.port}`;
           if (u.prefix) env[`PSO_UPSTREAM_${up(u.name)}_PREFIX`] = u.prefix;
@@ -339,7 +360,9 @@ export function renderCompose(t: Topology, c: InfraContract, mode: "stack" | "de
     if (t.orchestrator) edgeDeps[t.orchestrator.name] = { condition: "service_healthy" };
     if (managedIdentity(t)) edgeDeps["idp"] = { condition: "service_healthy" };
     services["edge"] = {
-      image: t.images.nginx, restart: "unless-stopped", user: runAs("101:101"),
+      // the framework's edge image (nginx with the native error responses, no server identification): built locally by PSO from the
+      // installed release, never pulled (a registry image of the same name is never used)
+      image: edgeImage().tag, pull_policy: "never", restart: "unless-stopped", user: runAs("101:101"),
       volumes: [`./${paths.nginx(t.env, "edge")}:/etc/nginx/conf.d/default.conf:ro`, `${tlsSourceDir(t, "edge")}:${CONTAINER_TLS}:ro`],
       tmpfs: ["/var/cache/nginx:mode=1777", "/var/run:mode=1777", "/tmp:mode=1777"],
       ports: [dev ? `127.0.0.1:${t.httpsPort}:8443` : `${t.httpsPort}:8443`],

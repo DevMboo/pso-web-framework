@@ -56,3 +56,4 @@ Findings are verified by `pso security:check`; dependencies by `pso security:aud
 - Treating this table as a guarantee instead of a map of where each threat is handled.
 - Enabling permissive CORS or plain-text upstreams to get past an error.
 - Assuming the orchestrator's limits replace edge protection (WAF, DDoS service, network policy).
+- Adding error pages, `server_tokens` or header rules to an application to hide the infrastructure: the generated edge already removes `Server` and `X-Powered-By` and answers its own errors without naming its software ([Edge protection](/infrastructure/edge-protection)).

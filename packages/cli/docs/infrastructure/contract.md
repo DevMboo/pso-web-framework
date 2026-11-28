@@ -64,7 +64,7 @@ This is the contract of the reference workspace (`fixtures/pso-reference`), vali
 | `redis.persistence`, `redis.resources` | append-only persistence in the volume `redis-data`; container limits | `true`; `256m`, `0.5` |
 | `environments.<name>.redis` | `provider`: `container` (PSO runs it), `external` (the address is the supplied secret `redis-url`) or `none`; `port`: loopback port of the dependencies stack for `pso dev` | `container`, `6379` |
 | `secrets.<name>` | declared application secrets: `description`, `generate: "random"` (development only) | - |
-| `docker` | Compose `project` name, `logs` (`maxSize`, `maxFile`), default `resources`, `images` (`nginx`, `postgres`, `keycloak`, `redis`) | `<workspace>-<env>`, `10m`/3 |
+| `docker` | Compose `project` name, `logs` (`maxSize`, `maxFile`), default `resources`, `images` (`nginx` for the shells and the pso-dev key server, `postgres`, `keycloak`, `redis`; the edge always runs the framework's own image) | `<workspace>-<env>`, `10m`/3 |
 
 ### Redis, application settings and authentication
 

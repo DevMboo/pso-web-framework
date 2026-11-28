@@ -98,10 +98,14 @@ A client frame can only reach an `@OnEvent` method: there is no way to invoke a 
 
 ```bash
 pso channels:enable --service recruitment-service      # starter, pso.channels, the channels.publish event
+pso dispatch:install redis --service gw                 # the orchestrator receives the services' events through Dispatch
 pso channels:enable --service gw                       # the orchestrator side: Dispatch consumer + @pso/channels
 pso make:notifier candidate --service recruitment-service --channel "candidate.{candidateId}" \
   --event candidate.updated --fields "candidateId:string,status:string" --durable
 ```
+
+On the orchestrator, `channels:enable` refuses to run (and changes nothing) until the orchestrator has a Dispatch provider: its side of
+Channels is the Dispatch consumer that hands the services' events to the browsers. Dispatch stays disabled until you enable it.
 
 In a layered service `make:notifier` writes the payload record to `application/event/CandidateEvent.java` and the publishing service
 to `application/service/CandidateNotifier.java`; a 0.1 service gets `events/` and `application/`.
@@ -197,6 +201,7 @@ The files are small and import the SDK; nothing of the SDK is copied into your p
 |---|---|
 | development | endpoint `ws://localhost:3000/channels`; the orchestrator accepts the same origin, or list your dev server in `PSO_CHANNELS_ALLOWED_ORIGINS=http://localhost:5173` |
 | production | `wss://api.example.com/channels` in the build-time variable; `PSO_CHANNELS_ALLOWED_ORIGINS=https://app.example.com`; `bus: redis` for several orchestrator instances |
+| behind the PSO edge (`pso docker:up`, `pso deploy --env`) | the shell's own `wss://<shell host>/channels`; the engine sets `PSO_CHANNELS_ALLOWED_ORIGINS` to the declared shells' exact origins (port included, any environment kind) unless you set it in `services.<orchestrator>.environment`; the edge forwards the external host and port as `Host`. Other origins get `403` |
 
 Unsupported targets are refused with the reason: no `react` dependency, React older than 18, no `tsconfig`, TypeScript not installed, no `src/` folder (pass `--dir`), conflicting lockfiles, or a `--dir` outside the project. `--skip-install` writes only the files and prints the exact packages to add yourself.
 

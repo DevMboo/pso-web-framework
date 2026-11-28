@@ -125,6 +125,10 @@
           "to": "node_modules/@pso/infra/dist"
         },
         {
+          "from": "packages/infra/edge",
+          "to": "node_modules/@pso/infra/edge"
+        },
+        {
           "from": "packages/cli/bin",
           "to": "node_modules/@pso/cli/bin"
         },

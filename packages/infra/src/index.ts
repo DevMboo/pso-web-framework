@@ -14,3 +14,4 @@ export * from "./validate.ts";
 export { readFrontends } from "./frontends.ts";
 export { protectFile, exposure, atomicWrite, sha256, withLock, withLockAsync, pendingJournal, cleanTemporaries } from "./fsutil.ts";
 export * from "./keycloak.ts";
+export { DISCLOSURE, EDGE_DIR, EDGE_INCLUDES, EDGE_RESOURCES, EDGE_STATUSES, edgeBuildContext, edgeImage, edgeImagePresent, ensureEdgeImage, renderErrorPage, renderProblem, type EdgeStatus } from "./edge.ts";

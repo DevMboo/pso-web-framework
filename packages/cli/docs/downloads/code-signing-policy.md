@@ -9,7 +9,7 @@ related: [downloads/privacy-policy, downloads/index, infrastructure/release-inte
 > [!IMPORTANT]
 > **Status: no PSO Web release is Authenticode-signed yet.** The project is preparing an application to the
 > [SignPath Foundation](https://signpath.org) free code-signing program for open-source projects. It has **not** been accepted, no
-> certificate has been issued, and nothing is signed through SignPath. `0.2.0-rc.7` is unsigned; Windows Smart App Control can block its
+> certificate has been issued, and nothing is signed through SignPath. `0.2.0-rc.8` is unsigned; Windows Smart App Control can block its
 > installer. This page describes the policy that signed releases will follow, and it will name the signing service once one is active.
 
 ## What will be signed
@@ -22,7 +22,7 @@ related: [downloads/privacy-policy, downloads/index, infrastructure/release-inte
 | scripts (`pso.cmd`, the Maven wrapper of generated projects) and JavaScript | cannot carry Authenticode signatures; covered by the package's signed per-file inventory (`pso integrity check --full`) |
 
 Only executables built from this project's own source code (Apache License 2.0) are signed. Upstream binaries are never signed with the project's certificate.
-Every signed file carries the product name **PSO Web** and the release version (for example `0.2.0-rc.7`, numerically `0.2.0.0`) in its
+Every signed file carries the product name **PSO Web** and the release version (for example `0.2.0-rc.8`, numerically `0.2.0.0`) in its
 version information, the same values in every file of a release. Signatures use SHA-256 and an RFC 3161 timestamp.
 
 ## How a release is built and approved

@@ -44,7 +44,7 @@ workspace/
 
 | Part | Holds | Never holds |
 |---|---|---|
-| `.infra/` (workspace) | certificates, secrets, the identity provider's realm, nginx and compose files, provisioning state: generated and reconciled by PSO | application code; it is not version-controlled source |
+| `.infra/` (workspace) | certificates, secrets, the identity provider's realm, nginx and compose files, provisioning state: generated and reconciled by PSO | application code; it is not version-controlled source; framework runtime resources (the edge image and its error pages belong to the installed PSO, not to the workspace) |
 | `.app/` (orchestrator) | version-controlled, application-wide source: guards, middlewares, interceptors, filters, configuration modules, shared contracts, decorators | business functionality, secrets, certificates |
 | `modules/<module>/` (orchestrator) | one business capability: its controllers, services, providers (calls to microservices), DTOs, contracts, mappers and its `routes/ROUTES.pso.ts` | another module's internals; persistence |
 | `application/` (Java) | what the service does: REST controllers, transactional services, request/response records, mappers | JPA entities in responses; infrastructure details |

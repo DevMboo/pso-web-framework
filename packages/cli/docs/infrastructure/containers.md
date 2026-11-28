@@ -12,7 +12,7 @@ PSO runs containers with **Docker Engine and Compose v2**; it does not reimpleme
 
 | Container | Image | Role |
 |---|---|---|
-| `edge` | `nginx:1.27-alpine`, user 101, read-only | TLS termination, one server per public host, `/api` and `/channels` to the orchestrator, `/` to the shell, identity host to Keycloak; the only published port |
+| `edge` | `pso-edge:<hash>`, the framework's edge image (nginx with headers-more and the native error responses; built locally, never pulled), user 101, read-only | TLS termination, one server per public host, `/api` and `/channels` to the orchestrator, `/` to the shell, identity host to Keycloak; the only published port. No `Server` header, no built-in nginx error page: see [Edge protection](/infrastructure/edge-protection) |
 | `fei-<name>` | `nginx:1.27-alpine`, user 101, read-only | one static server per shell; its site root (`.infra/sites/<env>/<fei>`) is mounted read-only and the active release follows `fei/current.json` |
 | orchestrator | built from `./<path>` | inbound TLS, upstream TLS (and mutual TLS), JWT configuration |
 | each service | built from `./<path>` | TLS with its own certificate; mutual TLS when declared |
@@ -34,7 +34,7 @@ Publishing a new shell or microfrontend release (`pso frontend:publish <project>
 |---|---|
 | `pso docker:plan --env <env>` | startup order, images (built or pulled), published ports, networks, volumes, secrets (names), limits; pending infrastructure changes. Needs no Docker |
 | `pso docker:build --env <env> [--service <name>] [--vendor]` | creates missing Dockerfiles (never overwrites one), vendors the framework packages with `--vendor`, builds the service images |
-| `pso docker:up --env <env> [--service a,b] [--no-deps] [--build]` | development: provisions missing infrastructure and builds missing images first; checks every published host port; starts in dependency order and waits until every container is healthy |
+| `pso docker:up --env <env> [--service a,b] [--no-deps] [--build]` | development: provisions missing infrastructure and builds missing images first (the edge image once per PSO release); checks every published host port; has nginx test the edge configuration (`nginx -t`, never started when rejected); starts in dependency order and waits until every container is healthy |
 | `pso docker:restart <name...> --env <env> [--recreate]` | restarts only those containers; `--recreate` picks up changed environment, mounts or images |
 | `pso docker:ps`, `docker:logs <name>`, `docker:inspect [<name>]` | state and health, redacted logs, the effective definition as Compose resolves it |
 | `pso docker:down --env <env>` | stops and removes containers and networks; **keeps volumes**. `--volumes` deletes the data too and needs `--yes` |
